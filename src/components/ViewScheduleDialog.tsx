@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar, Clock, ListFilter } from "lucide-react";
 import ScheduleCalendarView from "./ScheduleCalendarView";
 import ScheduleListView from "./ScheduleListView";
+import { motion } from "framer-motion";
 
 interface ViewScheduleDialogProps {
   open: boolean;
@@ -24,9 +25,10 @@ const ViewScheduleDialog = ({
   const [view, setView] = useState("calendar");
   const [selectedCourses, setSelectedCourses] = useState<string[]>([]);
   const [generatingSchedule, setGeneratingSchedule] = useState(false);
+  const [expandedCourse, setExpandedCourse] = useState<string | null>(null);
 
   // Initialize selected courses when dialog opens
-  React.useEffect(() => {
+  useEffect(() => {
     if (open) {
       setSelectedCourses(courses.map(course => course.id));
     }
@@ -40,6 +42,10 @@ const ViewScheduleDialog = ({
         return [...prev, courseId];
       }
     });
+  };
+
+  const toggleCourseExpand = (courseId: string) => {
+    setExpandedCourse(expandedCourse === courseId ? null : courseId);
   };
 
   const handleGenerateSchedule = () => {
@@ -73,21 +79,80 @@ const ViewScheduleDialog = ({
             
             <div className="space-y-3">
               {courses.map(course => (
-                <div key={course.id} className="flex items-start space-x-2">
-                  <Checkbox 
-                    id={`course-${course.id}`}
-                    checked={selectedCourses.includes(course.id)}
-                    onCheckedChange={() => handleCourseToggle(course.id)}
-                    className="mt-1"
-                  />
-                  <div className="flex-1">
-                    <label 
-                      htmlFor={`course-${course.id}`}
-                      className="text-sm font-medium cursor-pointer block"
-                    >
-                      {course.code}
-                    </label>
-                    <span className="text-xs text-gray-600">{course.name}</span>
+                <div key={course.id} className="w-full">
+                  <div className="flex items-start space-x-2 w-full">
+                    <Checkbox 
+                      id={`course-${course.id}`}
+                      checked={selectedCourses.includes(course.id)}
+                      onCheckedChange={() => handleCourseToggle(course.id)}
+                      className="mt-1"
+                    />
+                    <div className="flex-1">
+                      <div 
+                        className="flex items-center justify-between cursor-pointer" 
+                        onClick={() => toggleCourseExpand(course.id)}
+                      >
+                        <div>
+                          <label 
+                            htmlFor={`course-${course.id}`}
+                            className="text-sm font-medium cursor-pointer block"
+                          >
+                            {course.code}
+                          </label>
+                          <span className="text-xs text-gray-600">{course.name}</span>
+                        </div>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-6 w-6 p-0"
+                        >
+                          {expandedCourse === course.id ? 
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-up"><path d="m18 15-6-6-6 6"/></svg> : 
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-down"><path d="m6 9 6 6 6-6"/></svg>
+                          }
+                        </Button>
+                      </div>
+                      
+                      {/* Course Section Details */}
+                      {expandedCourse === course.id && course.sections && (
+                        <motion.div 
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="mt-2 pl-2 border-l-2 border-gray-200"
+                        >
+                          <div className="text-xs font-medium text-gray-700 mb-1">Sections:</div>
+                          {course.sections.map((section: any) => (
+                            <div key={section.id} className="text-xs mb-2 bg-gray-50 p-2 rounded">
+                              <div className="flex items-center justify-between">
+                                <div className="font-medium">{section.sectionNumber}</div>
+                                <div className="text-gray-500">{section.crn}</div>
+                              </div>
+                              <div className="mt-1">
+                                <div>Instructor: {section.instructor}</div>
+                                <div>Location: {section.location}</div>
+                                <div>Available: {section.availableSeats}/{section.maxSeats} seats</div>
+                                {section.schedule && section.schedule.map((sch: any, idx: number) => (
+                                  <div key={idx}>
+                                    {sch.days} {sch.startTime}-{sch.endTime}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                          
+                          {course.prerequisites && course.prerequisites.length > 0 && (
+                            <div className="mt-2">
+                              <div className="text-xs font-medium text-gray-700 mb-1">Prerequisites:</div>
+                              <div className="text-xs p-2 bg-amber-50 rounded">
+                                {course.prerequisites.join(", ")}
+                              </div>
+                            </div>
+                          )}
+                        </motion.div>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}

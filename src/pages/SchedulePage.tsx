@@ -6,6 +6,7 @@ import ScheduleTool from '@/components/ScheduleTool';
 import { useSchedule } from '@/contexts/ScheduleContext';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const SchedulePage = () => {
   const { currentTerm } = useSchedule();
@@ -39,7 +40,14 @@ const SchedulePage = () => {
   
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
+      <motion.div 
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="w-full"
+      >
+        <Header />
+      </motion.div>
       
       <main className="container max-w-7xl mx-auto px-4 pb-12 pt-6">
         {semesterId && (
@@ -49,7 +57,7 @@ const SchedulePage = () => {
               className="flex items-center text-gray-600 hover:text-gray-900 pl-0"
               onClick={() => navigate('/')}
             >
-              <ArrowLeft className="mr-1 h-4 w-4" /> 
+              <ArrowLeft className="mr-2 h-4 w-4" /> 
               Back to Course Planner
             </Button>
           </div>
