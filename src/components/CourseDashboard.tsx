@@ -4,9 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { mockDegreeRequirements, mockMandatoryCourses } from "@/lib/mock-data";
-import { ChevronDown, ChevronUp, Plus, Trash } from "lucide-react";
+import { ChevronDown, ChevronUp, Plus, Trash, Calendar, ArrowRight } from "lucide-react";
 import CourseSearch from "./CourseSearch";
+import ViewScheduleDialog from "./ViewScheduleDialog";
 import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
 
 interface CourseDashboardProps {
   onAddSemester: () => void;
@@ -17,6 +19,10 @@ const CourseDashboard: React.FC<CourseDashboardProps> = ({ onAddSemester }) => {
   const [showMandatoryCourses, setShowMandatoryCourses] = useState(false);
   const [isCourseSearchOpen, setIsCourseSearchOpen] = useState(false);
   const [selectedSemester, setSelectedSemester] = useState("");
+  const [isViewScheduleOpen, setIsViewScheduleOpen] = useState(false);
+  const [viewingSemester, setViewingSemester] = useState<any>(null);
+  
+  const navigate = useNavigate();
 
   // Organize courses by academic year and semester
   const years = [
@@ -99,6 +105,29 @@ const CourseDashboard: React.FC<CourseDashboardProps> = ({ onAddSemester }) => {
     setSelectedSemester(semesterId);
     setIsCourseSearchOpen(true);
   };
+  
+  const handleViewSchedule = (semester: any) => {
+    setViewingSemester(semester);
+    setIsViewScheduleOpen(true);
+  };
+  
+  const handleOpenSchedulePage = (semesterId: string) => {
+    // Navigate to the schedule page with the semester ID as a parameter
+    navigate(`/schedule?semester=${semesterId}`);
+  };
+
+  const handleDeleteCourse = (semesterId: string, courseId: string) => {
+    // In a real application, this would update your course data
+    console.log(`Deleting course ${courseId} from semester ${semesterId}`);
+  };
+
+  const handleViewDetails = (section: string) => {
+    if (section === "program") {
+      setShowProgramDetails(!showProgramDetails);
+    } else if (section === "mandatory") {
+      setShowMandatoryCourses(!showMandatoryCourses);
+    }
+  };
 
   return (
     <div className="animate-fade-in">
@@ -112,11 +141,12 @@ const CourseDashboard: React.FC<CourseDashboardProps> = ({ onAddSemester }) => {
                 <span className="text-gray-500 text-sm">62/120</span>
               </div>
               <Button 
-                variant="ghost" 
-                className="p-0 h-auto hover:bg-transparent text-blue-500 hover:text-blue-700 transition-colors"
-                onClick={() => setShowProgramDetails(!showProgramDetails)}
+                variant="outline"
+                size="sm"
+                className="text-blue-500 border-blue-200 hover:text-blue-700 hover:bg-blue-50 hover:border-blue-300 transition-colors"
+                onClick={() => handleViewDetails("program")}
               >
-                {showProgramDetails ? "Hide details" : "Show details"}
+                {showProgramDetails ? "Hide details" : "View details"}
               </Button>
             </div>
             <div className="text-gray-700 font-medium mt-1">Program credits left</div>
@@ -149,11 +179,12 @@ const CourseDashboard: React.FC<CourseDashboardProps> = ({ onAddSemester }) => {
                 <span className="text-gray-500 text-sm">8/15</span>
               </div>
               <Button 
-                variant="ghost" 
-                className="p-0 h-auto hover:bg-transparent text-blue-500 hover:text-blue-700 transition-colors"
-                onClick={() => setShowMandatoryCourses(!showMandatoryCourses)}
+                variant="outline"
+                size="sm"
+                className="text-blue-500 border-blue-200 hover:text-blue-700 hover:bg-blue-50 hover:border-blue-300 transition-colors"
+                onClick={() => handleViewDetails("mandatory")}
               >
-                {showMandatoryCourses ? "Hide details" : "Show details"}
+                {showMandatoryCourses ? "Hide details" : "View details"}
               </Button>
             </div>
             <div className="text-gray-700 font-medium mt-1">Mandatory courses left</div>
@@ -202,7 +233,9 @@ const CourseDashboard: React.FC<CourseDashboardProps> = ({ onAddSemester }) => {
                 <Card key={semester.id} className="shadow-sm hover:shadow-md transition-shadow animate-fade-in">
                   <CardHeader className="pb-2">
                     <div className="flex justify-between items-center">
-                      <CardTitle className="text-lg font-semibold">{semester.name}</CardTitle>
+                      <CardTitle className="text-lg font-semibold">
+                        {semester.name.replace(/\s\d{4}$/, "")} {/* Remove year suffix */}
+                      </CardTitle>
                       <div className="flex space-x-2">
                         <Button 
                           variant="outline" 
@@ -216,21 +249,25 @@ const CourseDashboard: React.FC<CourseDashboardProps> = ({ onAddSemester }) => {
                           variant="outline" 
                           size="sm" 
                           className="h-8 w-8 p-0 rounded-full"
-                          onClick={() => {}}
+                          onClick={() => handleViewSchedule(semester)}
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M8 12h4"/><path d="M14 8h.01"/><path d="M14 12h.01"/><path d="M14 16h.01"/><path d="M8 8h.01"/><path d="M8 16h.01"/></svg>
+                          <Calendar className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>
-                    <div className="text-sm text-gray-600">{semester.creditsSelected}/18 credits selected ✓</div>
+                    <div className="text-sm text-gray-600">
+                      {semester.creditsSelected}/18 credits selected ✓
+                    </div>
                   </CardHeader>
                   
                   <CardContent>
                     <div className="space-y-2">
-                      <select className="w-full rounded-md border border-gray-300 p-1 text-sm mb-2">
-                        <option>Case Western Reserve University</option>
-                        <option>Cleveland State University</option>
-                      </select>
+                      <div className="flex justify-between items-center mb-3">
+                        <select className="w-full rounded-md border border-gray-300 p-1 text-sm">
+                          <option>Case Western Reserve University</option>
+                          <option>Cleveland State University</option>
+                        </select>
+                      </div>
                       
                       {semester.courses.map(course => (
                         <div key={course.id} className="flex items-start space-x-2 border-b pb-2 last:border-0 group">
@@ -256,21 +293,32 @@ const CourseDashboard: React.FC<CourseDashboardProps> = ({ onAddSemester }) => {
                             variant="ghost"
                             size="icon"
                             className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-red-500 hover:text-red-600 hover:bg-red-50"
+                            onClick={() => handleDeleteCourse(semester.id, course.id)}
                           >
                             <Trash className="h-3 w-3" />
                           </Button>
                         </div>
                       ))}
                       
-                      {semester.courses.length > 0 && (
+                      <div className="pt-2 flex">
                         <Button
                           onClick={() => handleOpenCourseSearch(semester.id)}
                           variant="outline"
-                          className="w-full flex justify-center items-center text-sm h-9 mt-2"
+                          size="sm"
+                          className="flex-1 flex justify-center items-center text-sm h-9"
                         >
-                          <Plus className="h-4 w-4 mr-1" /> Add courses
+                          <Plus className="h-3.5 w-3.5 mr-1" /> Add courses
                         </Button>
-                      )}
+                        
+                        <Button
+                          onClick={() => handleOpenSchedulePage(semester.id)}
+                          variant="outline"
+                          size="sm"
+                          className="ml-2 flex items-center text-sm h-9 text-blue-500 hover:text-blue-700 border-blue-200 hover:border-blue-400"
+                        >
+                          View Schedule <ArrowRight className="h-3.5 w-3.5 ml-1" />
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -296,6 +344,16 @@ const CourseDashboard: React.FC<CourseDashboardProps> = ({ onAddSemester }) => {
         onOpenChange={setIsCourseSearchOpen}
         termId={selectedSemester}
       />
+      
+      {/* View Schedule Dialog */}
+      {viewingSemester && (
+        <ViewScheduleDialog 
+          open={isViewScheduleOpen}
+          onOpenChange={setIsViewScheduleOpen}
+          semesterName={viewingSemester.name}
+          courses={viewingSemester.courses}
+        />
+      )}
     </div>
   );
 };

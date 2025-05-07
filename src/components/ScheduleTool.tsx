@@ -1,8 +1,9 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import TermHeader from "./TermHeader";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Course } from "@/lib/types";
 import { useSchedule } from "@/contexts/ScheduleContext";
 import ScheduleCalendarView from "./ScheduleCalendarView";
@@ -13,9 +14,14 @@ import EditBusyTimeDialog from "./EditBusyTimeDialog";
 import AIAdvisorDialog from "./AIAdvisor";
 import TunePreferencesDialog from "./TunePreferencesDialog";
 import CompareSchedulesDialog from "./CompareSchedulesDialog";
-import { PlusCircle, Sliders, ArrowLeftRight } from "lucide-react";
+import { PlusCircle, Sliders, ArrowLeftRight, BookOpen } from "lucide-react";
+import { motion } from "framer-motion";
 
-const ScheduleTool = () => {
+interface ScheduleToolProps {
+  semesterId?: string | null;
+}
+
+const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId }) => {
   const { 
     courses, 
     busyTimes, 
@@ -30,10 +36,36 @@ const ScheduleTool = () => {
   const [isAIAdvisorOpen, setIsAIAdvisorOpen] = useState(false);
   const [isCompareOpen, setIsCompareOpen] = useState(false);
   const [isPreferencesOpen, setIsPreferencesOpen] = useState(false);
+  const [selectedCourses, setSelectedCourses] = useState<string[]>([]);
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  // Initialize selected courses
+  useEffect(() => {
+    setSelectedCourses(courses.map(course => course.id));
+  }, [courses]);
+
+  // Handle course selection toggle
+  const handleCourseToggle = (courseId: string) => {
+    setSelectedCourses(prev => {
+      if (prev.includes(courseId)) {
+        return prev.filter(id => id !== courseId);
+      } else {
+        return [...prev, courseId];
+      }
+    });
+  };
 
   const handleEditBusyTime = (busyTime: any) => {
     setSelectedBusyTime(busyTime);
     setIsEditBusyTimeOpen(true);
+  };
+
+  const handleGenerateSchedule = () => {
+    setIsGenerating(true);
+    setTimeout(() => {
+      generateSchedules();
+      setIsGenerating(false);
+    }, 800);
   };
 
   return (
@@ -65,11 +97,17 @@ const ScheduleTool = () => {
             
             <div className="space-y-2">
               {busyTimes.map(busyTime => (
-                <BusyTimeItem 
-                  key={busyTime.id} 
-                  busyTime={busyTime}
-                  onEdit={handleEditBusyTime}
-                />
+                <motion.div 
+                  key={busyTime.id}
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <BusyTimeItem 
+                    busyTime={busyTime}
+                    onEdit={handleEditBusyTime}
+                  />
+                </motion.div>
               ))}
               
               {busyTimes.length === 0 && (
@@ -96,7 +134,7 @@ const ScheduleTool = () => {
                   onClick={() => setIsCompareOpen(true)}
                 >
                   <ArrowLeftRight className="h-4 w-4 mr-1.5" />
-                  Compare schedules
+                  Compare
                 </Button>
                 <Button 
                   variant="outline" 
@@ -105,35 +143,52 @@ const ScheduleTool = () => {
                   onClick={() => setIsPreferencesOpen(true)}
                 >
                   <Sliders className="h-4 w-4 mr-1.5" />
-                  Tune preferences
+                  Preferences
                 </Button>
               </div>
             </div>
             
-            <div className="space-y-2 mb-4">
+            <div className="space-y-2 mb-4 max-h-[500px] overflow-y-auto pr-2 pb-2">
               {courses.map((course: Course) => (
-                <div 
+                <motion.div 
                   key={course.id}
                   className="bg-white border rounded-md p-3 flex justify-between items-start group hover:shadow-sm transition-all"
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2 }}
                 >
-                  <div>
-                    <div className="flex items-center mb-1">
-                      <span className="font-medium mr-2">{course.code}</span>
-                      <span className="text-xs bg-gray-100 px-2 py-0.5 rounded">{course.credits}cr</span>
+                  <div className="flex items-start space-x-2">
+                    <Checkbox 
+                      id={`course-${course.id}`}
+                      checked={selectedCourses.includes(course.id)}
+                      onCheckedChange={() => handleCourseToggle(course.id)}
+                      className="mt-1"
+                    />
+                    
+                    <div>
+                      <label 
+                        htmlFor={`course-${course.id}`}
+                        className="cursor-pointer"
+                      >
+                        <div className="flex items-center mb-1">
+                          <span className="font-medium mr-2">{course.code}</span>
+                          <span className="text-xs bg-gray-100 px-2 py-0.5 rounded">{course.credits}cr</span>
+                        </div>
+                        <div className="text-sm mb-1">{course.name}</div>
+                        <div className="text-xs text-gray-500">Pre-Calculus</div>
+                      </label>
                     </div>
-                    <div className="text-sm mb-1">{course.name}</div>
-                    <div className="text-xs text-gray-500">Pre-Calculus</div>
                   </div>
                   
                   <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <Button variant="ghost" size="icon" className="h-6 w-6">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/><path d="m15 5 3 3"/></svg>
+                      <BookOpen className="h-4 w-4" />
                     </Button>
                     <Button variant="ghost" size="icon" className="h-6 w-6 text-red-500 hover:text-red-700 hover:bg-red-50">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
                     </Button>
                   </div>
-                </div>
+                </motion.div>
               ))}
               
               {courses.length === 0 && (
@@ -144,11 +199,11 @@ const ScheduleTool = () => {
             </div>
             
             <Button 
-              onClick={generateSchedules} 
+              onClick={handleGenerateSchedule} 
               className="w-full bg-blue-500 hover:bg-blue-600 transition-colors"
-              disabled={courses.length === 0}
+              disabled={selectedCourses.length === 0 || isGenerating}
             >
-              Generate schedule
+              {isGenerating ? "Generating..." : "Generate schedule"}
             </Button>
           </div>
         </div>
@@ -196,9 +251,21 @@ const ScheduleTool = () => {
           
           {/* Schedule Views */}
           {view === "calendar" ? (
-            <ScheduleCalendarView />
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+            >
+              <ScheduleCalendarView />
+            </motion.div>
           ) : (
-            <ScheduleListView />
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+            >
+              <ScheduleListView />
+            </motion.div>
           )}
         </div>
       </div>
