@@ -14,7 +14,7 @@ import EditBusyTimeDialog from "./EditBusyTimeDialog";
 import AIAdvisorDialog from "./AIAdvisor";
 import TunePreferencesDialog from "./TunePreferencesDialog";
 import CompareSchedulesDialog from "./CompareSchedulesDialog";
-import { PlusCircle, Sliders, ArrowLeftRight, BookOpen, ChevronDown, ChevronUp } from "lucide-react";
+import { PlusCircle, Sliders, ArrowLeftRight, BookOpen, ChevronDown, ChevronUp, Lock, LockOpen } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface ScheduleToolProps {
@@ -96,16 +96,14 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId }) => {
           transition={{ duration: 0.4, delay: 0.2 }}
         >
           {/* Busy Times Section */}
-          <div className="mb-6">
+          <div className="mb-6 bg-[#F4F5F7] p-4 rounded-lg">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="font-medium flex items-center">
-                <Badge variant="outline" className="mr-2">
-                  Busy time ({busyTimes.length})
-                </Badge>
+              <h3 className="font-semibold uppercase text-sm text-[#011434] flex items-center">
+                Busy time ({busyTimes.length})
               </h3>
               <Button 
                 variant="outline" 
-                className="h-8" 
+                className="h-8 text-[#0D9BE1] border-[#9EA6B5] rounded-full flex items-center transition-colors duration-200" 
                 onClick={() => setIsAddBusyTimeOpen(true)}
               >
                 <PlusCircle className="h-4 w-4 mr-1.5" />
@@ -132,7 +130,7 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId }) => {
               </AnimatePresence>
               
               {busyTimes.length === 0 && (
-                <div className="text-sm text-gray-500 bg-gray-50 p-3 rounded-md">
+                <div className="text-sm text-[#3D4F6D] bg-white p-3 rounded-md border border-[#9EA6B5]">
                   No busy times added yet. Add your regular commitments to avoid scheduling conflicts.
                 </div>
               )}
@@ -140,18 +138,16 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId }) => {
           </div>
           
           {/* Courses Section */}
-          <div>
+          <div className="bg-[#F4F5F7] p-4 rounded-lg">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="font-medium flex items-center">
-                <Badge variant="outline" className="mr-2">
-                  Courses ({courses.length})
-                </Badge>
+              <h3 className="font-semibold uppercase text-sm text-[#011434] flex items-center">
+                Courses ({courses.length})
               </h3>
               <div className="flex space-x-1">
                 <Button 
                   variant="outline" 
                   size="sm"
-                  className="h-8 flex items-center"
+                  className="h-8 flex items-center text-[#3D4F6D] border-[#9EA6B5] rounded-full transition-colors duration-200"
                   onClick={() => setIsCompareOpen(true)}
                 >
                   <ArrowLeftRight className="h-4 w-4 mr-1.5" />
@@ -160,7 +156,7 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId }) => {
                 <Button 
                   variant="outline" 
                   size="sm"
-                  className="h-8"
+                  className="h-8 flex items-center text-[#3D4F6D] border-[#9EA6B5] rounded-full transition-colors duration-200"
                   onClick={() => setIsPreferencesOpen(true)}
                 >
                   <Sliders className="h-4 w-4 mr-1.5" />
@@ -174,7 +170,7 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId }) => {
                 {courses.map((course: Course, index: number) => (
                   <motion.div 
                     key={course.id}
-                    className="bg-white border rounded-md p-3 flex flex-col justify-between items-start group hover:shadow-sm transition-all w-full"
+                    className="bg-white border border-[#9EA6B5] rounded-md p-3 flex flex-col justify-between items-start group hover:shadow-sm transition-all w-full"
                     initial={{ opacity: 0, y: 5 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
@@ -185,7 +181,7 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId }) => {
                         id={`course-${course.id}`}
                         checked={selectedCourses.includes(course.id)}
                         onCheckedChange={() => handleCourseToggle(course.id)}
-                        className="mt-1"
+                        className="mt-1 border-[#7F8A9D]"
                       />
                       
                       <div className="flex-1">
@@ -196,30 +192,36 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId }) => {
                               className="cursor-pointer"
                             >
                               <div className="flex items-center mb-1">
-                                <span className="font-medium mr-2">{course.code}</span>
-                                <span className="text-xs bg-gray-100 px-2 py-0.5 rounded">{course.credits}cr</span>
+                                <span className="font-medium mr-2 text-[#011434]">{course.code}</span>
+                                <span className="text-xs bg-gray-100 px-2 py-0.5 rounded text-[#3D4F6D]">{course.credits}cr</span>
                               </div>
-                              <div className="text-sm mb-1">{course.name}</div>
-                              {course.prerequisites && course.prerequisites.length > 0 && (
-                                <div 
-                                  className="text-xs py-1 px-2 bg-amber-50 text-amber-800 rounded inline-flex items-center cursor-pointer"
-                                  onClick={() => toggleCourseExpanded(course.id)}
-                                >
-                                  Prerequisites required
-                                  {expandedCourses[course.id] ? 
-                                    <ChevronUp className="h-3 w-3 ml-1" /> : 
-                                    <ChevronDown className="h-3 w-3 ml-1" />
-                                  }
-                                </div>
-                              )}
+                              <div className="text-sm mb-1 text-[#3D4F6D]">{course.name}</div>
                             </label>
+                            
+                            <div className="flex items-center text-xs text-[#3D4F6D] space-x-1">
+                              <span>{course.name}</span>
+                              <span className="w-1 h-1 rounded-full bg-[#3D4F6D]"></span>
+                              <span>Category</span>
+                              <span className="w-1 h-1 rounded-full bg-[#3D4F6D]"></span>
+                              <span>Subcategory</span>
+                            </div>
                           </div>
                           
                           <div className="flex space-x-1">
                             <Button 
                               variant="ghost" 
                               size="icon" 
-                              className="h-6 w-6"
+                              className="h-6 w-6 text-[#3D4F6D]"
+                            >
+                              {selectedCourses.includes(course.id) ? 
+                                <LockOpen className="h-4 w-4" /> : 
+                                <Lock className="h-4 w-4" />
+                              }
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-6 w-6 text-[#3D4F6D]"
                               onClick={() => toggleCourseExpanded(course.id)}
                             >
                               {expandedCourses[course.id] ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -299,28 +301,49 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId }) => {
               </AnimatePresence>
               
               {courses.length === 0 && (
-                <div className="text-sm text-gray-500 bg-gray-50 p-3 rounded-md">
+                <div className="text-sm text-[#3D4F6D] bg-white p-3 rounded-md border border-[#9EA6B5]">
                   No courses added yet. Add courses to generate schedules.
                 </div>
               )}
             </div>
             
-            <Button 
-              onClick={handleGenerateSchedule} 
-              className="w-full bg-blue-500 hover:bg-blue-600 transition-colors"
-              disabled={selectedCourses.length === 0 || isGenerating}
-            >
-              {isGenerating ? 
-                <span className="flex items-center">
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Generating...
-                </span> : 
-                "Generate schedule"
-              }
-            </Button>
+            <div className="flex justify-between items-center">
+              <Button 
+                onClick={handleGenerateSchedule} 
+                className="bg-[#0D9BE1] hover:bg-[#0D9BE1]/90 text-white rounded-full transition-all duration-300 flex-1 mr-2"
+                disabled={selectedCourses.length === 0 || isGenerating}
+              >
+                {isGenerating ? 
+                  <span className="flex items-center">
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Generating...
+                  </span> : 
+                  "Generate schedule"
+                }
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                size="icon" 
+                className="text-purple-500 border-[#9EA6B5] bg-[#F4F5F7] rounded-full h-10 w-10"
+                onClick={() => setIsAIAdvisorOpen(true)}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M19.7 14a2 2 0 0 0-1.7-1h-1.2a3 3 0 0 0-3 3v.7c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V16" />
+                  <path d="M15.5 14h-.17c-.47.68-1.14 1.25-1.92 1.5" />
+                  <path d="M13.41 14.5c.87-1.98.87-4.02 0-6" />
+                  <path d="M18.24 9.5c2.13 2.13 2.13 5.57 0 7.7" />
+                  <path d="M18.24 6c3.53 3.53 3.53 9.24 0 12.77" />
+                  <path d="M11.5 9.5c-2.13 2.13-2.13 5.57 0 7.7" />
+                  <path d="M11.5 6c-3.53 3.53-3.53 9.24 0 12.77" />
+                  <path d="M8.35 8.35a4.8 4.8 0 0 0 0 7.3" />
+                  <path d="M4.9 4.9a8.5 8.5 0 0 0 0 14.2" />
+                </svg>
+              </Button>
+            </div>
           </div>
         </motion.div>
         
@@ -333,34 +356,13 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId }) => {
         >
           <div className="space-y-2 mb-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-medium text-lg">
+              <h3 className="font-medium text-lg text-[#011434]">
                 {selectedSchedule?.name || "No Schedule Selected"}
               </h3>
-              <div className="flex items-center space-x-1">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => setIsAIAdvisorOpen(true)}
-                  className="flex items-center text-purple-600 hover:text-purple-700 hover:bg-purple-50"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M19.7 14a2 2 0 0 0-1.7-1h-1.2a3 3 0 0 0-3 3v.7c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V16" />
-                    <path d="M15.5 14h-.17c-.47.68-1.14 1.25-1.92 1.5" />
-                    <path d="M13.41 14.5c.87-1.98.87-4.02 0-6" />
-                    <path d="M18.24 9.5c2.13 2.13 2.13 5.57 0 7.7" />
-                    <path d="M18.24 6c3.53 3.53 3.53 9.24 0 12.77" />
-                    <path d="M11.5 9.5c-2.13 2.13-2.13 5.57 0 7.7" />
-                    <path d="M11.5 6c-3.53 3.53-3.53 9.24 0 12.77" />
-                    <path d="M8.35 8.35a4.8 4.8 0 0 0 0 7.3" />
-                    <path d="M4.9 4.9a8.5 8.5 0 0 0 0 14.2" />
-                  </svg>
-                  Ask AI Advisor
-                </Button>
-              </div>
             </div>
             
             {selectedSchedule && (
-              <div className="text-sm text-gray-500">
+              <div className="text-sm text-[#3D4F6D]">
                 {selectedSchedule.totalCredits} credits {selectedSchedule.conflicts?.length > 0 && (
                   <span className="text-amber-500">
                     • {selectedSchedule.conflicts.length} conflict{selectedSchedule.conflicts.length > 1 ? 's' : ''}
