@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { timeSlots, weekDays, busyTimeColors } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 
 interface CompareCalendarViewProps {
   scheduleIds: string[];
@@ -113,7 +114,12 @@ const CompareCalendarView: React.FC<CompareCalendarViewProps> = ({ scheduleIds }
   }
   
   return (
-    <div className="space-y-4 animate-fade-in">
+    <motion.div 
+      className="space-y-4 animate-fade-in"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+    >
       <div className="flex items-center justify-between">
         <Button
           variant="outline"
@@ -145,29 +151,35 @@ const CompareCalendarView: React.FC<CompareCalendarViewProps> = ({ scheduleIds }
         </Button>
       </div>
       
-      <Card className="p-4 overflow-auto">
-        <div className="min-w-[1000px]">
+      <Card className="p-4 overflow-auto border border-gray-200 rounded-xl shadow-sm">
+        <div className="min-w-[900px]">
           {/* Calendar Header with Weekdays */}
-          <div className="grid grid-cols-[80px_repeat(7,1fr)] gap-1 mb-1">
-            <div className="text-center font-medium p-2">Time</div>
+          <div className="grid grid-cols-[80px_repeat(7,1fr)] gap-1 mb-2">
+            <div className="text-center font-medium p-2 text-gray-500">Time</div>
             {weekDays.map(day => (
-              <div 
+              <motion.div 
                 key={day} 
                 className="text-center font-medium p-2 bg-gray-100 rounded-md"
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: weekDays.indexOf(day) * 0.05 }}
               >
                 {day}
-              </div>
+              </motion.div>
             ))}
           </div>
           
           {/* Calendar Body with Time Slots */}
           {timeSlots.map((timeSlot, index) => (
-            <div 
+            <motion.div 
               key={timeSlot}
               className="grid grid-cols-[80px_repeat(7,1fr)] gap-1 mb-1"
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: index * 0.03 }}
             >
               {/* Time slot label */}
-              <div className="text-center text-sm font-medium flex items-center justify-center bg-gray-50 rounded-md">
+              <div className="text-center text-sm font-medium flex items-center justify-center bg-gray-50 rounded-md text-gray-600">
                 {timeSlot}
               </div>
               
@@ -181,17 +193,17 @@ const CompareCalendarView: React.FC<CompareCalendarViewProps> = ({ scheduleIds }
                   <div 
                     key={`${day}-${timeSlot}`}
                     className={cn(
-                      "p-0.5 rounded-md border min-h-[70px] transition-all",
-                      items.length > 0 ? "border-gray-300" : "border-gray-100"
+                      "p-0.5 rounded-lg border min-h-[70px] transition-all",
+                      items.length > 0 ? "border-gray-300 shadow-sm" : "border-gray-100"
                     )}
                   >
                     {items.map((item: any, i: number) => {
                       if (item.type === 'course') {
                         return (
-                          <div 
+                          <motion.div 
                             key={`${item.courseCode}-${i}`}
                             className={cn(
-                              "p-1 text-xs rounded bg-opacity-90 h-full",
+                              "p-1 text-xs rounded-md bg-opacity-90 h-full",
                               `bg-${item.color}`,
                               item.courseCode.startsWith("CS") && "bg-course-cs text-black",
                               item.courseCode.startsWith("MATH") && "bg-course-math text-white",
@@ -203,26 +215,32 @@ const CompareCalendarView: React.FC<CompareCalendarViewProps> = ({ scheduleIds }
                               item.courseCode.startsWith("UNIV") && "bg-course-univ text-white",
                               item.courseCode.startsWith("ECON") && "bg-course-econ text-white",
                             )}
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.3 }}
                           >
                             <div className="font-semibold">{item.courseCode}</div>
                             <div className="text-[10px] truncate">{item.instructor}</div>
                             <div className="text-[10px] truncate">{item.location}</div>
-                          </div>
+                          </motion.div>
                         );
                       } else if (item.type === 'busy') {
                         const busyTypeStyle = busyTimeColors[item.busyTimeType] || busyTimeColors.other;
                         
                         return (
-                          <div 
+                          <motion.div 
                             key={`busy-${i}`}
                             className={cn(
-                              "p-1 text-xs rounded h-full flex items-center space-x-1",
+                              "p-1 text-xs rounded-md h-full flex items-center space-x-1",
                               busyTypeStyle.bg,
                               busyTypeStyle.text
                             )}
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.3 }}
                           >
                             <span className="truncate flex-1">{item.title}</span>
-                          </div>
+                          </motion.div>
                         );
                       }
                       
@@ -231,11 +249,11 @@ const CompareCalendarView: React.FC<CompareCalendarViewProps> = ({ scheduleIds }
                   </div>
                 );
               })}
-            </div>
+            </motion.div>
           ))}
         </div>
       </Card>
-    </div>
+    </motion.div>
   );
 };
 

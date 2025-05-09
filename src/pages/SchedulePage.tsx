@@ -39,19 +39,23 @@ const SchedulePage = () => {
   }
   
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       <motion.div 
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="w-full"
       >
         <Header />
       </motion.div>
       
-      <main className="container max-w-7xl mx-auto px-4 pb-12 pt-6">
+      <main className="container max-w-7xl mx-auto px-4 pb-12 pt-6 flex-grow">
         {semesterId && (
-          <div className="mb-4">
+          <motion.div 
+            className="mb-4"
+            initial={{ opacity: 0, x: -5 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3, delay: 0.1 }}
+          >
             <Button
               variant="ghost"
               className="flex items-center text-gray-600 hover:text-gray-900 pl-0"
@@ -60,7 +64,7 @@ const SchedulePage = () => {
               <ArrowLeft className="mr-2 h-4 w-4" /> 
               Back to Course Planner
             </Button>
-          </div>
+          </motion.div>
         )}
         
         <ScheduleTool semesterId={semesterId} />
