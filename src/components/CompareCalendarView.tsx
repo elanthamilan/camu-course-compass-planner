@@ -48,7 +48,7 @@ const CompareCalendarView: React.FC<CompareCalendarViewProps> = ({ scheduleIds }
   scheduledSections.forEach((section: any) => {
     section.schedule.forEach((schedule: any) => {
       const days = schedule.days.split(",");
-      days.forEach((day: string) => {
+      days.forEach(day => {
         const startHour = parseInt(schedule.startTime.split(":")[0]);
         const endHour = parseInt(schedule.endTime.split(":")[0]);
         
@@ -126,15 +126,15 @@ const CompareCalendarView: React.FC<CompareCalendarViewProps> = ({ scheduleIds }
           size="sm"
           onClick={handlePrev}
           disabled={currentIndex === 0}
-          className="flex items-center border-[#9EA6B5] text-[#3D4F6D] transition-colors duration-200"
+          className="flex items-center"
         >
           <ChevronLeft className="h-4 w-4 mr-1" />
           Previous
         </Button>
         
         <div className="text-center">
-          <h3 className="font-medium text-[#011434]">{currentSchedule.name}</h3>
-          <div className="text-xs text-[#3D4F6D]">
+          <h3 className="font-medium">{currentSchedule.name}</h3>
+          <div className="text-xs text-gray-600">
             Schedule {currentIndex + 1} of {selectedSchedules.length}
           </div>
         </div>
@@ -144,18 +144,18 @@ const CompareCalendarView: React.FC<CompareCalendarViewProps> = ({ scheduleIds }
           size="sm"
           onClick={handleNext}
           disabled={currentIndex === selectedSchedules.length - 1}
-          className="flex items-center border-[#9EA6B5] text-[#3D4F6D] transition-colors duration-200"
+          className="flex items-center"
         >
           Next
           <ChevronRight className="h-4 w-4 ml-1" />
         </Button>
       </div>
       
-      <Card className="p-4 overflow-auto border border-[#9EA6B5] rounded-xl shadow-sm">
+      <Card className="p-4 overflow-auto border border-gray-200 rounded-xl shadow-sm">
         <div className="min-w-[900px]">
           {/* Calendar Header with Weekdays */}
           <div className="grid grid-cols-[80px_repeat(7,1fr)] gap-1 mb-2">
-            <div className="text-center font-medium p-2 text-[#3D4F6D]">Time</div>
+            <div className="text-center font-medium p-2 text-gray-500">Time</div>
             {weekDays.map(day => (
               <motion.div 
                 key={day} 
@@ -179,7 +179,7 @@ const CompareCalendarView: React.FC<CompareCalendarViewProps> = ({ scheduleIds }
               transition={{ duration: 0.3, delay: index * 0.03 }}
             >
               {/* Time slot label */}
-              <div className="text-center text-sm font-medium flex items-center justify-center bg-gray-50 rounded-md text-[#3D4F6D]">
+              <div className="text-center text-sm font-medium flex items-center justify-center bg-gray-50 rounded-md text-gray-600">
                 {timeSlot}
               </div>
               
@@ -194,7 +194,7 @@ const CompareCalendarView: React.FC<CompareCalendarViewProps> = ({ scheduleIds }
                     key={`${day}-${timeSlot}`}
                     className={cn(
                       "p-0.5 rounded-lg border min-h-[70px] transition-all",
-                      items.length > 0 ? "border-[#9EA6B5] shadow-sm" : "border-gray-100"
+                      items.length > 0 ? "border-gray-300 shadow-sm" : "border-gray-100"
                     )}
                   >
                     {items.map((item: any, i: number) => {
@@ -232,8 +232,8 @@ const CompareCalendarView: React.FC<CompareCalendarViewProps> = ({ scheduleIds }
                             key={`busy-${i}`}
                             className={cn(
                               "p-1 text-xs rounded-md h-full flex items-center space-x-1",
-                              busyTypeStyle.bg || "bg-[#FDF3BF]",
-                              busyTypeStyle.text || "text-[#011434]"
+                              busyTypeStyle.bg,
+                              busyTypeStyle.text
                             )}
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
