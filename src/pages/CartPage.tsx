@@ -1,5 +1,4 @@
 
-import React from 'react';
 import RegistrationSummary from '@/components/RegistrationSummary';
 import Header from '@/components/Header';
 

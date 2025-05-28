@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import {
   Course,
   BusyTime,
@@ -7,9 +7,7 @@ import {
   Term,
   PreferenceSettings,
   StudentInfo,
-  SchedulePreferences,
-  TimePreference,
-  SectionSchedule 
+  SchedulePreferences
 } from "@/lib/types";
 import { mockCourses, mockBusyTimes, mockSchedules, mockTerms, mockStudent } from "@/lib/mock-data";
 import { toast } from "sonner";
@@ -81,9 +79,9 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
   const [busyTimes, setBusyTimes] = useState<BusyTime[]>(mockBusyTimes);
   const [schedules, setSchedules] = useState<Schedule[]>(mockSchedules);
   const [selectedSchedule, setSelectedSchedule] = useState<Schedule | null>(mockSchedules.length > 0 ? mockSchedules[0] : null);
-  const [allTerms, setAllTerms] = useState<Term[]>(mockTerms);
+  const [_allTerms, _setAllTerms] = useState<Term[]>(mockTerms);
   const [currentTerm, setCurrentTerm] = useState<Term | null>(mockTerms[0]);
-  const [studentInfo, setStudentInfo] = useState<StudentInfo>(mockStudent);
+  const [_studentInfo, _setStudentInfo] = useState<StudentInfo>(mockStudent);
   const [preferences, setPreferences] = useState<PreferenceSettings>(defaultPreferences);
   const [schedulePreferences, setSchedulePreferences] = useState<SchedulePreferences>({
     timePreference: "none",
@@ -231,7 +229,7 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
     if (processedCourses.length < coursesToSchedule.length) {
-        toast.warn("Some selected courses had no available sections after applying preferences and were excluded.");
+        toast.info("Some selected courses had no available sections after applying preferences and were excluded.");
     }
 
     const foundSchedules: Schedule[] = [];
@@ -287,7 +285,7 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
         setSelectedSchedule(foundSchedules[0]);
         toast.success(`${foundSchedules.length} new schedule(s) generated!`);
         if (coursesNotScheduled.size > 0 && foundSchedules.length < MAX_SCHEDULES_TO_GENERATE) {
-            toast.warn(`Could not schedule all selected courses. Unable to place: ${Array.from(coursesNotScheduled).join(', ')}.`);
+            toast.info(`Could not schedule all selected courses. Unable to place: ${Array.from(coursesNotScheduled).join(', ')}.`);
         }
       } else {
         toast.error("Could not generate any valid schedules with the current selections and constraints.");
@@ -298,7 +296,7 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const selectTerm = (termId: string) => {
-    const term = allTerms.find(t => t.id === termId);
+    const term = _allTerms.find((t: Term) => t.id === termId);
     if (term) setCurrentTerm(term);
   };
 
@@ -378,8 +376,8 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
         schedules,
         selectedSchedule,
         currentTerm,
-        allTerms,
-        studentInfo,
+        allTerms: _allTerms,
+        studentInfo: _studentInfo,
         preferences,
         schedulePreferences,
         shoppingCart, 

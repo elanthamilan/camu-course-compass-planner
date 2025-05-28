@@ -153,7 +153,7 @@ const EditBusyTimeDialog: React.FC<EditBusyTimeDialogProps> = ({ busyTime, open,
                 F: "Friday", 
                 Sa: "Saturday", 
                 Su: "Sunday"
-              }).map(([day, fullName]) => (
+              }).map(([day, _fullName]) => (
                 <div key={day} className="flex items-center space-x-2 bg-gray-100 px-3 py-2 rounded-md">
                   <Checkbox
                     id={`day-${day}`}

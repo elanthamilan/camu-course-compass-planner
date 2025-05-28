@@ -1,8 +1,8 @@
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar, List, ListFilter, ChevronDown, ChevronUp, Wand2 } from "lucide-react"; // Added ChevronDown, ChevronUp, Wand2
 import ScheduleCalendarView from "./ScheduleCalendarView";
@@ -58,9 +58,9 @@ const ViewScheduleDialog = ({
   };
 
   // Filter courses based on selection
-  const filteredCourses = courses.filter(course => 
-    selectedCourses.includes(course.id)
-  );
+  // const filteredCourses = courses.filter(course => 
+  //   selectedCourses.includes(course.id)
+  // );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

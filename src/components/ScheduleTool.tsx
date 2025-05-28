@@ -13,7 +13,7 @@ import EditBusyTimeDialog from "./EditBusyTimeDialog";
 import AIAdvisorDialog from "./AIAdvisor";
 import TunePreferencesDialog from "./TunePreferencesDialog";
 import CompareSchedulesDialog from "./CompareSchedulesDialog";
-import { PlusCircle, Sliders, ArrowLeftRight, BookOpen, ChevronDown, ChevronUp, CalendarPlus, Sparkles, Trash2 } from "lucide-react";
+import { PlusCircle, Sliders, ArrowLeftRight, ChevronDown, ChevronUp, CalendarPlus, Sparkles, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -23,7 +23,7 @@ interface ScheduleToolProps {
   semesterId?: string | null;
 }
 
-const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId }) => {
+const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) => {
   const { 
     courses, 
     busyTimes, 
@@ -478,7 +478,7 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId }) => {
             
             {selectedSchedule && (
               <div className="text-sm text-gray-500">
-                {selectedSchedule.totalCredits} credits {selectedSchedule.conflicts?.length > 0 && (
+                {selectedSchedule.totalCredits} credits {selectedSchedule.conflicts && selectedSchedule.conflicts.length > 0 && (
                   <span className="text-amber-500">
                     • {selectedSchedule.conflicts.length} conflict{selectedSchedule.conflicts.length > 1 ? 's' : ''}
                   </span>

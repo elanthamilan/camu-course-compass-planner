@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import CourseDashboard from '@/components/CourseDashboard';
 import Header from '@/components/Header';
 import AIAdvisor from '@/components/AIAdvisor';
@@ -9,17 +9,12 @@ import { Sparkles } from 'lucide-react'; // Import Sparkles
 const Index = () => {
   const [isAIAdvisorOpen, setIsAIAdvisorOpen] = useState(false);
   
-  const handleAddSemester = () => {
-    // Logic to add a new semester
-    console.log("Adding new semester");
-  };
-  
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
       
-      <main className="container max-w-7xl mx-auto px-4 pb-20">
-        <CourseDashboard onAddSemester={handleAddSemester} />
+      <main className="px-4 pb-20">
+        <CourseDashboard />
       </main>
       
       <AIAdvisor open={isAIAdvisorOpen} onOpenChange={setIsAIAdvisorOpen} />

@@ -1,5 +1,4 @@
 
-import React from 'react';
 import Header from '@/components/Header';
 import AIAdvisor from '@/components/AIAdvisor';
 
@@ -8,7 +7,7 @@ const AdvisorPage = () => {
     <div className="min-h-screen bg-gray-50">
       <Header />
       
-      <main className="container max-w-3xl mx-auto px-4 py-8">
+      <main className="px-4 py-8">
         <div className="bg-gradient-to-r from-purple-600 to-violet-500 rounded-lg p-8 text-white mb-8 shadow-lg animate-fade-in">
           <h1 className="text-3xl font-bold mb-4">AI Course Advisor</h1>
           <p className="mb-6">

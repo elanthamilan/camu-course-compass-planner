@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import ScheduleTool from '@/components/ScheduleTool';
@@ -48,7 +48,7 @@ const SchedulePage = () => {
         <Header />
       </motion.div>
       
-      <main className="container max-w-7xl mx-auto px-4 pb-12 pt-6 flex-grow">
+      <main className="px-4 pb-12 pt-6 flex-grow">
         {semesterId && (
           <motion.div 
             className="mb-4"

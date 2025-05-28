@@ -1,11 +1,11 @@
 
-import React from "react";
 import { useSchedule } from "@/contexts/ScheduleContext";
 import { Card } from "@/components/ui/card";
 import { timeSlots, weekDays, busyTimeColors } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { Lock } from "lucide-react"; // Import Lock icon
+import { BusyTimeType } from "@/lib/types"; // Import BusyTimeType
 
 const ScheduleCalendarView = () => {
   const { selectedSchedule, busyTimes } = useSchedule();
@@ -43,7 +43,7 @@ const ScheduleCalendarView = () => {
             sectionId: section.id,
             instructor: section.instructor,
             location: schedule.location,
-            color: getCourseColor(courseCode),
+            color: getCourseColorInfo(courseCode),
             locked: section.locked // Pass locked status
           });
         }
@@ -177,7 +177,8 @@ const ScheduleCalendarView = () => {
                           </motion.div>
                         );
                       } else if (item.type === 'busy') {
-                        const busyTypeStyle = busyTimeColors[item.busyTimeType] || busyTimeColors.other;
+                        const busyType = item.busyTimeType as BusyTimeType; // Cast to BusyTimeType
+                        const busyTypeStyle = busyTimeColors[busyType] || busyTimeColors.other;
                         
                         return (
                           <motion.div 

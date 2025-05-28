@@ -1,13 +1,13 @@
 
-import React from "react";
 import { useSchedule } from "@/contexts/ScheduleContext";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { Lock } from "lucide-react"; // Import Lock icon
+import { CourseSection, Course, SectionSchedule } from "@/lib/types"; // Import CourseSection, Course, and SectionSchedule
 
 const ScheduleListView = () => {
-  const { selectedSchedule } = useSchedule();
+  const { selectedSchedule, courses } = useSchedule();
 
   if (!selectedSchedule) return null;
 
@@ -46,11 +46,11 @@ const ScheduleListView = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {selectedSchedule.sections.map((section) => {
+            {selectedSchedule.sections.map((section: CourseSection) => {
               const courseCode = section.id.split("-")[0].toUpperCase();
               // This mapping should ideally come from the Course objects in context for accuracy
-              const courseDetails = selectedSchedule.courses?.find(c => c.code === courseCode) || 
-                                  { name: "Unknown Course", credits: section.credits || 0 }; // Fallback
+              const courseDetails = courses.find((c: Course) => c.id === section.id.split("-")[0] || c.code === section.id.split("-")[0]);
+              
               const colorInfo = getCourseColorInfo(courseCode);
               
               return (
@@ -65,13 +65,13 @@ const ScheduleListView = () => {
                       {courseCode}
                     </span>
                   </TableCell>
-                  <TableCell className="p-2 sm:p-4">{courseDetails.name}</TableCell>
+                  <TableCell className="p-2 sm:p-4">{courseDetails?.name || "Unknown Course"}</TableCell>
                   <TableCell className="p-2 sm:p-4">{section.crn}</TableCell>
-                  <TableCell className="p-2 sm:p-4">{courseDetails.credits}</TableCell>
+                  <TableCell className="p-2 sm:p-4">{courseDetails?.credits ?? "N/A"}</TableCell>
                   <TableCell className="p-2 sm:p-4">{section.sectionNumber}</TableCell>
                   <TableCell className="p-2 sm:p-4">{section.instructor}</TableCell>
                   <TableCell className="p-2 sm:p-4">
-                    {section.schedule.map((sch, i) => (
+                    {section.schedule.map((sch: SectionSchedule, i: number) => (
                       <div key={i} className="mb-1 last:mb-0">
                         <div className="text-xs sm:text-sm">{sch.days}</div>
                         <div className="text-[10px] sm:text-xs text-muted-foreground">{sch.startTime} - {sch.endTime}</div> {/* Use muted-foreground */}

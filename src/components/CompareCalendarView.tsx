@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { timeSlots, weekDays, busyTimeColors } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { BusyTimeType } from "@/lib/types";
 
 interface CompareCalendarViewProps {
   scheduleIds: string[];
@@ -43,12 +44,12 @@ const CompareCalendarView: React.FC<CompareCalendarViewProps> = ({ scheduleIds }
   const busyTimes = currentSchedule.busyTimes;
   
   // Create a map of day-time slots to course sections
-  const calendarMap: Record<string, any> = {};
+  const calendarMap: Record<string, any[]> = {};
   
   scheduledSections.forEach((section: any) => {
     section.schedule.forEach((schedule: any) => {
       const days = schedule.days.split(",");
-      days.forEach(day => {
+      days.forEach((day: string) => {
         const startHour = parseInt(schedule.startTime.split(":")[0]);
         const endHour = parseInt(schedule.endTime.split(":")[0]);
         
@@ -66,11 +67,11 @@ const CompareCalendarView: React.FC<CompareCalendarViewProps> = ({ scheduleIds }
           
           calendarMap[key].push({
             type: 'course',
-            courseCode,
+            courseCode: courseCode as string,
             sectionId: section.id,
             instructor: section.instructor,
             location: schedule.location,
-            color: getCourseColor(courseCode)
+            color: getCourseColor(courseCode as string)
           });
         }
       });
@@ -94,7 +95,7 @@ const CompareCalendarView: React.FC<CompareCalendarViewProps> = ({ scheduleIds }
         calendarMap[key].push({
           type: 'busy',
           title: busyTime.title,
-          busyTimeType: busyTime.type
+          busyTimeType: busyTime.type as BusyTimeType
         });
       }
     });
@@ -197,7 +198,7 @@ const CompareCalendarView: React.FC<CompareCalendarViewProps> = ({ scheduleIds }
                       items.length > 0 ? "border-gray-300 shadow-sm" : "border-gray-100"
                     )}
                   >
-                    {items.map((item: any, i: number) => {
+                    {items.map((item, i: number) => {
                       if (item.type === 'course') {
                         return (
                           <motion.div 
@@ -225,7 +226,8 @@ const CompareCalendarView: React.FC<CompareCalendarViewProps> = ({ scheduleIds }
                           </motion.div>
                         );
                       } else if (item.type === 'busy') {
-                        const busyTypeStyle = busyTimeColors[item.busyTimeType] || busyTimeColors.other;
+                        const busyType = item.busyTimeType as BusyTimeType;
+                        const busyTypeStyle = busyTimeColors[busyType] || busyTimeColors.other;
                         
                         return (
                           <motion.div 

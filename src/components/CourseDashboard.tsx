@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { mockDegreeRequirements, mockMandatoryCourses } from "@/lib/mock-data"; // Assuming these are still relevant
-import { PlusCircle, Trash2, CalendarDays, ArrowRight, ChevronDown, ChevronUp, Eye } from "lucide-react"; // Lucide icons
+import { PlusCircle, Trash2, ArrowRight, ChevronDown, Eye } from "lucide-react"; // Lucide icons
 
 import CourseSearch from "./CourseSearch"; // Already Shadcn
 import ViewScheduleDialog from "./ViewScheduleDialog"; // Needs check, might be Bootstrap
@@ -72,12 +72,10 @@ const initialYearsData: YearData[] = [
 // Prop onAddSemester is not used in the provided React Bootstrap version, so it's removed for now.
 // If it's needed, it should be passed from Index.tsx and handled appropriately.
 const CourseDashboard: React.FC = () => {
-  const [showProgramDetails, setShowProgramDetails] = useState(false); // This state might be replaced by Accordion behavior
-  const [showMandatoryCourses, setShowMandatoryCourses] = useState(false); // This state might be replaced by Accordion behavior
   const [isCourseSearchOpen, setIsCourseSearchOpen] = useState(false);
   const [selectedSemesterId, setSelectedSemesterId] = useState(""); // Changed to selectedSemesterId for clarity
   const [isViewScheduleOpen, setIsViewScheduleOpen] = useState(false);
-  const [viewingSemester, setViewingSemester] = useState<SemesterData | null>(null);
+  const [viewingSemester] = useState<SemesterData | null>(null);
   const [yearsData, setYearsData] = useState<YearData[]>(initialYearsData);
   const [isAddSemesterDialogOpen, setIsAddSemesterDialogOpen] = useState(false);
   
@@ -86,13 +84,6 @@ const CourseDashboard: React.FC = () => {
   const handleOpenCourseSearch = (semesterId: string) => {
     setSelectedSemesterId(semesterId);
     setIsCourseSearchOpen(true);
-  };
-  
-  const handleViewSchedule = (semester: SemesterData) => {
-    // This function seems to be for a custom ViewScheduleDialog.
-    // For now, I will keep its logic, but the dialog itself might need review/refactor if it's Bootstrap-based.
-    setViewingSemester(semester);
-    setIsViewScheduleOpen(true); 
   };
   
   const handleOpenSchedulePage = (semesterId: string) => {
@@ -419,8 +410,8 @@ const CourseDashboard: React.FC = () => {
       )}
 
       <AddSemesterDialog
-        show={isAddSemesterDialogOpen} 
-        onHide={() => setIsAddSemesterDialogOpen(false)}
+        open={isAddSemesterDialogOpen} 
+        onOpenChange={setIsAddSemesterDialogOpen}
         onAddSemester={handleAddSemesterSubmit}
       />
     </div>

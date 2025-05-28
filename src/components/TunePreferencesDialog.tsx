@@ -1,116 +1,108 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Button, Form, Col } from 'react-bootstrap';
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useSchedule } from '@/contexts/ScheduleContext';
 import { TimePreference } from '@/lib/types';
-import { XCircle, Save } from 'lucide-react'; // Added XCircle, Save
+import { XCircle, Save } from 'lucide-react';
 
 interface TunePreferencesDialogProps {
-  show: boolean; // Changed from 'open'
-  onHide: () => void; // Changed from 'onOpenChange'
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-const TunePreferencesDialog: React.FC<TunePreferencesDialogProps> = ({ show, onHide }) => {
+const TunePreferencesDialog: React.FC<TunePreferencesDialogProps> = ({ open, onOpenChange }) => {
   const { schedulePreferences, updateSchedulePreferences } = useSchedule();
   
   const [localTimePreference, setLocalTimePreference] = useState<TimePreference>(schedulePreferences.timePreference);
   const [localAvoidFriday, setLocalAvoidFriday] = useState<boolean>(schedulePreferences.avoidFridayClasses);
 
   useEffect(() => {
-    if (show) {
+    if (open) {
       setLocalTimePreference(schedulePreferences.timePreference);
       setLocalAvoidFriday(schedulePreferences.avoidFridayClasses);
     }
-  }, [show, schedulePreferences]);
+  }, [open, schedulePreferences]);
 
   const handleSave = () => {
     updateSchedulePreferences({
       timePreference: localTimePreference,
       avoidFridayClasses: localAvoidFriday,
     });
-    onHide(); // Close dialog
+    onOpenChange(false); // Close dialog
   };
 
   return (
-    <Modal show={show} onHide={onHide} centered>
-      <Modal.Header closeButton>
-        <Modal.Title>Tune Schedule Preferences</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
-        <p className="mb-3">Adjust your preferences to help generate a schedule that works for you.</p>
-        <Form>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[480px]">
+        <DialogHeader>
+          <DialogTitle>Tune Schedule Preferences</DialogTitle>
+          <DialogDescription>
+            Adjust your preferences to help generate a schedule that works for you.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-6 py-4">
           {/* Time Preference Section */}
-          <Form.Group className="mb-3">
-            <Form.Label as="legend" column sm={12} className="font-semibold ps-0"> {/* ps-0 to align with checkbox group */}
-              Time Preference
-            </Form.Label>
-            <Col sm={{ span: 12 }}> {/* Making radio options full width for clarity */}
-              <Form.Check
-                type="radio"
-                label="No preference"
-                id="time-none"
-                value="none"
-                name="timePreferenceRadio"
-                checked={localTimePreference === 'none'}
-                onChange={(e) => setLocalTimePreference(e.target.value as TimePreference)}
-              />
-              <Form.Check
-                type="radio"
-                label="Prefer morning classes (until 12 PM)"
-                id="time-morning"
-                value="morning"
-                name="timePreferenceRadio"
-                checked={localTimePreference === 'morning'}
-                onChange={(e) => setLocalTimePreference(e.target.value as TimePreference)}
-              />
-              <Form.Check
-                type="radio"
-                label="Prefer afternoon classes (12 PM - 5 PM)"
-                id="time-afternoon"
-                value="afternoon"
-                name="timePreferenceRadio"
-                checked={localTimePreference === 'afternoon'}
-                onChange={(e) => setLocalTimePreference(e.target.value as TimePreference)}
-              />
-              <Form.Check
-                type="radio"
-                label="Prefer evening classes (after 5 PM)"
-                id="time-evening"
-                value="evening"
-                name="timePreferenceRadio"
-                checked={localTimePreference === 'evening'}
-                onChange={(e) => setLocalTimePreference(e.target.value as TimePreference)}
-              />
-            </Col>
-          </Form.Group>
+          <div>
+            <Label className="font-semibold">Time Preference</Label>
+            <RadioGroup
+              value={localTimePreference}
+              onValueChange={(value) => setLocalTimePreference(value as TimePreference)}
+              className="mt-2 space-y-2"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="none" id="time-none" />
+                <Label htmlFor="time-none">No preference</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="morning" id="time-morning" />
+                <Label htmlFor="time-morning">Prefer morning classes (until 12 PM)</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="afternoon" id="time-afternoon" />
+                <Label htmlFor="time-afternoon">Prefer afternoon classes (12 PM - 5 PM)</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="evening" id="time-evening" />
+                <Label htmlFor="time-evening">Prefer evening classes (after 5 PM)</Label>
+              </div>
+            </RadioGroup>
+          </div>
 
           {/* Day Preference Section */}
-          <Form.Group className="mb-3">
-            <Form.Label as="legend" column sm={12} className="font-semibold ps-0">
-              Day Preferences
-            </Form.Label>
-            <Col sm={{ span: 12 }}>
-              <Form.Check
-                type="checkbox"
-                label="Avoid Friday classes if possible"
+          <div>
+            <Label className="font-semibold">Day Preferences</Label>
+            <div className="mt-2 flex items-center space-x-2">
+              <Checkbox
                 id="avoid-friday"
                 checked={localAvoidFriday}
-                onChange={(e) => setLocalAvoidFriday(e.target.checked)}
+                onCheckedChange={(checked) => setLocalAvoidFriday(checked as boolean)}
               />
-            </Col>
-          </Form.Group>
-        </Form>
-      </Modal.Body>
-      <Modal.Footer>
-        <Button variant="outline-secondary" onClick={onHide} className="d-flex align-items-center">
-          <XCircle className="h-4 w-4 me-2" /> {/* Added XCircle icon, me-2 for margin */}
-          Cancel
-        </Button>
-        <Button variant="primary" onClick={handleSave} className="d-flex align-items-center">
-          <Save className="h-4 w-4 me-2" /> {/* Added Save icon, me-2 for margin */}
-          Save Preferences
-        </Button>
-      </Modal.Footer>
-    </Modal>
+              <Label htmlFor="avoid-friday">Avoid Friday classes if possible</Label>
+            </div>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="flex items-center">
+            <XCircle className="h-4 w-4 mr-2" />
+            Cancel
+          </Button>
+          <Button onClick={handleSave} className="flex items-center">
+            <Save className="h-4 w-4 mr-2" />
+            Save Preferences
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 

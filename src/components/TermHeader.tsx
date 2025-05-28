@@ -1,5 +1,4 @@
 
-import React from "react";
 import { useSchedule } from "@/contexts/ScheduleContext";
 import { Button } from "@/components/ui/button";
 import { CalendarIcon, ListIcon, ShoppingCartIcon } from "lucide-react";
@@ -12,7 +11,7 @@ interface TermHeaderProps {
 }
 
 const TermHeader = ({ view, setView }: TermHeaderProps) => {
-  const { currentTerm, moveToCart } = useSchedule();
+  const { currentTerm } = useSchedule();
   const navigate = useNavigate();
 
   if (!currentTerm) return null;

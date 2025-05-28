@@ -1,12 +1,14 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useSchedule } from "@/contexts/ScheduleContext";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertTriangle, ArrowLeft, Check, ShoppingCart, Trash2, ShieldCheck, CircleSlash } from "lucide-react"; // Added Trash2, ShieldCheck, CircleSlash
+import { AlertTriangle, ArrowLeft, Check, ShoppingCart, Trash2, ShieldCheck } from "lucide-react"; // Added Trash2, ShieldCheck, CircleSlash
 import { toast } from "sonner";
-import { Course, CourseSection, BusyTime, StudentInfo } from "@/lib/types"; // For validation function
+import { Course, CourseSection } from "@/lib/types"; // For validation function
 import { isSectionConflictWithBusyTimes, isSectionConflictWithOtherSections } from "@/contexts/ScheduleContextUtils"; // Import helpers
+import { mockCourses } from "@/lib/mock-data"; // Added mockCourses import
+import { cn } from "@/lib/utils"; // Added cn import
 
 // Define validation result types
 interface SectionValidationResult {
@@ -38,8 +40,8 @@ const RegistrationSummary = () => {
   const getCourseDetails = (section: CourseSection): Course | undefined => {
     const courseIdOrCode = section.id.split("-")[0];
     // Try finding in planningCourses first, then in allCatalogCourses
-    return planningCourses.find(c => c.id === courseIdOrCode || c.code === courseIdOrCode) || 
-           allCatalogCourses.find(c => c.id === courseIdOrCode || c.code === courseIdOrCode);
+    return planningCourses.find((c: Course) => c.id === courseIdOrCode || c.code === courseIdOrCode) || 
+           allCatalogCourses.find((c: Course) => c.id === courseIdOrCode || c.code === courseIdOrCode);
   };
 
 
@@ -211,7 +213,7 @@ const RegistrationSummary = () => {
                         )}
                       </div>
                       <div className="text-sm text-muted-foreground mt-0.5">
-                        Credits: {courseDetails?.credits || "N/A"}
+                        Credits: {courseDetails?.credits ?? "N/A"}
                       </div>
                       <div className="text-sm text-muted-foreground">
                         Section {section.sectionNumber} • CRN: {section.crn} • {section.instructor}
@@ -278,7 +280,7 @@ const RegistrationSummary = () => {
             size="lg"
             className="text-lg px-8 w-full sm:w-auto"
             onClick={handleCompleteRegistration}
-            disabled={validationResults && !validationResults.overallValid}
+            disabled={validationResults ? !validationResults.overallValid : true}
           >
             <ShoppingCart className="h-5 w-5 mr-2" />
             Complete Registration

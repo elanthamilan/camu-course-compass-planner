@@ -85,7 +85,7 @@ const CourseSearch: React.FC<CourseSearchProps> = ({ open, onOpenChange, termId 
   };
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange} direction="right"> {/* Changed Dialog to Drawer and added direction */}
+    <Drawer open={open} onOpenChange={onOpenChange}> {/* Changed Dialog to Drawer and added direction */}
       <DrawerContent className="sm:max-w-xl animate-slide-in-right"> {/* Adjusted className for drawer */}
         <DrawerHeader>
           <DrawerTitle className="text-xl">Search for courses to add in {termId.replace(/([A-Z])/g, ' $1').trim()}</DrawerTitle>
