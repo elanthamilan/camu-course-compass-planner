@@ -10,6 +10,7 @@ export interface Course {
   sections: CourseSection[];
   department: string;
   color?: string;
+  attributes?: string[]; // Added for course attributes
 }
 
 export interface CourseSection {
@@ -22,6 +23,8 @@ export interface CourseSection {
   availableSeats: number;
   waitlistCount?: number;
   sectionNumber: string;
+  locked?: boolean; // Added for lock status
+  sectionType?: 'Honors' | 'Lab' | 'Standard'; // Added for special section types
 }
 
 export interface SectionSchedule {

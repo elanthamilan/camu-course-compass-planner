@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { timeSlots, weekDays, busyTimeColors } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { Lock } from "lucide-react"; // Import Lock icon
 
 const ScheduleCalendarView = () => {
   const { selectedSchedule, busyTimes } = useSchedule();
@@ -42,7 +43,8 @@ const ScheduleCalendarView = () => {
             sectionId: section.id,
             instructor: section.instructor,
             location: schedule.location,
-            color: getCourseColor(courseCode)
+            color: getCourseColor(courseCode),
+            locked: section.locked // Pass locked status
           });
         }
       });
@@ -72,18 +74,27 @@ const ScheduleCalendarView = () => {
     });
   });
 
-  function getCourseColor(courseCode: string) {
-    if (courseCode.startsWith("CS")) return "course-cs";
-    if (courseCode.startsWith("MATH")) return "course-math";
-    if (courseCode.startsWith("ENG")) return "course-eng";
-    if (courseCode.startsWith("BIO")) return "course-bio";
-    if (courseCode.startsWith("CHEM")) return "course-chem";
-    if (courseCode.startsWith("PHYS")) return "course-phys";
-    if (courseCode.startsWith("PHIL")) return "course-phil";
-    if (courseCode.startsWith("UNIV")) return "course-univ";
-    if (courseCode.startsWith("ECON")) return "course-econ";
-    return "bg-gray-200";
+  function getCourseColorInfo(courseCode: string): { baseColor: string; backgroundClass: string; foregroundClass: string } {
+    let baseColor = "default";
+    if (courseCode.startsWith("CS")) baseColor = "cs";
+    else if (courseCode.startsWith("MATH")) baseColor = "math";
+    else if (courseCode.startsWith("ENG")) baseColor = "eng";
+    else if (courseCode.startsWith("BIO")) baseColor = "bio";
+    else if (courseCode.startsWith("CHEM")) baseColor = "chem";
+    else if (courseCode.startsWith("PHYS")) baseColor = "phys";
+    else if (courseCode.startsWith("PHIL")) baseColor = "phil";
+    else if (courseCode.startsWith("UNIV")) baseColor = "univ";
+    else if (courseCode.startsWith("ECON")) baseColor = "econ";
+    
+    return {
+      baseColor,
+      backgroundClass: `bg-course-${baseColor}`,
+      foregroundClass: `text-course-${baseColor}-foreground`,
+    };
   }
+  
+  const shortWeekDays = ["M", "T", "W", "Th", "F", "Sa", "Su"];
+
 
   return (
     <motion.div 
@@ -95,17 +106,18 @@ const ScheduleCalendarView = () => {
       <Card className="p-4 mb-4 overflow-auto border border-gray-200 rounded-xl shadow-sm">
         <div className="min-w-[900px]">
           {/* Calendar Header with Weekdays */}
-          <div className="grid grid-cols-[80px_repeat(7,1fr)] gap-1 mb-2">
-            <div className="text-center font-medium p-2 text-gray-500">Time</div>
-            {weekDays.map(day => (
+          <div className="grid grid-cols-[theme(spacing.16)_repeat(7,1fr)] sm:grid-cols-[theme(spacing.20)_repeat(7,1fr)] gap-1 mb-2"> {/* Responsive time column */}
+            <div className="text-center font-medium p-1 sm:p-2 text-gray-500 text-xs sm:text-sm">Time</div> {/* Responsive padding and text size */}
+            {weekDays.map((day, index) => (
               <motion.div 
                 key={day} 
-                className="text-center font-medium p-2 bg-gray-100 rounded-md"
+                className="text-center font-medium p-1 sm:p-2 bg-gray-100 rounded-md text-xs sm:text-sm" // Responsive padding and text size
                 initial={{ opacity: 0, y: -5 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: weekDays.indexOf(day) * 0.05 }}
+                transition={{ duration: 0.3, delay: index * 0.05 }}
               >
-                {day}
+                <span className="hidden sm:inline">{day}</span>
+                <span className="sm:hidden">{shortWeekDays[index]}</span> {/* Show short day names on small screens */}
               </motion.div>
             ))}
           </div>
@@ -114,13 +126,13 @@ const ScheduleCalendarView = () => {
           {timeSlots.map((timeSlot, index) => (
             <motion.div 
               key={timeSlot}
-              className="grid grid-cols-[80px_repeat(7,1fr)] gap-1 mb-1"
+              className="grid grid-cols-[theme(spacing.16)_repeat(7,1fr)] sm:grid-cols-[theme(spacing.20)_repeat(7,1fr)] gap-1 mb-1" // Responsive time column
               initial={{ opacity: 0, y: 5 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: index * 0.03 }}
             >
               {/* Time slot label */}
-              <div className="text-center text-sm font-medium flex items-center justify-center bg-gray-50 rounded-md text-gray-600">
+              <div className="text-center text-xs sm:text-sm font-medium flex items-center justify-center bg-gray-50 rounded-md text-gray-600"> {/* Responsive text size */}
                 {timeSlot}
               </div>
               
@@ -134,35 +146,34 @@ const ScheduleCalendarView = () => {
                   <div 
                     key={`${day}-${timeSlot}`}
                     className={cn(
-                      "p-0.5 rounded-lg border min-h-[70px] transition-all",
+                      "p-0.5 rounded-lg border min-h-[60px] sm:min-h-[70px] transition-all", // Responsive min-height
                       items.length > 0 ? "border-gray-300 shadow-sm" : "border-gray-100"
                     )}
                   >
                     {items.map((item: any, i: number) => {
                       if (item.type === 'course') {
+                        const colorInfo = getCourseColorInfo(item.courseCode);
                         return (
                           <motion.div 
                             key={`${item.courseCode}-${i}`}
                             className={cn(
-                              "p-1 text-xs rounded-md bg-opacity-90 h-full",
-                              `bg-${item.color}`,
-                              item.courseCode.startsWith("CS") && "bg-course-cs text-black",
-                              item.courseCode.startsWith("MATH") && "bg-course-math text-white",
-                              item.courseCode.startsWith("ENG") && "bg-course-eng text-white",
-                              item.courseCode.startsWith("PHYS") && "bg-course-phys text-black",
-                              item.courseCode.startsWith("CHEM") && "bg-course-chem text-white",
-                              item.courseCode.startsWith("BIO") && "bg-course-bio text-white",
-                              item.courseCode.startsWith("PHIL") && "bg-course-phil text-white",
-                              item.courseCode.startsWith("UNIV") && "bg-course-univ text-white",
-                              item.courseCode.startsWith("ECON") && "bg-course-econ text-white",
+                              "p-0.5 sm:p-1 text-xs rounded-md bg-opacity-90 h-full relative", // Responsive padding
+                              colorInfo.backgroundClass,
+                              colorInfo.foregroundClass
                             )}
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ duration: 0.3 }}
                           >
-                            <div className="font-semibold">{item.courseCode}</div>
-                            <div className="text-[10px] truncate">{item.instructor}</div>
-                            <div className="text-[10px] truncate">{item.location}</div>
+                            {item.locked && (
+                              <Lock 
+                                className="absolute top-0.5 right-0.5 h-3 w-3 sm:h-3.5 sm:w-3.5 text-white" // Adjusted for visibility
+                                style={{ filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.7))' }} // Drop shadow for better contrast
+                              />
+                            )}
+                            <div className="font-semibold text-[11px] sm:text-xs">{item.courseCode}</div> {/* Responsive text */}
+                            <div className="text-[9px] sm:text-[10px] truncate">{item.instructor}</div> {/* Responsive text */}
+                            <div className="text-[9px] sm:text-[10px] truncate">{item.location}</div> {/* Responsive text */}
                           </motion.div>
                         );
                       } else if (item.type === 'busy') {

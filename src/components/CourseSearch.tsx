@@ -1,15 +1,18 @@
 
 import React, { useState } from "react";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Drawer, DrawerContent, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"; // Changed Dialog to Drawer
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSchedule } from "@/contexts/ScheduleContext";
 import { Course } from "@/lib/types";
 import { mockCourses } from "@/lib/mock-data";
-import { Search, Check, Info } from "lucide-react";
+import { Search, Check, Info, PlusCircle, LogOut, Filter } from "lucide-react"; // Added Filter
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Checkbox } from "@/components/ui/checkbox"; // Added Checkbox
 import { cn } from "@/lib/utils";
+import { Label } from "@/components/ui/label"; // Added Label
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // Added Select
 
 interface CourseSearchProps {
   open: boolean;
@@ -21,23 +24,39 @@ const CourseSearch: React.FC<CourseSearchProps> = ({ open, onOpenChange, termId 
   const { addCourse } = useSchedule();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTab, setSelectedTab] = useState("required");
-  
-  // Filter courses based on search term
-  const filteredCourses = mockCourses.filter(course => 
-    course.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    course.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const [selectedAttributes, setSelectedAttributes] = useState<string[]>([]);
 
-  // Required courses for the student's degree (example)
-  const requiredCourses = [
+  const allAttributes = Array.from(new Set(mockCourses.flatMap(course => course.attributes || []))).sort();
+
+  const handleAttributeChange = (attribute: string) => {
+    setSelectedAttributes(prev =>
+      prev.includes(attribute)
+        ? prev.filter(attr => attr !== attribute)
+        : [...prev, attribute]
+    );
+  };
+  
+  // Filter courses based on search term and attributes
+  const filteredCourses = mockCourses.filter(course => {
+    const searchMatch = course.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        course.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const attributeMatch = selectedAttributes.length === 0 || 
+                           selectedAttributes.every(attr => course.attributes?.includes(attr));
+    return searchMatch && attributeMatch;
+  }).map(course => ({ ...course, description: course.description || "No description available." }));
+
+
+  // Required courses for the student's degree (example) - also apply attribute filtering
+  const requiredCourses = [ // This should ideally be fetched or dynamically determined based on degree requirements
     {
-      id: "cs202",
+      id: "cs202", // Mock data, should be filtered if attributes are applied globally
       code: "CS202",
       name: "Database Systems",
       credits: 3,
       department: "Core",
       prerequisites: ["cs101"],
-      sections: []
+      sections: [],
+      description: "Learn about database design, SQL, and data management." // Added mock description
     },
     {
       id: "math202",
@@ -46,7 +65,8 @@ const CourseSearch: React.FC<CourseSearchProps> = ({ open, onOpenChange, termId 
       credits: 4,
       department: "Math",
       prerequisites: ["math101"],
-      sections: []
+      sections: [],
+      description: "Continue your journey in calculus, exploring new concepts." // Added mock description
     },
     {
       id: "eng205",
@@ -55,7 +75,8 @@ const CourseSearch: React.FC<CourseSearchProps> = ({ open, onOpenChange, termId 
       credits: 3,
       department: "General",
       prerequisites: ["eng101"],
-      sections: []
+      sections: [],
+      description: "Develop skills in writing clear and effective technical documents." // Added mock description
     }
   ];
 
@@ -64,13 +85,13 @@ const CourseSearch: React.FC<CourseSearchProps> = ({ open, onOpenChange, termId 
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-xl animate-scale-in">
-        <DialogHeader>
-          <DialogTitle className="text-xl">Search for courses to add in {termId.replace(/([A-Z])/g, ' $1').trim()}</DialogTitle>
-        </DialogHeader>
+    <Drawer open={open} onOpenChange={onOpenChange} direction="right"> {/* Changed Dialog to Drawer and added direction */}
+      <DrawerContent className="sm:max-w-xl animate-slide-in-right"> {/* Adjusted className for drawer */}
+        <DrawerHeader>
+          <DrawerTitle className="text-xl">Search for courses to add in {termId.replace(/([A-Z])/g, ' $1').trim()}</DrawerTitle>
+        </DrawerHeader>
         
-        <div className="space-y-4">
+        <div className="space-y-4 p-4"> {/* Added padding for drawer content */}
           <div className="flex space-x-2">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
@@ -83,50 +104,92 @@ const CourseSearch: React.FC<CourseSearchProps> = ({ open, onOpenChange, termId 
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4"> {/* Responsive grid for selects */}
             <div>
-              <label className="text-sm font-medium">Days</label>
-              <select className="w-full rounded-md border border-gray-300 p-2">
-                <option>Mon - Sun, Any Day</option>
-                <option>Mon/Wed/Fri</option>
-                <option>Tue/Thu</option>
-                <option>Weekends Only</option>
-              </select>
+              <Label htmlFor="days-select" className="text-sm font-medium">Days</Label>
+              <Select defaultValue="any">
+                <SelectTrigger id="days-select" className="w-full mt-1">
+                  <SelectValue placeholder="Select days" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="any">Mon - Sun, Any Day</SelectItem>
+                  <SelectItem value="mwf">Mon/Wed/Fri</SelectItem>
+                  <SelectItem value="tth">Tue/Thu</SelectItem>
+                  <SelectItem value="wknd">Weekends Only</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div>
-              <label className="text-sm font-medium">Colleges</label>
-              <select className="w-full rounded-md border border-gray-300 p-2">
-                <option>All</option>
-                <option>College of Engineering</option>
-                <option>College of Liberal Arts</option>
-                <option>Business School</option>
-              </select>
+              <Label htmlFor="colleges-select" className="text-sm font-medium">Colleges</Label>
+              <Select defaultValue="all">
+                <SelectTrigger id="colleges-select" className="w-full mt-1">
+                  <SelectValue placeholder="Select college" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Colleges</SelectItem>
+                  <SelectItem value="eng">College of Engineering</SelectItem>
+                  <SelectItem value="la">College of Liberal Arts</SelectItem>
+                  <SelectItem value="biz">Business School</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
           
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4"> {/* Responsive grid for selects */}
             <div>
-              <label className="text-sm font-medium">Campuses</label>
-              <select className="w-full rounded-md border border-gray-300 p-2">
-                <option>All</option>
-                <option>Main Campus</option>
-                <option>North Campus</option>
-                <option>Downtown Campus</option>
-              </select>
+              <Label htmlFor="campuses-select" className="text-sm font-medium">Campuses</Label>
+              <Select defaultValue="all">
+                <SelectTrigger id="campuses-select" className="w-full mt-1">
+                  <SelectValue placeholder="Select campus" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Campuses</SelectItem>
+                  <SelectItem value="main">Main Campus</SelectItem>
+                  <SelectItem value="north">North Campus</SelectItem>
+                  <SelectItem value="downtown">Downtown Campus</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div>
-              <label className="text-sm font-medium">Locations</label>
-              <select className="w-full rounded-md border border-gray-300 p-2">
-                <option>All</option>
-                <option>Science Building</option>
-                <option>Liberal Arts Building</option>
-                <option>Business Building</option>
-              </select>
+              <Label htmlFor="locations-select" className="text-sm font-medium">Locations</Label>
+              <Select defaultValue="all">
+                <SelectTrigger id="locations-select" className="w-full mt-1">
+                  <SelectValue placeholder="Select location" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Locations</SelectItem>
+                  <SelectItem value="sci">Science Building</SelectItem>
+                  <SelectItem value="la-bldg">Liberal Arts Building</SelectItem>
+                  <SelectItem value="biz-bldg">Business Building</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Attribute Filters Section */}
+          <div className="mt-4 p-4 border rounded-md bg-gray-50/50">
+            <div className="flex items-center mb-3">
+              <Filter className="h-4 w-4 mr-2 text-gray-600" />
+              <h4 className="text-sm font-medium text-gray-700">Filter by Attributes</h4>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-2">
+              {allAttributes.map(attr => (
+                <div key={attr} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`attr-${attr}`}
+                    checked={selectedAttributes.includes(attr)}
+                    onCheckedChange={() => handleAttributeChange(attr)}
+                  />
+                  <Label htmlFor={`attr-${attr}`} className="text-xs font-normal text-gray-600 cursor-pointer">
+                    {attr}
+                  </Label>
+                </div>
+              ))}
             </div>
           </div>
 
           <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-            <TabsList className="w-full">
+            <TabsList className="w-full mt-4"> {/* Added mt-4 for spacing */}
               <TabsTrigger value="required" className="flex-1 relative">
                 <span className="flex items-center">
                   <Check size={16} className="mr-2" />
@@ -162,6 +225,7 @@ const CourseSearch: React.FC<CourseSearchProps> = ({ open, onOpenChange, termId 
                         <span className="ml-1 text-xs bg-gray-100 px-1 rounded text-gray-700">{course.credits}cr</span>
                       </div>
                       <h3 className="font-medium">{course.name}</h3>
+                      {course.description && <p className="text-xs text-gray-500 mt-1">{course.description}</p>} {/* Conditional display */}
                       {course.prerequisites && (
                         <div className="text-xs text-amber-600 flex items-center mt-1">
                           <span className="inline-block w-3 h-3 rounded-full bg-amber-400 mr-1"></span>
@@ -181,10 +245,11 @@ const CourseSearch: React.FC<CourseSearchProps> = ({ open, onOpenChange, termId 
                       </Tooltip>
                       
                       <Button 
-                        className="bg-blue-500 hover:bg-blue-600"
+                        variant="default" // Changed to default variant
                         size="sm"
                         onClick={() => handleAddCourse(course as unknown as Course)}
                       >
+                        <PlusCircle className="h-4 w-4 mr-1.5" />
                         Add
                       </Button>
                     </div>
@@ -206,6 +271,7 @@ const CourseSearch: React.FC<CourseSearchProps> = ({ open, onOpenChange, termId 
                         <span className="ml-1 text-xs bg-gray-100 px-1 rounded text-gray-700">{course.credits}cr</span>
                       </div>
                       <h3 className="font-medium">{course.name}</h3>
+                      {course.description && <p className="text-xs text-gray-500 mt-1">{course.description}</p>} {/* Conditional display */}
                       {course.prerequisites && (
                         <div className="text-xs text-amber-600 flex items-center mt-1">
                           <span className="inline-block w-3 h-3 rounded-full bg-amber-400 mr-1"></span>
@@ -225,10 +291,11 @@ const CourseSearch: React.FC<CourseSearchProps> = ({ open, onOpenChange, termId 
                       </Tooltip>
                       
                       <Button 
-                        className="bg-blue-500 hover:bg-blue-600"
+                        variant="default" // Changed to default variant
                         size="sm"
                         onClick={() => handleAddCourse(course)}
                       >
+                        <PlusCircle className="h-4 w-4 mr-1.5" />
                         Add
                       </Button>
                     </div>
@@ -239,11 +306,14 @@ const CourseSearch: React.FC<CourseSearchProps> = ({ open, onOpenChange, termId 
           </Tabs>
         </div>
         
-        <DialogFooter className="sm:justify-end">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Close</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        <DrawerFooter className="sm:justify-end p-4 border-t">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <LogOut className="h-4 w-4 mr-2" /> {/* Added LogOut icon */}
+            Close
+          </Button>
+        </DrawerFooter>
+      </DrawerContent>
+    </Drawer>
   );
 };
 

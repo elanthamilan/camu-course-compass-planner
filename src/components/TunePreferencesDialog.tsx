@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Button, Form, Col } from 'react-bootstrap'; // Removed Row as it's not strictly needed for this layout
+import { Modal, Button, Form, Col } from 'react-bootstrap';
 import { useSchedule } from '@/contexts/ScheduleContext';
 import { TimePreference } from '@/lib/types';
+import { XCircle, Save } from 'lucide-react'; // Added XCircle, Save
 
 interface TunePreferencesDialogProps {
   show: boolean; // Changed from 'open'
@@ -100,10 +101,12 @@ const TunePreferencesDialog: React.FC<TunePreferencesDialogProps> = ({ show, onH
         </Form>
       </Modal.Body>
       <Modal.Footer>
-        <Button variant="outline-secondary" onClick={onHide}>
+        <Button variant="outline-secondary" onClick={onHide} className="d-flex align-items-center">
+          <XCircle className="h-4 w-4 me-2" /> {/* Added XCircle icon, me-2 for margin */}
           Cancel
         </Button>
-        <Button variant="primary" onClick={handleSave}>
+        <Button variant="primary" onClick={handleSave} className="d-flex align-items-center">
+          <Save className="h-4 w-4 me-2" /> {/* Added Save icon, me-2 for margin */}
           Save Preferences
         </Button>
       </Modal.Footer>

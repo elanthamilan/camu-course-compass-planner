@@ -4,108 +4,109 @@ import { useSchedule } from "@/contexts/ScheduleContext";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+import { Lock } from "lucide-react"; // Import Lock icon
 
 const ScheduleListView = () => {
   const { selectedSchedule } = useSchedule();
 
   if (!selectedSchedule) return null;
 
-  function getCourseColor(courseCode: string) {
-    if (courseCode.startsWith("CS")) return "bg-course-cs";
-    if (courseCode.startsWith("MATH")) return "bg-course-math text-white";
-    if (courseCode.startsWith("ENG")) return "bg-course-eng text-white";
-    if (courseCode.startsWith("BIO")) return "bg-course-bio text-white";
-    if (courseCode.startsWith("CHEM")) return "bg-course-chem text-white";
-    if (courseCode.startsWith("PHYS")) return "bg-course-phys";
-    if (courseCode.startsWith("PHIL")) return "bg-course-phil text-white";
-    if (courseCode.startsWith("UNIV")) return "bg-course-univ text-white";
-    if (courseCode.startsWith("ECON")) return "bg-course-econ text-white";
-    return "";
+  function getCourseColorInfo(courseCode: string): { backgroundClass: string; foregroundClass: string } {
+    let baseColor = "default";
+    if (courseCode.startsWith("CS")) baseColor = "cs";
+    else if (courseCode.startsWith("MATH")) baseColor = "math";
+    else if (courseCode.startsWith("ENG")) baseColor = "eng";
+    else if (courseCode.startsWith("BIO")) baseColor = "bio";
+    else if (courseCode.startsWith("CHEM")) baseColor = "chem";
+    else if (courseCode.startsWith("PHYS")) baseColor = "phys";
+    else if (courseCode.startsWith("PHIL")) baseColor = "phil";
+    else if (courseCode.startsWith("UNIV")) baseColor = "univ";
+    else if (courseCode.startsWith("ECON")) baseColor = "econ";
+    
+    return {
+      backgroundClass: `bg-course-${baseColor}`,
+      foregroundClass: `text-course-${baseColor}-foreground`,
+    };
   }
 
   return (
-    <Card className="p-4 mb-4 overflow-hidden animate-fade-in">
-      <Table className="w-full">
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-[120px]">Course Code</TableHead>
-            <TableHead>Course Name</TableHead>
-            <TableHead className="w-[80px]">Class #</TableHead>
-            <TableHead className="w-[80px]">Credits</TableHead>
-            <TableHead className="w-[100px]">Section</TableHead>
-            <TableHead>Instructor</TableHead>
-            <TableHead>Schedule</TableHead>
-            <TableHead>Location</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {selectedSchedule.sections.map((section) => {
-            const courseCode = section.id.split("-")[0].toUpperCase();
-            const course = courseCode === "CS101" ? "Introduction to Computer Science" : 
-                            courseCode === "MATH105" ? "Pre-Calculus" :
-                            courseCode === "ENG234" ? "Composition II" :
-                            courseCode === "PHYS210" ? "Physics I: Mechanics" :
-                            courseCode === "PHIL101" ? "Introduction to Logic" :
-                            courseCode === "BIO101" ? "Introduction to Biology" :
-                            courseCode === "CHEM101" ? "General Chemistry" :
-                            courseCode === "UNIV100" ? "University Seminar" :
-                            courseCode === "ECON101" ? "Principles of Microeconomics" :
-                            "Unknown Course";
-            
-            const credits = courseCode === "UNIV100" ? "1" : 
-                            courseCode === "PHYS210" || courseCode === "BIO101" || courseCode === "CHEM101" ? "4" : "3";
-            
-            return (
-              <TableRow key={section.id} className="hover:bg-gray-50 transition-colors">
-                <TableCell>
-                  <span className={cn(
-                    "py-1 px-2 rounded text-sm font-medium",
-                    getCourseColor(courseCode)
-                  )}>
-                    {courseCode}
-                  </span>
-                </TableCell>
-                <TableCell>{course}</TableCell>
-                <TableCell>{section.crn}</TableCell>
-                <TableCell>{credits}</TableCell>
-                <TableCell>{section.sectionNumber}</TableCell>
-                <TableCell>{section.instructor}</TableCell>
-                <TableCell>
-                  {section.schedule.map((sch, i) => (
-                    <div key={i} className="mb-1 last:mb-0">
-                      <div className="text-sm">{sch.days}</div>
-                      <div className="text-xs text-gray-600">{sch.startTime} - {sch.endTime}</div>
-                    </div>
-                  ))}
-                </TableCell>
-                <TableCell>{section.location}</TableCell>
-              </TableRow>
-            );
-          })}
-          {/* Display busy times */}
-          {selectedSchedule.busyTimes.map((busyTime) => (
-            <TableRow key={busyTime.id} className="bg-gray-50/50">
-              <TableCell colSpan={2}>
-                <span className="font-medium text-gray-700">{busyTime.title}</span>
-              </TableCell>
-              <TableCell>-</TableCell>
-              <TableCell>-</TableCell>
-              <TableCell>-</TableCell>
-              <TableCell>-</TableCell>
-              <TableCell>
-                <div className="text-sm">{busyTime.days.join(", ")}</div>
-                <div className="text-xs text-gray-600">{busyTime.startTime} - {busyTime.endTime}</div>
-              </TableCell>
-              <TableCell>-</TableCell>
+    <Card className="p-2 sm:p-4 mb-4 overflow-hidden animate-fade-in"> {/* Responsive padding for card */}
+      <div className="overflow-x-auto"> {/* Wrapper for horizontal scrolling */}
+        <Table className="min-w-full sm:w-full"> {/* Ensure table takes at least full width or its own content width */}
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[120px] p-2 sm:p-4">Course Code</TableHead> {/* Responsive padding */}
+              <TableHead className="p-2 sm:p-4">Course Name</TableHead>
+              <TableHead className="w-[80px] p-2 sm:p-4">Class #</TableHead>
+              <TableHead className="w-[80px] p-2 sm:p-4">Credits</TableHead>
+              <TableHead className="w-[100px] p-2 sm:p-4">Section</TableHead>
+              <TableHead className="p-2 sm:p-4">Instructor</TableHead>
+              <TableHead className="p-2 sm:p-4">Schedule</TableHead>
+              <TableHead className="p-2 sm:p-4">Location</TableHead>
             </TableRow>
-          ))}
-          <TableRow className="bg-gray-100 font-medium">
-            <TableCell colSpan={3} className="text-right">Total Credits:</TableCell>
-            <TableCell>{selectedSchedule.totalCredits}</TableCell>
-            <TableCell colSpan={4}></TableCell>
-          </TableRow>
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {selectedSchedule.sections.map((section) => {
+              const courseCode = section.id.split("-")[0].toUpperCase();
+              // This mapping should ideally come from the Course objects in context for accuracy
+              const courseDetails = selectedSchedule.courses?.find(c => c.code === courseCode) || 
+                                  { name: "Unknown Course", credits: section.credits || 0 }; // Fallback
+              const colorInfo = getCourseColorInfo(courseCode);
+              
+              return (
+                <TableRow key={section.id} className="hover:bg-muted/50 transition-colors text-xs sm:text-sm"> {/* Responsive text */}
+                  <TableCell className="p-2 sm:p-4 font-medium">
+                    <span className={cn(
+                      "py-1 px-2 rounded text-xs sm:text-sm font-medium flex items-center w-fit", // w-fit for badge-like width
+                      colorInfo.backgroundClass,
+                      colorInfo.foregroundClass
+                    )}>
+                      {section.locked && <Lock className="h-3 w-3 mr-1.5 flex-shrink-0" />}
+                      {courseCode}
+                    </span>
+                  </TableCell>
+                  <TableCell className="p-2 sm:p-4">{courseDetails.name}</TableCell>
+                  <TableCell className="p-2 sm:p-4">{section.crn}</TableCell>
+                  <TableCell className="p-2 sm:p-4">{courseDetails.credits}</TableCell>
+                  <TableCell className="p-2 sm:p-4">{section.sectionNumber}</TableCell>
+                  <TableCell className="p-2 sm:p-4">{section.instructor}</TableCell>
+                  <TableCell className="p-2 sm:p-4">
+                    {section.schedule.map((sch, i) => (
+                      <div key={i} className="mb-1 last:mb-0">
+                        <div className="text-xs sm:text-sm">{sch.days}</div>
+                        <div className="text-[10px] sm:text-xs text-muted-foreground">{sch.startTime} - {sch.endTime}</div> {/* Use muted-foreground */}
+                      </div>
+                    ))}
+                  </TableCell>
+                  <TableCell className="p-2 sm:p-4">{section.location}</TableCell>
+                </TableRow>
+              );
+            })}
+            {/* Display busy times */}
+            {selectedSchedule.busyTimes.map((busyTime) => (
+              <TableRow key={busyTime.id} className="bg-muted/30 hover:bg-muted/50 text-xs sm:text-sm">
+                <TableCell className="p-2 sm:p-4" colSpan={2}>
+                  <span className="font-medium text-foreground">{busyTime.title} (Busy)</span>
+                </TableCell>
+                <TableCell className="p-2 sm:p-4 text-muted-foreground">-</TableCell>
+                <TableCell className="p-2 sm:p-4 text-muted-foreground">-</TableCell>
+                <TableCell className="p-2 sm:p-4 text-muted-foreground">-</TableCell>
+                <TableCell className="p-2 sm:p-4 text-muted-foreground">-</TableCell>
+                <TableCell className="p-2 sm:p-4">
+                  <div className="text-xs sm:text-sm">{busyTime.days.join(", ")}</div>
+                  <div className="text-[10px] sm:text-xs text-muted-foreground">{busyTime.startTime} - {busyTime.endTime}</div>
+                </TableCell>
+                <TableCell className="p-2 sm:p-4 text-muted-foreground">-</TableCell>
+              </TableRow>
+            ))}
+            <TableRow className="bg-muted font-semibold text-xs sm:text-sm">
+              <TableCell className="p-2 sm:p-4 text-right" colSpan={3}>Total Credits:</TableCell>
+              <TableCell className="p-2 sm:p-4">{selectedSchedule.totalCredits}</TableCell>
+              <TableCell className="p-2 sm:p-4" colSpan={4}></TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </div>
     </Card>
   );
 };

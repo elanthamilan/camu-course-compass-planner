@@ -9,9 +9,11 @@ export const mockCourses: Course[] = [
     credits: 3,
     department: "Computer Science",
     color: "#FFA726",
+    attributes: ["Technical", "Introductory"], // Added attributes
     sections: [
       {
         id: "cs101-001",
+        sectionType: "Lab", // Added sectionType
         crn: "12345",
         instructor: "Dr. John Smith",
         sectionNumber: "001",
@@ -20,7 +22,8 @@ export const mockCourses: Course[] = [
         ],
         location: "North Campus",
         maxSeats: 30,
-        availableSeats: 5
+        availableSeats: 5,
+        locked: true // Added lock status
       },
       {
         id: "cs101-002",
@@ -43,9 +46,11 @@ export const mockCourses: Course[] = [
     credits: 3,
     department: "Mathematics",
     color: "#EF5350",
+    attributes: ["Quantitative Reasoning", "Introductory"], // Added attributes
     sections: [
       {
         id: "math105-001",
+        sectionType: "Standard", // Added sectionType
         crn: "23451",
         instructor: "Dr. Robert Johnson",
         sectionNumber: "001",
@@ -66,7 +71,8 @@ export const mockCourses: Course[] = [
         ],
         location: "Main Campus",
         maxSeats: 35,
-        availableSeats: 3
+        availableSeats: 3,
+        locked: true // Added lock status
       }
     ]
   },
@@ -78,9 +84,11 @@ export const mockCourses: Course[] = [
     prerequisites: ["eng101"],
     department: "English",
     color: "#42A5F5",
+    attributes: ["Humanities", "Writing Intensive"], // Added attributes
     sections: [
       {
         id: "eng234-001",
+        sectionType: "Standard", // Added sectionType
         crn: "34551",
         instructor: "Prof. Mark Antony",
         sectionNumber: "001",
@@ -101,7 +109,8 @@ export const mockCourses: Course[] = [
         ],
         location: "East Campus",
         maxSeats: 25,
-        availableSeats: 4
+        availableSeats: 4,
+        sectionType: "Honors" // Added sectionType
       }
     ]
   },
@@ -113,9 +122,11 @@ export const mockCourses: Course[] = [
     corequisites: ["math201"],
     department: "Physics",
     color: "#26C6DA",
+    attributes: ["Natural Science", "Lab Science", "Quantitative Reasoning"], // Added attributes
     sections: [
       {
         id: "phys210-001",
+        sectionType: "Lab", // Added sectionType
         crn: "45151",
         instructor: "Dr. Albert Newton",
         sectionNumber: "001",
@@ -136,9 +147,11 @@ export const mockCourses: Course[] = [
     credits: 3,
     department: "Philosophy",
     color: "#EC407A",
+    attributes: ["Humanities", "Critical Thinking"], // Added attributes
     sections: [
       {
         id: "phil101-001",
+        sectionType: "Standard", // Added sectionType
         crn: "51231",
         instructor: "Dr. Sophie Wisdom",
         sectionNumber: "001",
@@ -158,9 +171,11 @@ export const mockCourses: Course[] = [
     credits: 4,
     department: "Biology",
     color: "#66BB6A",
+    attributes: ["Natural Science", "Lab Science"], // Added attributes
     sections: [
       {
         id: "bio101-001",
+        sectionType: "Lab", // Added sectionType
         crn: "61425",
         instructor: "Dr. Gene Splicing",
         sectionNumber: "001",
@@ -182,9 +197,11 @@ export const mockCourses: Course[] = [
     credits: 4,
     department: "Chemistry",
     color: "#AB47BC",
+    attributes: ["Natural Science", "Lab Science"], // Added attributes
     sections: [
       {
         id: "chem101-001",
+        sectionType: "Lab", // Added sectionType
         crn: "71523",
         instructor: "Dr. Molecule",
         sectionNumber: "001",
@@ -205,9 +222,11 @@ export const mockCourses: Course[] = [
     credits: 1,
     department: "University",
     color: "#7E57C2",
+    attributes: ["Introductory", "University Requirement"], // Added attributes
     sections: [
       {
         id: "univ100-001",
+        sectionType: "Standard", // Added sectionType
         crn: "81625",
         instructor: "Dr. Campus Guide",
         sectionNumber: "001",
@@ -227,9 +246,11 @@ export const mockCourses: Course[] = [
     credits: 3,
     department: "Economics",
     color: "#FF7043",
+    attributes: ["Social Science", "Quantitative Reasoning"], // Added attributes
     sections: [
       {
         id: "econ101-001",
+        sectionType: "Standard", // Added sectionType
         crn: "91725",
         instructor: "Dr. Market",
         sectionNumber: "001",

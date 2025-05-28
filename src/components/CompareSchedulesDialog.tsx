@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSchedule } from "@/contexts/ScheduleContext";
 import { Schedule } from "@/lib/types";
-import { AlertTriangle, CheckCircle2 } from "lucide-react";
+import { AlertTriangle, CheckCircle2, CheckCircle, ArrowRight, ArrowLeft } from "lucide-react"; // Added CheckCircle, ArrowRight, ArrowLeft
 import ScheduleCompareView from "./ScheduleCompareView";
 import CompareCalendarView from "./CompareCalendarView";
 import { cn } from "@/lib/utils";
@@ -112,13 +112,15 @@ const CompareSchedulesDialog: React.FC<CompareSchedulesDialogProps> = ({ open, o
                     {selectedSchedules.includes(schedule.id) && (
                       <div className="mt-3">
                         <Button 
+                          variant="default" // Changed to default variant
                           size="sm" 
-                          className="w-full bg-blue-500 hover:bg-blue-600"
+                          className="w-full" // Removed explicit bg colors
                           onClick={(e) => {
                             e.stopPropagation();
                             handleApplySchedule(schedule.id);
                           }}
                         >
+                          <CheckCircle className="h-4 w-4 mr-2" /> {/* Added CheckCircle icon */}
                           Apply this schedule
                         </Button>
                       </div>
@@ -132,6 +134,7 @@ const CompareSchedulesDialog: React.FC<CompareSchedulesDialogProps> = ({ open, o
                   onClick={handleNextStep}
                   disabled={selectedSchedules.length < 2}
                 >
+                  <ArrowRight className="h-4 w-4 mr-2" /> {/* Added ArrowRight icon */}
                   Compare {selectedSchedules.length} schedules
                 </Button>
               </div>
@@ -140,6 +143,7 @@ const CompareSchedulesDialog: React.FC<CompareSchedulesDialogProps> = ({ open, o
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <Button variant="outline" size="sm" onClick={handleBack}>
+                  <ArrowLeft className="h-4 w-4 mr-2" /> {/* Added ArrowLeft icon */}
                   Back to selection
                 </Button>
                 

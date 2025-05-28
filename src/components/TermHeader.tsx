@@ -18,14 +18,16 @@ const TermHeader = ({ view, setView }: TermHeaderProps) => {
   if (!currentTerm) return null;
 
   return (
-    <div className="flex items-center justify-between mb-6 animate-fade-in">
+    // Responsive flex layout: stacks on small screens, row on sm and up
+    <div className="flex flex-col space-y-4 sm:flex-row sm:space-y-0 items-center justify-between mb-6 animate-fade-in">
       <div>
-        <h2 className="text-2xl font-semibold">{currentTerm.name}</h2>
+        <h2 className="text-2xl font-semibold text-center sm:text-left">{currentTerm.name}</h2> {/* Centered on small, left on sm+ */}
       </div>
 
-      <div className="flex items-center space-x-4">
-        <Tabs value={view} onValueChange={setView} className="animate-scale-in">
-          <TabsList>
+      {/* Group Tabs and Button for better responsive layout if needed */}
+      <div className="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:items-center sm:space-x-4 w-full sm:w-auto">
+        <Tabs value={view} onValueChange={setView} className="animate-scale-in w-full sm:w-auto">
+          <TabsList className="grid grid-cols-2 w-full sm:w-auto"> {/* Ensure tabs fill width on small screens */}
             <TabsTrigger value="calendar" className="flex items-center">
               <CalendarIcon className="mr-1 h-4 w-4" />
               Calendar
@@ -38,7 +40,8 @@ const TermHeader = ({ view, setView }: TermHeaderProps) => {
         </Tabs>
 
         <Button 
-          className="bg-blue-500 hover:bg-blue-600 transition-all duration-200 animate-scale-in"
+          variant="default" // Changed to default variant
+          className="transition-all duration-200 animate-scale-in w-full sm:w-auto" // Full width on small, auto on sm+
           onClick={() => navigate("/cart")}
         >
           <ShoppingCartIcon className="mr-2 h-4 w-4" />

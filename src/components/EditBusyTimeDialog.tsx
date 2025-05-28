@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useSchedule } from "@/contexts/ScheduleContext";
 import { BusyTime, BusyTimeType } from "@/lib/types";
 import { Checkbox } from "@/components/ui/checkbox";
+import { XCircle, Save } from "lucide-react"; // Added XCircle, Save
 
 interface EditBusyTimeDialogProps {
   busyTime: BusyTime | null;
@@ -178,9 +179,13 @@ const EditBusyTimeDialog: React.FC<EditBusyTimeDialogProps> = ({ busyTime, open,
               onClick={() => onOpenChange(false)}
               className="focus-ring"
             >
+              <XCircle className="h-4 w-4 mr-2" />
               Cancel
             </Button>
-            <Button type="submit" className="focus-ring">Update Busy Time</Button>
+            <Button type="submit" className="focus-ring">
+              <Save className="h-4 w-4 mr-2" />
+              Update Busy Time
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

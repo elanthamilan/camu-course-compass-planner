@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar } from "@/components/ui/avatar";
 import { useSchedule } from "@/contexts/ScheduleContext";
 import { cn } from "@/lib/utils";
-import { Send } from "lucide-react";
+import { Send, LogOut } from "lucide-react"; // Added LogOut
 
 interface AIAdvisorProps {
   open: boolean;
@@ -190,6 +190,7 @@ const AIAdvisor: React.FC<AIAdvisorProps> = ({ open, onOpenChange }) => {
             Your AI advisor has access to your academic record and program requirements.
           </div>
           <Button variant="outline" onClick={() => onOpenChange(false)} className="text-sm">
+            <LogOut className="h-4 w-4 mr-2" /> {/* Added LogOut icon */}
             Close
           </Button>
         </DialogFooter>

@@ -9,6 +9,7 @@ import { useSchedule } from "@/contexts/ScheduleContext";
 import { BusyTime, BusyTimeType } from "@/lib/types";
 import { Checkbox } from "@/components/ui/checkbox";
 import { v4 as uuidv4 } from 'uuid';
+import { XCircle, PlusCircle } from "lucide-react"; // Added XCircle, PlusCircle
 
 interface AddBusyTimeDialogProps {
   open: boolean;
@@ -170,9 +171,13 @@ const AddBusyTimeDialog: React.FC<AddBusyTimeDialogProps> = ({ open, onOpenChang
               }}
               className="focus-ring"
             >
+              <XCircle className="h-4 w-4 mr-2" />
               Cancel
             </Button>
-            <Button type="submit" className="focus-ring">Add Busy Time</Button>
+            <Button type="submit" className="focus-ring">
+              <PlusCircle className="h-4 w-4 mr-2" />
+              Add Busy Time
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
