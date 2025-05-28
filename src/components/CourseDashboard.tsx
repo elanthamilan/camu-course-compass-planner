@@ -1,17 +1,13 @@
-
 import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
+import { Container, Row, Col, Card, Button, ProgressBar, Form, Accordion, ListGroup, Badge } from "react-bootstrap";
 import { mockDegreeRequirements, mockMandatoryCourses } from "@/lib/mock-data";
-import { ChevronDown, ChevronUp, Plus, Trash, Calendar, ArrowRight } from "lucide-react";
+import { PlusLg, Trash, CalendarWeek, ArrowRight, ChevronDown, ChevronUp } from "react-bootstrap-icons";
 import CourseSearch from "./CourseSearch";
 import ViewScheduleDialog from "./ViewScheduleDialog";
-import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
-import AddSemesterDialog from "./AddSemesterDialog"; // Import the new dialog
+import AddSemesterDialog from "./AddSemesterDialog";
 
-// Define types for better state management (can be moved to types.ts if used elsewhere)
+// Define types (assuming these are correct from previous steps)
 interface CourseData {
   id: string;
   code: string;
@@ -19,7 +15,7 @@ interface CourseData {
   credits: number;
   days: string;
   time: string;
-  prerequisites?: string[]; // Assuming this was the change from the previous subtask
+  prerequisites?: string[];
 }
 
 interface SemesterData {
@@ -31,98 +27,52 @@ interface SemesterData {
 
 interface YearData {
   year: string;
-  credits: number;
-  schedules: number;
+  // 'credits' and 'schedules' in YearData seem to be aggregates, can be calculated or kept if updated properly
+  credits: number; // This might represent total possible credits or planned credits for the year
+  schedules: number; // Number of generated/saved schedules for this year's plan
   semesters: SemesterData[];
 }
 
 const initialYearsData: YearData[] = [
   {
     year: "2024 - 2025",
-      credits: 30,
-      schedules: 13,
-      semesters: [
-        {
-          id: "Summer2024",
-          name: "Summer 2024",
-          creditsSelected: 9,
-          courses: [
-            { id: "cs101", code: "CS101", name: "Introduction to Computer Science", credits: 3, days: "MWF", time: "09:00", prerequisites: [] },
-            { id: "math105", code: "MATH105", name: "Pre-Calculus", credits: 3, days: "MWF", time: "08:00", prerequisites: [] },
-            { id: "eng234", code: "ENG234", name: "Composition II", credits: 3, days: "MW", time: "10:00", prerequisites: ["ENG100"] }
-          ]
-        },
-        {
-          id: "Fall2024",
-          name: "Fall 2024",
-          creditsSelected: 11,
-          courses: [
-            { id: "phys210", code: "PHYS210", name: "Physics I: Mechanics", credits: 4, days: "MWF", time: "13:00", prerequisites: [] },
-            { id: "phil101", code: "PHIL101", name: "Introduction to Logic", credits: 3, days: "MWF", time: "11:00", prerequisites: [] },
-            { id: "univ100", code: "UNIV100", name: "University Seminar", credits: 1, days: "W", time: "14:00", prerequisites: [] }
-          ]
-        },
-        {
-          id: "Spring2025",
-          name: "Spring 2025",
-          creditsSelected: 10,
-          courses: [
-            { id: "econ101", code: "ECON101", name: "Principles of Microeconomics", credits: 3, days: "MWF", time: "10:00", prerequisites: [] },
-            { id: "bio101", code: "BIO101", name: "Introduction to Biology", credits: 4, days: "MWF", time: "09:00", prerequisites: [] },
-            { id: "chem101", code: "CHEM101", name: "General Chemistry", credits: 4, days: "MWF", time: "13:00", prerequisites: [] }
-          ]
-        }
-      ]
-    },
-    {
-      year: "2025 - 2026",
-      credits: 32,
-      schedules: 8,
-      semesters: [
-        {
-          id: "Summer2025",
-          name: "Summer 2025",
-          creditsSelected: 7,
-          courses: [
-            { id: "cs101-2", code: "CS101", name: "Introduction to Computer Science", credits: 3, days: "MWF", time: "09:00", prerequisites: [] },
-            { id: "phys210-2", code: "PHYS210", name: "Physics I: Mechanics", credits: 4, days: "MWF", time: "13:00", prerequisites: ["MATH105"] }
-          ]
-        },
-        {
-          id: "Fall2025",
-          name: "Fall 2025",
-          creditsSelected: 10,
-          courses: [
-            { id: "math105-2", code: "MATH105", name: "Pre-Calculus", credits: 3, days: "MWF", time: "08:00", prerequisites: [] },
-            { id: "phil101-2", code: "PHIL101", name: "Introduction to Logic", credits: 3, days: "MWF", time: "11:00", prerequisites: [] },
-            { id: "bio101-2", code: "BIO101", name: "Introduction to Biology", credits: 4, days: "MWF", time: "09:00", prerequisites: ["CHEM101"] }
-          ]
-        },
-        {
-          id: "Spring2026",
-          name: "Spring 2026",
-          creditsSelected: 15,
-          courses: [
-            { id: "eng234-2", code: "ENG234", name: "Composition II", credits: 3, days: "MW", time: "10:00", prerequisites: ["ENG233"] },
-            { id: "univ100-2", code: "UNIV100", name: "University Seminar", credits: 1, days: "W", time: "14:00", prerequisites: [] },
-            { id: "chem101-2", code: "CHEM101", name: "General Chemistry", credits: 4, days: "MWF", time: "13:00", prerequisites: [] }
-          ]
-        }
-      ]
-    }
+    credits: 30, // Example: total credits planned this year
+    schedules: 13,
+    semesters: [
+      {
+        id: "Summer2024", name: "Summer 2024", creditsSelected: 9, courses: [
+          { id: "cs101", code: "CS101", name: "Introduction to Computer Science", credits: 3, days: "MWF", time: "09:00", prerequisites: [] },
+          { id: "math105", code: "MATH105", name: "Pre-Calculus", credits: 3, days: "MWF", time: "08:00", prerequisites: [] },
+          { id: "eng234", code: "ENG234", name: "Composition II", credits: 3, days: "MW", time: "10:00", prerequisites: ["ENG100"] }
+        ]
+      },
+      {
+        id: "Fall2024", name: "Fall 2024", creditsSelected: 11, courses: [
+          { id: "phys210", code: "PHYS210", name: "Physics I: Mechanics", credits: 4, days: "MWF", time: "13:00", prerequisites: [] },
+          { id: "phil101", code: "PHIL101", name: "Introduction to Logic", credits: 3, days: "MWF", time: "11:00", prerequisites: [] },
+          { id: "univ100", code: "UNIV100", name: "University Seminar", credits: 1, days: "W", time: "14:00", prerequisites: [] }
+        ]
+      },
+      {
+        id: "Spring2025", name: "Spring 2025", creditsSelected: 10, courses: [
+          { id: "econ101", code: "ECON101", name: "Principles of Microeconomics", credits: 3, days: "MWF", time: "10:00", prerequisites: [] },
+          { id: "bio101", code: "BIO101", name: "Introduction to Biology", credits: 4, days: "MWF", time: "09:00", prerequisites: [] },
+          { id: "chem101", code: "CHEM101", name: "General Chemistry", credits: 4, days: "MWF", time: "13:00", prerequisites: [] }
+        ]
+      }
+    ]
+  },
+  // ... other years if any
 ];
 
-interface CourseDashboardProps {
-  onAddSemesterButtonClickProp?: () => void; // Renamed, optional if not used by parent
-}
 
-const CourseDashboard: React.FC<CourseDashboardProps> = ({ onAddSemesterButtonClickProp }) => {
+const CourseDashboard: React.FC = () => {
   const [showProgramDetails, setShowProgramDetails] = useState(false);
   const [showMandatoryCourses, setShowMandatoryCourses] = useState(false);
   const [isCourseSearchOpen, setIsCourseSearchOpen] = useState(false);
   const [selectedSemester, setSelectedSemester] = useState("");
   const [isViewScheduleOpen, setIsViewScheduleOpen] = useState(false);
-  const [viewingSemester, setViewingSemester] = useState<any>(null); // Consider using SemesterData type
+  const [viewingSemester, setViewingSemester] = useState<SemesterData | null>(null);
   const [yearsData, setYearsData] = useState<YearData[]>(initialYearsData);
   const [isAddSemesterDialogOpen, setIsAddSemesterDialogOpen] = useState(false);
   
@@ -133,7 +83,7 @@ const CourseDashboard: React.FC<CourseDashboardProps> = ({ onAddSemesterButtonCl
     setIsCourseSearchOpen(true);
   };
   
-  const handleViewSchedule = (semester: SemesterData) => { // Use SemesterData type
+  const handleViewSchedule = (semester: SemesterData) => {
     setViewingSemester(semester);
     setIsViewScheduleOpen(true);
   };
@@ -143,28 +93,20 @@ const CourseDashboard: React.FC<CourseDashboardProps> = ({ onAddSemesterButtonCl
   };
 
   const handleDeleteCourse = (semesterId: string, courseId: string) => {
-    console.log(`Deleting course ${courseId} from semester ${semesterId}`);
     setYearsData(prevYearsData => prevYearsData.map(year => ({
       ...year,
       semesters: year.semesters.map(semester => {
         if (semester.id === semesterId) {
+          const updatedCourses = semester.courses.filter(course => course.id !== courseId);
           return {
             ...semester,
-            courses: semester.courses.filter(course => course.id !== courseId),
-            creditsSelected: semester.courses.filter(course => course.id !== courseId).reduce((acc, curr) => acc + curr.credits, 0)
+            courses: updatedCourses,
+            creditsSelected: updatedCourses.reduce((acc, curr) => acc + curr.credits, 0)
           };
         }
         return semester;
       })
     })));
-  };
-
-  const handleViewDetails = (section: string) => {
-    if (section === "program") {
-      setShowProgramDetails(!showProgramDetails);
-    } else if (section === "mandatory") {
-      setShowMandatoryCourses(!showMandatoryCourses);
-    }
   };
 
   const handleOpenAddSemesterDialog = () => {
@@ -178,10 +120,7 @@ const CourseDashboard: React.FC<CourseDashboardProps> = ({ onAddSemesterButtonCl
     const semesterId = `${semesterType}${dialogYearStr}`;
 
     const newSemester: SemesterData = {
-      id: semesterId,
-      name: semesterName,
-      creditsSelected: 0,
-      courses: [],
+      id: semesterId, name: semesterName, creditsSelected: 0, courses: [],
     };
 
     setYearsData(prevYearsData => {
@@ -189,270 +128,254 @@ const CourseDashboard: React.FC<CourseDashboardProps> = ({ onAddSemesterButtonCl
       const yearIndex = updatedYearsData.findIndex(y => y.year === academicYearStr);
 
       if (yearIndex > -1) {
-        // Check if semester type already exists for that year
         const yearToUpdate = updatedYearsData[yearIndex];
         const semesterExists = yearToUpdate.semesters.some(s => s.name.startsWith(semesterType));
         if (!semesterExists) {
           yearToUpdate.semesters.push(newSemester);
-          // Sort semesters: Spring, Summer, Fall
-          const semesterOrder = ["Spring", "Summer", "Fall"];
+          const semesterOrder = ["Spring", "Summer", "Fall"]; // Spring < Summer < Fall
           yearToUpdate.semesters.sort((a, b) => {
             const typeA = a.name.split(" ")[0];
             const typeB = b.name.split(" ")[0];
+            const yearNumA = parseInt(a.name.split(" ")[1]);
+            const yearNumB = parseInt(b.name.split(" ")[1]);
+            if (yearNumA !== yearNumB) return yearNumA - yearNumB;
             return semesterOrder.indexOf(typeA) - semesterOrder.indexOf(typeB);
           });
         } else {
-          // Optionally, alert the user or handle as per specific requirements
           console.warn(`Semester ${semesterType} already exists for year ${academicYearStr}`);
         }
       } else {
         updatedYearsData.push({
-          year: academicYearStr,
-          credits: 0,
-          schedules: 0,
-          semesters: [newSemester],
+          year: academicYearStr, credits: 0, schedules: 0, semesters: [newSemester],
         });
       }
-      // Sort years
       updatedYearsData.sort((a,b) => a.year.localeCompare(b.year));
       return updatedYearsData;
     });
-    setIsAddSemesterDialogOpen(false); // Close dialog
+    setIsAddSemesterDialogOpen(false);
+  };
+
+  // Helper to get status badge variant
+  const getStatusVariant = (status: string) => {
+    if (status === "Completed") return "success";
+    if (status === "In Progress") return "primary";
+    return "secondary";
   };
 
   return (
-    <div className="animate-fade-in">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        {/* Program Credits Card */}
-        <Card className="shadow-sm hover:shadow-md transition-shadow">
-          <CardHeader className="pb-2">
-            <div className="flex justify-between items-center">
-              <div className="flex items-baseline space-x-2">
-                <CardTitle className="text-3xl font-bold">58</CardTitle>
-                <span className="text-gray-500 text-sm">62/120</span>
+    <Container fluid className="py-3">
+      <Row className="mb-4 g-3"> {/* g-3 for gap */}
+        <Col md={6}>
+          <Card className="shadow-sm">
+            <Card.Header className="pb-2 d-flex justify-content-between align-items-center">
+              <div>
+                <div className="d-flex align-items-baseline">
+                  <Card.Title as="h2" className="mb-0 me-2" style={{fontSize: '1.75rem', fontWeight: 'bold'}}>58</Card.Title>
+                  <span className="text-muted small">62/120</span>
+                </div>
+                <p className="text-muted mb-0 mt-1">Program credits left</p>
               </div>
-              <Button 
-                variant="outline"
-                size="sm"
-                className="text-blue-500 border-blue-200 hover:text-blue-700 hover:bg-blue-50 hover:border-blue-300 transition-colors"
-                onClick={() => handleViewDetails("program")}
-              >
+              <Button variant="outline-primary" size="sm" onClick={() => setShowProgramDetails(!showProgramDetails)}>
                 {showProgramDetails ? "Hide details" : "View details"}
               </Button>
-            </div>
-            <div className="text-gray-700 font-medium mt-1">Program credits left</div>
-            <Progress value={62} max={120} className="h-2 mt-2" />
-          </CardHeader>
-          
-          {showProgramDetails && (
-            <CardContent>
-              <h3 className="font-semibold mb-3">Program Credits Breakdown</h3>
-              <div className="space-y-3">
-                {mockDegreeRequirements.map(req => (
-                  <div key={req.id} className="flex justify-between items-center">
-                    <span>{req.name}</span>
-                    <span className="text-gray-600">
-                      {Math.round(req.requiredCredits * req.progress)}/{req.requiredCredits} credits
-                    </span>
-                  </div>
-                ))}
+            </Card.Header>
+            <ProgressBar now={62} max={120} style={{ height: "0.5rem", borderTopLeftRadius:0, borderTopRightRadius:0 }} />
+            {showProgramDetails && (
+              <Card.Body>
+                <Card.Subtitle className="mb-3 fw-semibold">Program Credits Breakdown</Card.Subtitle>
+                <ListGroup variant="flush">
+                  {mockDegreeRequirements.map(req => (
+                    <ListGroup.Item key={req.id} className="d-flex justify-content-between align-items-center px-0">
+                      <span>{req.name}</span>
+                      <span className="text-muted">
+                        {Math.round(req.requiredCredits * req.progress)}/{req.requiredCredits} credits
+                      </span>
+                    </ListGroup.Item>
+                  ))}
+                </ListGroup>
+              </Card.Body>
+            )}
+          </Card>
+        </Col>
+        <Col md={6}>
+          <Card className="shadow-sm">
+            <Card.Header className="pb-2 d-flex justify-content-between align-items-center">
+              <div>
+                <div className="d-flex align-items-baseline">
+                  <Card.Title as="h2" className="mb-0 me-2" style={{fontSize: '1.75rem', fontWeight: 'bold'}}>7</Card.Title>
+                  <span className="text-muted small">8/15</span>
+                </div>
+                 <p className="text-muted mb-0 mt-1">Mandatory courses left</p>
               </div>
-            </CardContent>
-          )}
-        </Card>
-        
-        {/* Mandatory Courses Card */}
-        <Card className="shadow-sm hover:shadow-md transition-shadow">
-          <CardHeader className="pb-2">
-            <div className="flex justify-between items-center">
-              <div className="flex items-baseline space-x-2">
-                <CardTitle className="text-3xl font-bold">7</CardTitle>
-                <span className="text-gray-500 text-sm">8/15</span>
-              </div>
-              <Button 
-                variant="outline"
-                size="sm"
-                className="text-blue-500 border-blue-200 hover:text-blue-700 hover:bg-blue-50 hover:border-blue-300 transition-colors"
-                onClick={() => handleViewDetails("mandatory")}
-              >
+              <Button variant="outline-primary" size="sm" onClick={() => setShowMandatoryCourses(!showMandatoryCourses)}>
                 {showMandatoryCourses ? "Hide details" : "View details"}
               </Button>
-            </div>
-            <div className="text-gray-700 font-medium mt-1">Mandatory courses left</div>
-            <Progress value={8} max={15} className="h-2 mt-2" />
-          </CardHeader>
-          
-          {showMandatoryCourses && (
-            <CardContent>
-              <h3 className="font-semibold mb-3">Mandatory Courses</h3>
-              <div className="space-y-2">
-                {mockMandatoryCourses.map(course => (
-                  <div key={course.code} className="flex justify-between items-center">
-                    <div>
-                      <span className="font-medium">{course.code}: </span>
-                      <span>{course.name}</span>
-                    </div>
-                    <span className={cn(
-                      "text-xs px-2 py-0.5 rounded",
-                      course.status === "Completed" ? "bg-green-100 text-green-800" : 
-                      course.status === "In Progress" ? "bg-blue-100 text-blue-800" : 
-                      "bg-gray-100 text-gray-800"
-                    )}>
-                      {course.status}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          )}
-        </Card>
-      </div>
+            </Card.Header>
+            <ProgressBar now={8} max={15} style={{ height: "0.5rem", borderTopLeftRadius:0, borderTopRightRadius:0 }} />
+            {showMandatoryCourses && (
+              <Card.Body>
+                <Card.Subtitle className="mb-3 fw-semibold">Mandatory Courses</Card.Subtitle>
+                <ListGroup variant="flush">
+                  {mockMandatoryCourses.map(course => (
+                    <ListGroup.Item key={course.code} className="d-flex justify-content-between align-items-center px-0">
+                      <div>
+                        <span className="fw-medium">{course.code}: </span>
+                        <span>{course.name}</span>
+                      </div>
+                      <Badge pill bg={getStatusVariant(course.status)} text={getStatusVariant(course.status) === 'secondary' ? 'dark' : 'light'}>
+                        {course.status}
+                      </Badge>
+                    </ListGroup.Item>
+                  ))}
+                </ListGroup>
+              </Card.Body>
+            )}
+          </Card>
+        </Col>
+      </Row>
       
-      {/* Academic Years and Semesters */}
-      <div className="space-y-6">
+      <div className="mb-4"> {/* Using div for spacing between sections */}
         {yearsData.map((year) => (
-          <div key={year.year} className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold">{year.year}</h2>
-              <div className="text-sm text-gray-600">
-                {year.semesters.reduce((acc, sem) => acc + sem.creditsSelected, 0)} credits · {year.schedules} Schedules ✓ {/* Calculate total credits for the year */}
+          <div key={year.year} className="mb-4">
+            <div className="d-flex justify-content-between align-items-center mb-2">
+              <h2 className="h4 fw-semibold">{year.year}</h2>
+              <div className="small text-muted">
+                {year.semesters.reduce((acc, sem) => acc + sem.creditsSelected, 0)} credits · {year.schedules} Schedules ✓
               </div>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Row xs={1} md={2} lg={3} className="g-3"> {/* Responsive grid for semesters */}
               {year.semesters.map((semester) => (
-                <Card key={semester.id} className="shadow-sm hover:shadow-md transition-shadow animate-fade-in">
-                  <CardHeader className="pb-2">
-                    <div className="flex justify-between items-center">
-                      <CardTitle className="text-lg font-semibold">
-                        {semester.name.replace(/\s\d{4}$/, "")} {/* Remove year suffix */}
-                      </CardTitle>
-                      <div className="flex space-x-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="h-8 w-8 p-0 rounded-full"
-                          onClick={() => handleOpenCourseSearch(semester.id)}
-                        >
-                          <Plus className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="h-8 w-8 p-0 rounded-full"
-                          onClick={() => handleViewSchedule(semester)}
-                        >
-                          <Calendar className="h-4 w-4" />
-                        </Button>
+                <Col key={semester.id}>
+                  <Card className="shadow-sm h-100"> {/* h-100 for equal height cards in a row */}
+                    <Card.Header className="pb-2">
+                      <div className="d-flex justify-content-between align-items-center">
+                        <Card.Title as="h5" className="fw-semibold mb-0">
+                          {semester.name.replace(/\s\d{4}$/, "")}
+                        </Card.Title>
+                        <div>
+                          <Button 
+                            variant="outline-secondary" 
+                            size="sm" 
+                            className="rounded-circle p-0 me-1"
+                            style={{ width: '2rem', height: '2rem' }}
+                            onClick={() => handleOpenCourseSearch(semester.id)}
+                          >
+                            <PlusLg size={16} />
+                          </Button>
+                          <Button 
+                            variant="outline-secondary" 
+                            size="sm" 
+                            className="rounded-circle p-0"
+                            style={{ width: '2rem', height: '2rem' }}
+                            onClick={() => handleViewSchedule(semester)}
+                          >
+                            <CalendarWeek size={16} />
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      {semester.creditsSelected}/18 credits selected ✓
-                    </div>
-                  </CardHeader>
-                  
-                  <CardContent>
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center mb-3">
-                        <select className="w-full rounded-md border border-gray-300 p-1 text-sm">
-                          <option>Case Western Reserve University</option>
-                          <option>Cleveland State University</option>
-                        </select>
+                      <div className="small text-muted mt-1">
+                        {semester.creditsSelected}/18 credits selected ✓
                       </div>
+                    </Card.Header>
+                    
+                    <Card.Body>
+                      <Form.Select size="sm" className="mb-3">
+                        <option>Case Western Reserve University</option>
+                        <option>Cleveland State University</option>
+                      </Form.Select>
                       
                       {semester.courses.map(course => (
-                        <div key={course.id} className="flex items-start space-x-2 border-b pb-2 last:border-0 group">
-                          <div className="flex-1">
-                            <div className="flex items-center space-x-2">
-                              <span className="font-medium">{course.code}</span>
-                              <span className="text-xs bg-gray-100 px-1 rounded">{course.credits} cr</span>
+                        <ListGroup.Item key={course.id} className="px-0 py-2 border-bottom d-flex justify-content-between align-items-start">
+                          <div>
+                            <div className="d-flex align-items-center">
+                              <span className="fw-medium me-2">{course.code}</span>
+                              <Badge bg="light" text="dark" className="me-2">{course.credits} cr</Badge>
                             </div>
-                            <div className="text-sm">{course.name}</div>
-                            <div className="text-xs text-gray-600">
+                            <div className="small">{course.name}</div>
+                            <div className="small text-muted">
                               {course.days} {course.time}
                             </div>
                             {course.prerequisites && course.prerequisites.length > 0 && (
-                              <div className="mt-1">
-                                <div className="text-xs text-yellow-800">
-                                  <span className="font-medium">Prerequisites: </span>
-                                  {course.prerequisites.join(', ')}
-                                </div>
+                              <div className="mt-1 small text-warning"> {/* Using text-warning for prerequisites */}
+                                <span className="fw-medium">Prerequisites: </span>
+                                {course.prerequisites.join(', ')}
                               </div>
                             )}
                           </div>
                           <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-red-500 hover:text-red-600 hover:bg-red-50"
+                            variant="link"
+                            size="sm"
+                            className="p-0 text-danger" // Using text-danger for delete button
                             onClick={() => handleDeleteCourse(semester.id, course.id)}
                           >
-                            <Trash className="h-3 w-3" />
+                            <Trash size={16} />
                           </Button>
-                        </div>
+                        </ListGroup.Item>
                       ))}
+                      {semester.courses.length === 0 && <p className="small text-muted text-center mt-2">No courses added yet.</p>}
                       
-                      <div className="pt-2 flex">
+                      <div className="d-flex mt-3">
                         <Button
                           onClick={() => handleOpenCourseSearch(semester.id)}
-                          variant="outline"
+                          variant="outline-primary"
                           size="sm"
-                          className="flex-1 flex justify-center items-center text-sm h-9"
+                          className="flex-grow-1 me-1" // flex-grow-1 to take available space
                         >
-                          <Plus className="h-3.5 w-3.5 mr-1" /> Add courses
+                          <PlusLg size={14} className="me-1" /> Add courses
                         </Button>
                         
                         <Button
                           onClick={() => handleOpenSchedulePage(semester.id)}
-                          variant="outline"
+                          variant="outline-info" // Using info for view schedule
                           size="sm"
-                          className="ml-2 flex items-center text-sm h-9 text-blue-500 hover:text-blue-700 border-blue-200 hover:border-blue-400"
+                          className="ms-1"
                         >
-                          View Schedule <ArrowRight className="h-3.5 w-3.5 ml-1" />
+                          View Schedule <ArrowRight size={14} className="ms-1" />
                         </Button>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </Card.Body>
+                  </Card>
+                </Col>
               ))}
-            </div>
+            </Row>
             
-            <div className="flex justify-center">
+            <div className="d-flex justify-content-center mt-3">
               <Button 
-                variant="outline" 
-                onClick={handleOpenAddSemesterDialog} // Changed to open the dialog
-                className="w-full max-w-md flex items-center justify-center text-gray-600 hover:text-gray-800 border-dashed"
+                variant="outline-secondary" 
+                onClick={handleOpenAddSemesterDialog}
+                className="w-100" // Full width button, max-width can be set by parent if needed
+                style={{ maxWidth: '400px', borderStyle: 'dashed' }}
               >
-                <Plus className="h-4 w-4 mr-2" /> Add Semester
+                <PlusLg size={16} className="me-2" /> Add Semester
               </Button>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Course Search Dialog */}
+      {/* Dialogs remain the same, assuming they are either already migrated or will be */}
       <CourseSearch 
         open={isCourseSearchOpen} 
-        onOpenChange={setIsCourseSearchOpen}
+        onOpenChange={setIsCourseSearchOpen} // These props might need to change if dialogs are also migrated
         termId={selectedSemester}
       />
       
-      {/* View Schedule Dialog */}
       {viewingSemester && (
         <ViewScheduleDialog 
-          open={isViewScheduleOpen}
-          onOpenChange={setIsViewScheduleOpen}
+          open={isViewScheduleOpen} // Prop might change to 'show'
+          onOpenChange={setIsViewScheduleOpen} // Prop might change to 'onHide'
           semesterName={viewingSemester.name}
-          courses={viewingSemester.courses} // Ensure viewingSemester.courses matches CourseData[]
+          courses={viewingSemester.courses}
         />
       )}
 
-      {/* Add Semester Dialog */}
       <AddSemesterDialog
-        open={isAddSemesterDialogOpen}
-        onOpenChange={setIsAddSemesterDialogOpen}
+        show={isAddSemesterDialogOpen} // Prop already 'show' from previous migration
+        onHide={() => setIsAddSemesterDialogOpen(false)} // Prop already 'onHide'
         onAddSemester={handleAddSemesterSubmit}
       />
-    </div>
+    </Container>
   );
 };
 

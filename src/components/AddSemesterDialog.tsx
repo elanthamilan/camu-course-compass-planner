@@ -1,26 +1,20 @@
 import React, { useState } from 'react';
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'; // Or use Select
+import { Modal, Button, Form, Row, Col } from 'react-bootstrap';
 
 interface AddSemesterDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  show: boolean; // Changed from 'open'
+  onHide: () => void; // Changed from 'onOpenChange'
   onAddSemester: (data: { year: string; semesterType: string }) => void;
 }
 
-const AddSemesterDialog: React.FC<AddSemesterDialogProps> = ({ open, onOpenChange, onAddSemester }) => {
+const AddSemesterDialog: React.FC<AddSemesterDialogProps> = ({ show, onHide, onAddSemester }) => {
   const [year, setYear] = useState<string>(String(new Date().getFullYear())); // Default to current year
   const [semesterType, setSemesterType] = useState<string>('Fall'); // Default semester type
 
   const handleSubmit = () => {
     if (year && semesterType) {
       onAddSemester({ year, semesterType });
-      onOpenChange(false); // Close dialog on submit
+      onHide(); // Close dialog on submit
     } else {
       // Basic validation: alert or inline message (optional for this step)
       alert("Please fill in all fields.");
@@ -28,57 +22,72 @@ const AddSemesterDialog: React.FC<AddSemesterDialogProps> = ({ open, onOpenChang
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Add New Semester</DialogTitle>
-          <DialogDescription>
-            Specify the academic year and type for the new semester.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="year" className="text-right">
+    <Modal show={show} onHide={onHide} centered>
+      <Modal.Header closeButton>
+        <Modal.Title>Add New Semester</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        <p className="mb-3">Specify the academic year and type for the new semester.</p>
+        <Form>
+          <Form.Group as={Row} className="mb-3" controlId="formAcademicYear">
+            <Form.Label column sm="4" className="text-sm-end">
               Academic Year
-            </Label>
-            <Input
-              id="year"
-              value={year}
-              onChange={(e) => setYear(e.target.value)}
-              className="col-span-3"
-              placeholder="e.g., 2024"
-            />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="semesterType" className="text-right">
+            </Form.Label>
+            <Col sm="8">
+              <Form.Control
+                type="text"
+                value={year}
+                onChange={(e) => setYear(e.target.value)}
+                placeholder="e.g., 2024"
+              />
+            </Col>
+          </Form.Group>
+
+          <Form.Group as={Row} className="mb-3" controlId="formSemesterType">
+            <Form.Label column sm="4" className="text-sm-end">
               Semester Type
-            </Label>
-            <RadioGroup
-              value={semesterType}
-              onValueChange={setSemesterType}
-              className="col-span-3 flex space-x-2"
-            >
-              <div className="flex items-center space-x-1">
-                <RadioGroupItem value="Fall" id="fall" />
-                <Label htmlFor="fall">Fall</Label>
-              </div>
-              <div className="flex items-center space-x-1">
-                <RadioGroupItem value="Spring" id="spring" />
-                <Label htmlFor="spring">Spring</Label>
-              </div>
-              <div className="flex items-center space-x-1">
-                <RadioGroupItem value="Summer" id="summer" />
-                <Label htmlFor="summer">Summer</Label>
-              </div>
-            </RadioGroup>
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={handleSubmit}>Add Semester</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+            </Form.Label>
+            <Col sm="8">
+              <Form.Check
+                type="radio"
+                label="Fall"
+                value="Fall"
+                id="fallRadio"
+                name="semesterTypeRadio" // Name attribute to group radio buttons
+                checked={semesterType === 'Fall'}
+                onChange={(e) => setSemesterType(e.target.value)}
+              />
+              <Form.Check
+                type="radio"
+                label="Spring"
+                value="Spring"
+                id="springRadio"
+                name="semesterTypeRadio"
+                checked={semesterType === 'Spring'}
+                onChange={(e) => setSemesterType(e.target.value)}
+              />
+              <Form.Check
+                type="radio"
+                label="Summer"
+                value="Summer"
+                id="summerRadio"
+                name="semesterTypeRadio"
+                checked={semesterType === 'Summer'}
+                onChange={(e) => setSemesterType(e.target.value)}
+              />
+            </Col>
+          </Form.Group>
+        </Form>
+      </Modal.Body>
+      <Modal.Footer>
+        <Button variant="outline-secondary" onClick={onHide}>
+          Cancel
+        </Button>
+        <Button variant="primary" onClick={handleSubmit}>
+          Add Semester
+        </Button>
+      </Modal.Footer>
+    </Modal>
   );
 };
 
