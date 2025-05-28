@@ -1,10 +1,13 @@
-
-import React, { useState } from "react";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { useSchedule } from "@/contexts/ScheduleContext";
-import { PreferenceSettings } from "@/lib/types";
-import { toast } from "sonner";
+import React, { useState, useEffect } from 'react'; // Added useEffect
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter
+} from '@/components/ui/dialog';
+import { useSchedule } from '@/contexts/ScheduleContext'; // Import useSchedule
+import { TimePreference } from '@/lib/types'; // Import TimePreference
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface TunePreferencesDialogProps {
   open: boolean;
@@ -12,200 +15,83 @@ interface TunePreferencesDialogProps {
 }
 
 const TunePreferencesDialog: React.FC<TunePreferencesDialogProps> = ({ open, onOpenChange }) => {
-  const { preferences, updatePreferences, generateSchedules } = useSchedule();
-  const [localPreferences, setLocalPreferences] = useState<PreferenceSettings>({
-    ...preferences
-  });
+  const { schedulePreferences, updateSchedulePreferences } = useSchedule();
+  
+  // Local state for dialog, initialized from context when dialog opens
+  const [localTimePreference, setLocalTimePreference] = useState<TimePreference>(schedulePreferences.timePreference);
+  const [localAvoidFriday, setLocalAvoidFriday] = useState<boolean>(schedulePreferences.avoidFridayClasses);
 
-  const handleTimePreference = (time: "morning" | "afternoon" | "evening" | "anytime") => {
-    setLocalPreferences(prev => ({
-      ...prev,
-      preferredTimes: time
-    }));
-  };
+  useEffect(() => {
+    if (open) {
+      setLocalTimePreference(schedulePreferences.timePreference);
+      setLocalAvoidFriday(schedulePreferences.avoidFridayClasses);
+    }
+  }, [open, schedulePreferences]);
 
-  const handleDensityPreference = (density: "compact" | "balanced" | "spread") => {
-    setLocalPreferences(prev => ({
-      ...prev,
-      preferredDensity: density
-    }));
-  };
-
-  const handleDayToggle = (day: string) => {
-    setLocalPreferences(prev => {
-      const currentDays = [...prev.preferredDays];
-      
-      if (currentDays.includes(day)) {
-        return {
-          ...prev,
-          preferredDays: currentDays.filter(d => d !== day)
-        };
-      } else {
-        return {
-          ...prev,
-          preferredDays: [...currentDays, day]
-        };
-      }
+  const handleSave = () => {
+    updateSchedulePreferences({
+      timePreference: localTimePreference,
+      avoidFridayClasses: localAvoidFriday,
     });
-  };
-
-  const handleInstructionModeChange = (mode: "in-person" | "online" | "hybrid" | "any") => {
-    setLocalPreferences(prev => ({
-      ...prev,
-      preferredInstructionMode: mode
-    }));
-  };
-
-  const handleCampusPreference = (campus: string) => {
-    setLocalPreferences(prev => ({
-      ...prev,
-      preferredCampus: campus
-    }));
-  };
-
-  const handleSubmit = () => {
-    updatePreferences(localPreferences);
-    toast.success("Preferences updated");
-    generateSchedules();
-    onOpenChange(false);
+    onOpenChange(false); // Close dialog
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md animate-scale-in">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Tune preference</DialogTitle>
+          <DialogTitle>Tune Schedule Preferences</DialogTitle>
+          <DialogDescription>
+            Adjust your preferences to help generate a schedule that works for you.
+          </DialogDescription>
         </DialogHeader>
-        
-        <div className="space-y-6">
-          <div>
-            <p className="text-sm text-gray-600 mb-3">
-              The algorithm will not enforce but try its best to find sections at these
-              times. It applies for all the schedule suggestions.
-            </p>
-            
-            <div className="space-y-4">
+        <div className="space-y-6 py-4">
+          {/* Time Preference Section */}
+          <div className="space-y-2">
+            <Label className="font-semibold">Time Preference</Label>
+            <RadioGroup 
+              value={localTimePreference} 
+              onValueChange={(value) => setLocalTimePreference(value as TimePreference)} 
+              className="space-y-1"
+            >
               <div>
-                <h3 className="font-medium mb-2">Preferred time</h3>
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    { value: "anytime", label: "Anytime" },
-                    { value: "morning", label: "Morning (before 12PM)" },
-                    { value: "afternoon", label: "Afternoon (12-5PM)" },
-                    { value: "evening", label: "Evening (after 5PM)" }
-                  ].map(option => (
-                    <Button
-                      key={option.value}
-                      type="button"
-                      variant={localPreferences.preferredTimes === option.value ? "default" : "outline"}
-                      onClick={() => handleTimePreference(option.value as any)}
-                      className="rounded-full"
-                    >
-                      {option.label}
-                    </Button>
-                  ))}
-                </div>
+                <RadioGroupItem value="none" id="time-none" className="mr-2" />
+                <Label htmlFor="time-none">No preference</Label>
               </div>
-              
               <div>
-                <h3 className="font-medium mb-2">Preferred density</h3>
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    { value: "compact", label: "Fewer days with classes" },
-                    { value: "balanced", label: "Balanced" },
-                    { value: "spread", label: "Fewer classes per day" }
-                  ].map(option => (
-                    <Button
-                      key={option.value}
-                      type="button"
-                      variant={localPreferences.preferredDensity === option.value ? "default" : "outline"}
-                      onClick={() => handleDensityPreference(option.value as any)}
-                      className={option.value === "balanced" ? "rounded-full" : "rounded-full"}
-                    >
-                      {option.label}
-                    </Button>
-                  ))}
-                </div>
+                <RadioGroupItem value="morning" id="time-morning" className="mr-2" />
+                <Label htmlFor="time-morning">Prefer morning classes (until 12 PM)</Label>
               </div>
-              
               <div>
-                <h3 className="font-medium mb-2">Preferred days</h3>
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    { value: "Mon", label: "Mon" },
-                    { value: "Tue", label: "Tue" },
-                    { value: "Wed", label: "Wed" },
-                    { value: "Thu", label: "Thu" },
-                    { value: "Fri", label: "Fri" },
-                    { value: "Sat", label: "Sat" },
-                    { value: "Sun", label: "Sun" }
-                  ].map(option => (
-                    <Button
-                      key={option.value}
-                      type="button"
-                      variant={localPreferences.preferredDays.includes(option.value) ? "default" : "outline"}
-                      onClick={() => handleDayToggle(option.value)}
-                      className="rounded-full w-14"
-                    >
-                      {option.label}
-                    </Button>
-                  ))}
-                </div>
+                <RadioGroupItem value="afternoon" id="time-afternoon" className="mr-2" />
+                <Label htmlFor="time-afternoon">Prefer afternoon classes (12 PM - 5 PM)</Label>
               </div>
-              
               <div>
-                <h3 className="font-medium mb-2">Preferred campus</h3>
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    { value: "current", label: "Current campus only" },
-                    { value: "any", label: "Across any campus" }
-                  ].map(option => (
-                    <Button
-                      key={option.value}
-                      type="button"
-                      variant={localPreferences.preferredCampus === option.value ? "default" : "outline"}
-                      onClick={() => handleCampusPreference(option.value)}
-                      className="rounded-full"
-                    >
-                      {option.label}
-                    </Button>
-                  ))}
-                </div>
+                <RadioGroupItem value="evening" id="time-evening" className="mr-2" />
+                <Label htmlFor="time-evening">Prefer evening classes (after 5 PM)</Label>
               </div>
-              
-              <div>
-                <h3 className="font-medium mb-2">Preferred Instruction Mode</h3>
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    { value: "in-person", label: "In-person" },
-                    { value: "online", label: "Online" },
-                    { value: "hybrid", label: "Hybrid" },
-                    { value: "any", label: "Any mode" }
-                  ].map(option => (
-                    <Button
-                      key={option.value}
-                      type="button"
-                      variant={localPreferences.preferredInstructionMode === option.value ? "default" : "outline"}
-                      onClick={() => handleInstructionModeChange(option.value as any)}
-                      className="rounded-full"
-                    >
-                      {option.label}
-                    </Button>
-                  ))}
-                </div>
-              </div>
+            </RadioGroup>
+          </div>
+
+          {/* Day Preference Section */}
+          <div className="space-y-2">
+            <Label className="font-semibold">Day Preferences</Label>
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="avoid-friday" 
+                checked={localAvoidFriday} 
+                onCheckedChange={(checked) => setLocalAvoidFriday(Boolean(checked))} 
+              />
+              <Label htmlFor="avoid-friday" className="font-normal">
+                Avoid Friday classes if possible
+              </Label>
             </div>
           </div>
-          
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSubmit}>
-              Apply & generate
-            </Button>
-          </DialogFooter>
         </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button onClick={handleSave}>Save Preferences</Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

@@ -123,3 +123,12 @@ export interface AIRecommendation {
   courses?: Course[];
   schedule?: Schedule;
 }
+
+// Types for User Scheduling Preferences
+export type TimePreference = "none" | "morning" | "afternoon" | "evening";
+
+export interface SchedulePreferences {
+  timePreference: TimePreference;
+  avoidFridayClasses: boolean;
+  // Future preferences can be added here
+}

@@ -1,6 +1,16 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { Course, BusyTime, Schedule, CourseSection, Term, PreferenceSettings, StudentInfo } from "@/lib/types";
+import {
+  Course,
+  BusyTime,
+  Schedule,
+  CourseSection,
+  Term,
+  PreferenceSettings, // This is the old/existing preference type
+  StudentInfo,
+  SchedulePreferences, // New preference type
+  TimePreference      // New preference type
+} from "@/lib/types";
 import { mockCourses, mockBusyTimes, mockSchedules, mockTerms, mockStudent } from "@/lib/mock-data";
 import { toast } from "sonner";
 
@@ -12,7 +22,8 @@ interface ScheduleContextType {
   currentTerm: Term | null;
   allTerms: Term[];
   studentInfo: StudentInfo;
-  preferences: PreferenceSettings;
+  preferences: PreferenceSettings; // Existing preferences
+  schedulePreferences: SchedulePreferences; // New specific schedule preferences
   setCourses: (courses: Course[]) => void;
   addCourse: (course: Course) => void;
   removeCourse: (courseId: string) => void;
@@ -26,7 +37,8 @@ interface ScheduleContextType {
   selectSchedule: (scheduleId: string | null) => void;
   generateSchedules: () => void;
   selectTerm: (termId: string) => void;
-  updatePreferences: (newPreferences: Partial<PreferenceSettings>) => void;
+  updatePreferences: (newPreferences: Partial<PreferenceSettings>) => void; // For existing preferences
+  updateSchedulePreferences: (newPreferences: Partial<SchedulePreferences>) => void; // For new preferences
   addSectionToSchedule: (section: CourseSection) => void;
   removeSectionFromSchedule: (sectionId: string) => void;
   moveToCart: () => void;
@@ -51,7 +63,11 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
   const [allTerms, setAllTerms] = useState<Term[]>(mockTerms);
   const [currentTerm, setCurrentTerm] = useState<Term | null>(mockTerms[0]);
   const [studentInfo, setStudentInfo] = useState<StudentInfo>(mockStudent);
-  const [preferences, setPreferences] = useState<PreferenceSettings>(defaultPreferences);
+  const [preferences, setPreferences] = useState<PreferenceSettings>(defaultPreferences); // Existing preferences state
+  const [schedulePreferences, setSchedulePreferences] = useState<SchedulePreferences>({ // New preferences state
+    timePreference: "none",
+    avoidFridayClasses: false,
+  });
   
   const addCourse = (course: Course) => {
     setCourses(prev => {
@@ -176,6 +192,14 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
     }));
   };
 
+  const updateSchedulePreferences = (newPreferences: Partial<SchedulePreferences>) => {
+    setSchedulePreferences(prev => ({
+      ...prev,
+      ...newPreferences,
+    }));
+    toast.success("Schedule preferences updated!"); // Optional: feedback to user
+  };
+
   const addSectionToSchedule = (section: CourseSection) => {
     if (!selectedSchedule) return;
     
@@ -250,7 +274,8 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
         currentTerm,
         allTerms,
         studentInfo,
-        preferences,
+        preferences, // Existing preferences
+        schedulePreferences, // New preferences
         setCourses,
         addCourse,
         removeCourse,
@@ -264,7 +289,8 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
         selectSchedule,
         generateSchedules,
         selectTerm,
-        updatePreferences,
+        updatePreferences, // Existing preference update function
+        updateSchedulePreferences, // New preference update function
         addSectionToSchedule,
         removeSectionFromSchedule,
         moveToCart,

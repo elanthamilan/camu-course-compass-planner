@@ -9,25 +9,36 @@ import CourseSearch from "./CourseSearch";
 import ViewScheduleDialog from "./ViewScheduleDialog";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
+import AddSemesterDialog from "./AddSemesterDialog"; // Import the new dialog
 
-interface CourseDashboardProps {
-  onAddSemester: () => void;
+// Define types for better state management (can be moved to types.ts if used elsewhere)
+interface CourseData {
+  id: string;
+  code: string;
+  name: string;
+  credits: number;
+  days: string;
+  time: string;
+  prerequisites?: string[]; // Assuming this was the change from the previous subtask
 }
 
-const CourseDashboard: React.FC<CourseDashboardProps> = ({ onAddSemester }) => {
-  const [showProgramDetails, setShowProgramDetails] = useState(false);
-  const [showMandatoryCourses, setShowMandatoryCourses] = useState(false);
-  const [isCourseSearchOpen, setIsCourseSearchOpen] = useState(false);
-  const [selectedSemester, setSelectedSemester] = useState("");
-  const [isViewScheduleOpen, setIsViewScheduleOpen] = useState(false);
-  const [viewingSemester, setViewingSemester] = useState<any>(null);
-  
-  const navigate = useNavigate();
+interface SemesterData {
+  id: string;
+  name: string;
+  creditsSelected: number;
+  courses: CourseData[];
+}
 
-  // Organize courses by academic year and semester
-  const years = [
-    {
-      year: "2024 - 2025",
+interface YearData {
+  year: string;
+  credits: number;
+  schedules: number;
+  semesters: SemesterData[];
+}
+
+const initialYearsData: YearData[] = [
+  {
+    year: "2024 - 2025",
       credits: 30,
       schedules: 13,
       semesters: [
@@ -36,9 +47,9 @@ const CourseDashboard: React.FC<CourseDashboardProps> = ({ onAddSemester }) => {
           name: "Summer 2024",
           creditsSelected: 9,
           courses: [
-            { id: "cs101", code: "CS101", name: "Introduction to Computer Science", credits: 3, days: "MWF", time: "09:00", hasPrereqs: false },
-            { id: "math105", code: "MATH105", name: "Pre-Calculus", credits: 3, days: "MWF", time: "08:00", hasPrereqs: false },
-            { id: "eng234", code: "ENG234", name: "Composition II", credits: 3, days: "MW", time: "10:00", hasPrereqs: true }
+            { id: "cs101", code: "CS101", name: "Introduction to Computer Science", credits: 3, days: "MWF", time: "09:00", prerequisites: [] },
+            { id: "math105", code: "MATH105", name: "Pre-Calculus", credits: 3, days: "MWF", time: "08:00", prerequisites: [] },
+            { id: "eng234", code: "ENG234", name: "Composition II", credits: 3, days: "MW", time: "10:00", prerequisites: ["ENG100"] }
           ]
         },
         {
@@ -46,9 +57,9 @@ const CourseDashboard: React.FC<CourseDashboardProps> = ({ onAddSemester }) => {
           name: "Fall 2024",
           creditsSelected: 11,
           courses: [
-            { id: "phys210", code: "PHYS210", name: "Physics I: Mechanics", credits: 4, days: "MWF", time: "13:00", hasPrereqs: false },
-            { id: "phil101", code: "PHIL101", name: "Introduction to Logic", credits: 3, days: "MWF", time: "11:00", hasPrereqs: false },
-            { id: "univ100", code: "UNIV100", name: "University Seminar", credits: 1, days: "W", time: "14:00", hasPrereqs: false }
+            { id: "phys210", code: "PHYS210", name: "Physics I: Mechanics", credits: 4, days: "MWF", time: "13:00", prerequisites: [] },
+            { id: "phil101", code: "PHIL101", name: "Introduction to Logic", credits: 3, days: "MWF", time: "11:00", prerequisites: [] },
+            { id: "univ100", code: "UNIV100", name: "University Seminar", credits: 1, days: "W", time: "14:00", prerequisites: [] }
           ]
         },
         {
@@ -56,9 +67,9 @@ const CourseDashboard: React.FC<CourseDashboardProps> = ({ onAddSemester }) => {
           name: "Spring 2025",
           creditsSelected: 10,
           courses: [
-            { id: "econ101", code: "ECON101", name: "Principles of Microeconomics", credits: 3, days: "MWF", time: "10:00", hasPrereqs: false },
-            { id: "bio101", code: "BIO101", name: "Introduction to Biology", credits: 4, days: "MWF", time: "09:00", hasPrereqs: false },
-            { id: "chem101", code: "CHEM101", name: "General Chemistry", credits: 4, days: "MWF", time: "13:00", hasPrereqs: false }
+            { id: "econ101", code: "ECON101", name: "Principles of Microeconomics", credits: 3, days: "MWF", time: "10:00", prerequisites: [] },
+            { id: "bio101", code: "BIO101", name: "Introduction to Biology", credits: 4, days: "MWF", time: "09:00", prerequisites: [] },
+            { id: "chem101", code: "CHEM101", name: "General Chemistry", credits: 4, days: "MWF", time: "13:00", prerequisites: [] }
           ]
         }
       ]
@@ -73,8 +84,8 @@ const CourseDashboard: React.FC<CourseDashboardProps> = ({ onAddSemester }) => {
           name: "Summer 2025",
           creditsSelected: 7,
           courses: [
-            { id: "cs101-2", code: "CS101", name: "Introduction to Computer Science", credits: 3, days: "MWF", time: "09:00", hasPrereqs: false },
-            { id: "phys210-2", code: "PHYS210", name: "Physics I: Mechanics", credits: 4, days: "MWF", time: "13:00", hasPrereqs: true }
+            { id: "cs101-2", code: "CS101", name: "Introduction to Computer Science", credits: 3, days: "MWF", time: "09:00", prerequisites: [] },
+            { id: "phys210-2", code: "PHYS210", name: "Physics I: Mechanics", credits: 4, days: "MWF", time: "13:00", prerequisites: ["MATH105"] }
           ]
         },
         {
@@ -82,9 +93,9 @@ const CourseDashboard: React.FC<CourseDashboardProps> = ({ onAddSemester }) => {
           name: "Fall 2025",
           creditsSelected: 10,
           courses: [
-            { id: "math105-2", code: "MATH105", name: "Pre-Calculus", credits: 3, days: "MWF", time: "08:00", hasPrereqs: false },
-            { id: "phil101-2", code: "PHIL101", name: "Introduction to Logic", credits: 3, days: "MWF", time: "11:00", hasPrereqs: false },
-            { id: "bio101-2", code: "BIO101", name: "Introduction to Biology", credits: 4, days: "MWF", time: "09:00", hasPrereqs: true }
+            { id: "math105-2", code: "MATH105", name: "Pre-Calculus", credits: 3, days: "MWF", time: "08:00", prerequisites: [] },
+            { id: "phil101-2", code: "PHIL101", name: "Introduction to Logic", credits: 3, days: "MWF", time: "11:00", prerequisites: [] },
+            { id: "bio101-2", code: "BIO101", name: "Introduction to Biology", credits: 4, days: "MWF", time: "09:00", prerequisites: ["CHEM101"] }
           ]
         },
         {
@@ -92,33 +103,60 @@ const CourseDashboard: React.FC<CourseDashboardProps> = ({ onAddSemester }) => {
           name: "Spring 2026",
           creditsSelected: 15,
           courses: [
-            { id: "eng234-2", code: "ENG234", name: "Composition II", credits: 3, days: "MW", time: "10:00", hasPrereqs: true },
-            { id: "univ100-2", code: "UNIV100", name: "University Seminar", credits: 1, days: "W", time: "14:00", hasPrereqs: false },
-            { id: "chem101-2", code: "CHEM101", name: "General Chemistry", credits: 4, days: "MWF", time: "13:00", hasPrereqs: false }
+            { id: "eng234-2", code: "ENG234", name: "Composition II", credits: 3, days: "MW", time: "10:00", prerequisites: ["ENG233"] },
+            { id: "univ100-2", code: "UNIV100", name: "University Seminar", credits: 1, days: "W", time: "14:00", prerequisites: [] },
+            { id: "chem101-2", code: "CHEM101", name: "General Chemistry", credits: 4, days: "MWF", time: "13:00", prerequisites: [] }
           ]
         }
       ]
     }
-  ];
+];
+
+interface CourseDashboardProps {
+  onAddSemesterButtonClickProp?: () => void; // Renamed, optional if not used by parent
+}
+
+const CourseDashboard: React.FC<CourseDashboardProps> = ({ onAddSemesterButtonClickProp }) => {
+  const [showProgramDetails, setShowProgramDetails] = useState(false);
+  const [showMandatoryCourses, setShowMandatoryCourses] = useState(false);
+  const [isCourseSearchOpen, setIsCourseSearchOpen] = useState(false);
+  const [selectedSemester, setSelectedSemester] = useState("");
+  const [isViewScheduleOpen, setIsViewScheduleOpen] = useState(false);
+  const [viewingSemester, setViewingSemester] = useState<any>(null); // Consider using SemesterData type
+  const [yearsData, setYearsData] = useState<YearData[]>(initialYearsData);
+  const [isAddSemesterDialogOpen, setIsAddSemesterDialogOpen] = useState(false);
+  
+  const navigate = useNavigate();
 
   const handleOpenCourseSearch = (semesterId: string) => {
     setSelectedSemester(semesterId);
     setIsCourseSearchOpen(true);
   };
   
-  const handleViewSchedule = (semester: any) => {
+  const handleViewSchedule = (semester: SemesterData) => { // Use SemesterData type
     setViewingSemester(semester);
     setIsViewScheduleOpen(true);
   };
   
   const handleOpenSchedulePage = (semesterId: string) => {
-    // Navigate to the schedule page with the semester ID as a parameter
     navigate(`/schedule?semester=${semesterId}`);
   };
 
   const handleDeleteCourse = (semesterId: string, courseId: string) => {
-    // In a real application, this would update your course data
     console.log(`Deleting course ${courseId} from semester ${semesterId}`);
+    setYearsData(prevYearsData => prevYearsData.map(year => ({
+      ...year,
+      semesters: year.semesters.map(semester => {
+        if (semester.id === semesterId) {
+          return {
+            ...semester,
+            courses: semester.courses.filter(course => course.id !== courseId),
+            creditsSelected: semester.courses.filter(course => course.id !== courseId).reduce((acc, curr) => acc + curr.credits, 0)
+          };
+        }
+        return semester;
+      })
+    })));
   };
 
   const handleViewDetails = (section: string) => {
@@ -127,6 +165,59 @@ const CourseDashboard: React.FC<CourseDashboardProps> = ({ onAddSemester }) => {
     } else if (section === "mandatory") {
       setShowMandatoryCourses(!showMandatoryCourses);
     }
+  };
+
+  const handleOpenAddSemesterDialog = () => {
+    setIsAddSemesterDialogOpen(true);
+  };
+
+  const handleAddSemesterSubmit = (data: { year: string; semesterType: string }) => {
+    const { year: dialogYearStr, semesterType } = data;
+    const academicYearStr = `${dialogYearStr} - ${parseInt(dialogYearStr) + 1}`;
+    const semesterName = `${semesterType} ${dialogYearStr}`;
+    const semesterId = `${semesterType}${dialogYearStr}`;
+
+    const newSemester: SemesterData = {
+      id: semesterId,
+      name: semesterName,
+      creditsSelected: 0,
+      courses: [],
+    };
+
+    setYearsData(prevYearsData => {
+      const updatedYearsData = [...prevYearsData];
+      const yearIndex = updatedYearsData.findIndex(y => y.year === academicYearStr);
+
+      if (yearIndex > -1) {
+        // Check if semester type already exists for that year
+        const yearToUpdate = updatedYearsData[yearIndex];
+        const semesterExists = yearToUpdate.semesters.some(s => s.name.startsWith(semesterType));
+        if (!semesterExists) {
+          yearToUpdate.semesters.push(newSemester);
+          // Sort semesters: Spring, Summer, Fall
+          const semesterOrder = ["Spring", "Summer", "Fall"];
+          yearToUpdate.semesters.sort((a, b) => {
+            const typeA = a.name.split(" ")[0];
+            const typeB = b.name.split(" ")[0];
+            return semesterOrder.indexOf(typeA) - semesterOrder.indexOf(typeB);
+          });
+        } else {
+          // Optionally, alert the user or handle as per specific requirements
+          console.warn(`Semester ${semesterType} already exists for year ${academicYearStr}`);
+        }
+      } else {
+        updatedYearsData.push({
+          year: academicYearStr,
+          credits: 0,
+          schedules: 0,
+          semesters: [newSemester],
+        });
+      }
+      // Sort years
+      updatedYearsData.sort((a,b) => a.year.localeCompare(b.year));
+      return updatedYearsData;
+    });
+    setIsAddSemesterDialogOpen(false); // Close dialog
   };
 
   return (
@@ -219,12 +310,12 @@ const CourseDashboard: React.FC<CourseDashboardProps> = ({ onAddSemester }) => {
       
       {/* Academic Years and Semesters */}
       <div className="space-y-6">
-        {years.map((year) => (
+        {yearsData.map((year) => (
           <div key={year.year} className="space-y-4">
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-semibold">{year.year}</h2>
               <div className="text-sm text-gray-600">
-                {year.credits} credits · {year.schedules} Schedules ✓
+                {year.semesters.reduce((acc, sem) => acc + sem.creditsSelected, 0)} credits · {year.schedules} Schedules ✓ {/* Calculate total credits for the year */}
               </div>
             </div>
             
@@ -280,11 +371,11 @@ const CourseDashboard: React.FC<CourseDashboardProps> = ({ onAddSemester }) => {
                             <div className="text-xs text-gray-600">
                               {course.days} {course.time}
                             </div>
-                            {course.hasPrereqs && (
+                            {course.prerequisites && course.prerequisites.length > 0 && (
                               <div className="mt-1">
-                                <div className="text-xs px-2 py-1 bg-yellow-50 text-yellow-800 rounded-md border border-yellow-200 flex items-center cursor-pointer hover:bg-yellow-100 transition-colors">
-                                  <span className="font-medium mr-1">Prerequisites required</span>
-                                  <ChevronDown className="h-3 w-3" />
+                                <div className="text-xs text-yellow-800">
+                                  <span className="font-medium">Prerequisites: </span>
+                                  {course.prerequisites.join(', ')}
                                 </div>
                               </div>
                             )}
@@ -328,7 +419,7 @@ const CourseDashboard: React.FC<CourseDashboardProps> = ({ onAddSemester }) => {
             <div className="flex justify-center">
               <Button 
                 variant="outline" 
-                onClick={onAddSemester}
+                onClick={handleOpenAddSemesterDialog} // Changed to open the dialog
                 className="w-full max-w-md flex items-center justify-center text-gray-600 hover:text-gray-800 border-dashed"
               >
                 <Plus className="h-4 w-4 mr-2" /> Add Semester
@@ -351,9 +442,16 @@ const CourseDashboard: React.FC<CourseDashboardProps> = ({ onAddSemester }) => {
           open={isViewScheduleOpen}
           onOpenChange={setIsViewScheduleOpen}
           semesterName={viewingSemester.name}
-          courses={viewingSemester.courses}
+          courses={viewingSemester.courses} // Ensure viewingSemester.courses matches CourseData[]
         />
       )}
+
+      {/* Add Semester Dialog */}
+      <AddSemesterDialog
+        open={isAddSemesterDialogOpen}
+        onOpenChange={setIsAddSemesterDialogOpen}
+        onAddSemester={handleAddSemesterSubmit}
+      />
     </div>
   );
 };
