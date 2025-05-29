@@ -9,7 +9,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"; // Added Dialog components
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"; // Added Tooltip
 import { toast } from "sonner"; // For notifications
-import { mockDegreeRequirements, mockMandatoryCourses, mockStudent } from "@/lib/mock-data"; // Assuming these are still relevant
+import { mockDegreeRequirements, mockMandatoryCourses } from "@/lib/mock-data"; // Assuming these are still relevant
 import { PlusCircle, Trash2, ArrowRight, ChevronDown, Eye, CheckCircle2, CircleDot, Circle } from "lucide-react"; // Lucide icons
 import { useSchedule } from '@/contexts/ScheduleContext'; // Ensure this import is present
 
@@ -77,8 +77,7 @@ const initialYearsData: YearData[] = [
 // Prop onAddSemester is not used in the provided React Bootstrap version, so it's removed for now.
 // If it's needed, it should be passed from Index.tsx and handled appropriately.
 const CourseDashboard: React.FC = () => {
-  const { studentInfo: contextStudentInfo } = useSchedule(); // Using studentInfo from context
-  const studentInfo = contextStudentInfo || mockStudent; // Fallback to mockStudent if context is not yet populated
+  const { studentInfo } = useSchedule(); // Using studentInfo directly from context
 
   const [isCourseSearchOpen, setIsCourseSearchOpen] = useState(false);
   const [selectedSemesterId, setSelectedSemesterId] = useState(""); // Changed to selectedSemesterId for clarity
@@ -251,8 +250,9 @@ const CourseDashboard: React.FC = () => {
   };
   
   // Calculate total credits left for the program.
-  const studentTotalCredits = studentInfo.totalCredits;
-  const programRequiredCredits = studentInfo.requiredCredits;
+  // If studentInfo is undefined, these will default to 0 or NaN, card should handle this.
+  const studentTotalCredits = studentInfo?.totalCredits || 0;
+  const programRequiredCredits = studentInfo?.requiredCredits || 0;
   const creditsLeft = programRequiredCredits - studentTotalCredits;
   const programProgressValue = programRequiredCredits > 0 ? (studentTotalCredits / programRequiredCredits) * 100 : 0;
 
@@ -307,16 +307,23 @@ const CourseDashboard: React.FC = () => {
           <CardTitle>My Academic Snapshot</CardTitle>
           <CardDescription>Summary of your academic standing and interests.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-2 text-sm">
-          <p className="text-lg font-semibold">{studentInfo.name}</p>
-          <p><span className="font-semibold">Major:</span> {studentInfo.major}</p>
-          {studentInfo.minor && <p><span className="font-semibold">Minor:</span> {studentInfo.minor}</p>}
-          <p><span className="font-semibold">GPA:</span> {studentInfo.gpa ? studentInfo.gpa.toFixed(2) : "N/A"}</p>
-          <p><span className="font-semibold">Expected Graduation:</span> {studentInfo.expectedGraduationDate || "N/A"}</p>
-          {studentInfo.interests && studentInfo.interests.length > 0 && (
-            <p><span className="font-semibold">Interests:</span> {studentInfo.interests.join(', ')}</p>
-          )}
-        </CardContent>
+        {studentInfo && ( // Conditionally render CardContent if studentInfo is available
+          <CardContent className="space-y-2 text-sm">
+            <p className="text-lg font-semibold">{studentInfo.name}</p>
+            <p><span className="font-semibold">Major:</span> {studentInfo.major}</p>
+            {studentInfo.minor && <p><span className="font-semibold">Minor:</span> {studentInfo.minor}</p>}
+            <p><span className="font-semibold">GPA:</span> {studentInfo.gpa ? studentInfo.gpa.toFixed(2) : "N/A"}</p>
+            <p><span className="font-semibold">Expected Graduation:</span> {studentInfo.expectedGraduationDate || "N/A"}</p>
+            {studentInfo.interests && studentInfo.interests.length > 0 && (
+              <p><span className="font-semibold">Interests:</span> {studentInfo.interests.join(', ')}</p>
+            )}
+          </CardContent>
+        )}
+        {!studentInfo && ( // Optional: Display a loading or N/A message
+            <CardContent>
+                <p className="text-sm text-muted-foreground">Student information is not available.</p>
+            </CardContent>
+        )}
       </Card>
       
       {/* Top Stats Cards */}
@@ -463,30 +470,7 @@ const CourseDashboard: React.FC = () => {
                     <div className="flex justify-between items-center">
                       <CardTitle className="text-lg">{semester.name.replace(/\s\d{4}$/, "")}</CardTitle>
                       <div className="flex space-x-1">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button 
-                              variant="ghost" size="icon" className="h-7 w-7"
-                              onClick={() => handleOpenCourseSearch(semester.id)}
-                              aria-label="Add course to semester"
-                            >
-                              <PlusCircle size={18} />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent><p>Add a course to this semester.</p></TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button 
-                              variant="ghost" size="icon" className="h-7 w-7"
-                              onClick={() => handleOpenSchedulePage(semester.id)}
-                              aria-label="View schedule for semester"
-                            >
-                              <Eye size={18} /> 
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent><p>View or generate schedules for this semester.</p></TooltipContent>
-                        </Tooltip>
+                        {/* "Add course" and "View schedule" icon buttons removed, functionality moved to footer */}
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
@@ -563,8 +547,33 @@ const CourseDashboard: React.FC = () => {
                       <p className="text-xs text-muted-foreground text-center mt-4">No courses added yet.</p>
                     )}
                   </CardContent>
-                  <CardFooter className="flex gap-2 pt-4"> {/* Added pt-4 for spacing */}
-                    {/* Redundant buttons removed as per task. Functionality is in header icons. */}
+                  <CardFooter className="flex flex-col sm:flex-row gap-2 pt-4"> {/* Ensure footer can wrap on small screens, stack vertically */}
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          onClick={() => handleOpenCourseSearch(semester.id)}
+                          variant="outline" 
+                          size="sm"
+                          className="w-full" // Make buttons take full width within their flex item
+                        >
+                          <PlusCircle size={14} className="mr-1.5" /> Add Courses
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent><p>Search and add courses to this semester.</p></TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          onClick={() => handleOpenSchedulePage(semester.id)}
+                          variant="default" 
+                          size="sm"
+                          className="w-full" // Make buttons take full width within their flex item
+                        >
+                          View Schedule <ArrowRight size={14} className="ml-1.5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent><p>Open the detailed scheduling tool for this semester.</p></TooltipContent>
+                    </Tooltip>
                   </CardFooter>
                 </Card>
               ))}
