@@ -9,14 +9,13 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"; // Added Dialog components
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"; // Added Tooltip
 import { toast } from "sonner"; // For notifications
-import { mockDegreeRequirements, mockMandatoryCourses } from "@/lib/mock-data"; // Assuming these are still relevant
+import { mockDegreeRequirements, mockMandatoryCourses, mockPrograms, mockCourses } from "@/lib/mock-data"; // Assuming these are still relevant
 import { PlusCircle, Trash2, ArrowRight, ChevronDown, Eye, CheckCircle2, CircleDot, Circle } from "lucide-react"; // Lucide icons
 import { useSchedule } from '@/contexts/ScheduleContext'; // Ensure this import is present
-
-import CourseSearch from "./CourseSearch"; // Already Shadcn
-import ViewScheduleDialog from "./ViewScheduleDialog"; // Needs check, might be Bootstrap
-import AddSemesterDialog from "./AddSemesterDialog"; // Already Shadcn
-import { Course } from "../lib/types"; // Import global Course type
+import { Label } from "@/components/ui/label"; // Added Label import
+import { calculateWhatIfAudit } from '../lib/degree-audit-utils';
+import WhatIfDegreeAuditView from './WhatIfDegreeAuditView';
+import { Course, AcademicProgram, DegreeRequirement } from "../lib/types"; // Import global Course type and AcademicProgram
 
 // Define types (assuming these are correct from previous steps)
 // interface CourseData { // Will be replaced by global Course type
@@ -78,6 +77,14 @@ const initialYearsData: YearData[] = [
 // If it's needed, it should be passed from Index.tsx and handled appropriately.
 const CourseDashboard: React.FC = () => {
   const { studentInfo } = useSchedule(); // Using studentInfo directly from context
+
+  const [selectedWhatIfMajorId, setSelectedWhatIfMajorId] = useState<string | null>(null);
+  const [selectedWhatIfMinorId, setSelectedWhatIfMinorId] = useState<string | null>(null);
+  const [whatIfAuditResults, setWhatIfAuditResults] = useState<DegreeRequirement[] | null>(null);
+  const [currentWhatIfProgram, setCurrentWhatIfProgram] = useState<AcademicProgram | null>(null);
+
+  const [actualProgram, setActualProgram] = useState<AcademicProgram | null>(null);
+  const [actualProgramAudit, setActualProgramAudit] = useState<DegreeRequirement[] | null>(null);
 
   const [isCourseSearchOpen, setIsCourseSearchOpen] = useState(false);
   const [selectedSemesterId, setSelectedSemesterId] = useState(""); // Changed to selectedSemesterId for clarity
@@ -263,10 +270,12 @@ const CourseDashboard: React.FC = () => {
   const mandatoryProgressValue = (completedMandatoryCourses / totalMandatoryCourses) * 100;
 
   const remainingMandatoryCourses = mockMandatoryCourses.filter(c => c.status !== "Completed");
-  const unmetDegreeRequirements = mockDegreeRequirements.filter(req => req.progress < 1);
+  
+  // Updated to use actualProgramAudit
+  const unmetDegreeRequirements = actualProgramAudit?.filter(req => (req.progress ?? 0) < 1) || [];
 
-  // This would ideally come from context or student data
-  const studentCompletedCourses = ["CS101", "MATH105", "ENG234"]; 
+  // This would ideally come from context or student data (studentInfo.completedCourses is used in analyze)
+  // const studentCompletedCourses = ["CS101", "MATH105", "ENG234"]; 
 
 
   // Helper function to find suggested courses for a requirement
@@ -298,6 +307,25 @@ const CourseDashboard: React.FC = () => {
     return suggested.filter(course => !studentCompletedCourses.includes(course.code)).slice(0, 3);
   };
 
+  React.useEffect(() => {
+    if (studentInfo?.majorId && mockPrograms.length > 0 && mockCourses.length > 0) {
+      const currentMajorProgram = mockPrograms.find(p => p.id === studentInfo.majorId && p.type === 'Major');
+      if (currentMajorProgram) {
+        const completedCourseCodes = studentInfo.completedCourses || [];
+        const auditResults = calculateWhatIfAudit(completedCourseCodes, currentMajorProgram, mockCourses);
+        setActualProgram(currentMajorProgram);
+        setActualProgramAudit(auditResults);
+      } else {
+        setActualProgram(null);
+        setActualProgramAudit(null);
+        console.warn(`Student's declared major ID (${studentInfo.majorId}) not found in mockPrograms.`);
+      }
+    } else {
+      setActualProgram(null);
+      setActualProgramAudit(null);
+    }
+  }, [studentInfo, mockPrograms, mockCourses]); // mockCourses added as dependency
+
 
   return (
     <div className="py-3 space-y-6"> {/* Replaced Container fluid and added space-y */}
@@ -325,22 +353,130 @@ const CourseDashboard: React.FC = () => {
             </CardContent>
         )}
       </Card>
+
+      {/* "Explore Programs / What-If Analysis" Card */}
+      <Card className="w-full mb-4">
+        <CardHeader>
+          <CardTitle>Explore Programs (What-If Analysis)</CardTitle>
+          <CardDescription>
+            See how your completed courses apply to a different major or minor.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Major Selection Dropdown */}
+          <div>
+            <Label htmlFor="whatif-major-select">Select a "What-If" Major:</Label>
+            <Select
+              value={selectedWhatIfMajorId || ""}
+              onValueChange={(value) => setSelectedWhatIfMajorId(value === "none" ? null : value)}
+            >
+              <SelectTrigger id="whatif-major-select" className="mt-1">
+                <SelectValue placeholder="Choose a major to explore..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None (Show my actual major)</SelectItem>
+                {mockPrograms.filter(p => p.type === 'Major').map(program => (
+                  <SelectItem key={program.id} value={program.id}>
+                    {program.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Minor Selection Dropdown (Optional) */}
+          <div>
+            <Label htmlFor="whatif-minor-select">Add a "What-If" Minor (Optional):</Label>
+            <Select
+              value={selectedWhatIfMinorId || ""}
+              onValueChange={(value) => setSelectedWhatIfMinorId(value === "none" ? null : value)}
+              disabled={!selectedWhatIfMajorId} // Optionally disable if no major is selected for what-if
+            >
+              <SelectTrigger id="whatif-minor-select" className="mt-1">
+                <SelectValue placeholder="Choose a minor to add..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None</SelectItem>
+                {mockPrograms.filter(p => p.type === 'Minor').map(program => (
+                  <SelectItem key={program.id} value={program.id}>
+                    {program.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+        <CardFooter className="flex justify-end space-x-2">
+          <Button 
+            variant="outline" 
+            onClick={() => {
+              setSelectedWhatIfMajorId(null);
+              setSelectedWhatIfMinorId(null);
+              setWhatIfAuditResults(null);
+              setCurrentWhatIfProgram(null);
+              toast.info("What-If analysis cleared. Showing your actual program progress.");
+            }}
+          >
+            Clear What-If
+          </Button>
+          <Button 
+            onClick={() => {
+              if (!selectedWhatIfMajorId) {
+                setWhatIfAuditResults(null);
+                setCurrentWhatIfProgram(null);
+                toast.info("Please select a 'What-If' Major to analyze.");
+                return;
+              }
+
+              const targetMajorProgram = mockPrograms.find(p => p.id === selectedWhatIfMajorId);
+              // Not handling minor for now as per instructions, will just analyze major.
+
+              if (targetMajorProgram) {
+                const completedCourseCodes = studentInfo?.completedCourses || [];
+                const auditResults = calculateWhatIfAudit(completedCourseCodes, targetMajorProgram, mockCourses);
+                setWhatIfAuditResults(auditResults);
+                setCurrentWhatIfProgram(targetMajorProgram);
+                toast.success(`What-If analysis complete for ${targetMajorProgram.name}.`);
+              } else {
+                toast.error("Could not find the selected What-If program details.");
+                setWhatIfAuditResults(null);
+                setCurrentWhatIfProgram(null);
+              }
+            }}
+            disabled={!selectedWhatIfMajorId}
+          >
+            Analyze Selected Program(s)
+          </Button>
+        </CardFooter>
+      </Card>
+
+      {/* What-If Degree Audit View */}
+      {currentWhatIfProgram && whatIfAuditResults && (
+        <WhatIfDegreeAuditView
+          whatIfProgram={currentWhatIfProgram}
+          whatIfRequirements={whatIfAuditResults}
+        />
+      )}
       
       {/* Top Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card>
           <CardHeader className="pb-2 flex flex-row items-center justify-between">
             <div>
-              <CardTitle className="text-4xl font-bold">{creditsLeft}</CardTitle>
-              <CardDescription>{studentTotalCredits}/{programRequiredCredits} program credits left</CardDescription>
+              <CardTitle className="text-4xl font-bold">
+                {actualProgram ? (creditsLeft >= 0 ? creditsLeft : 0) : <span className="text-gray-400">N/A</span>}
+              </CardTitle>
+              <CardDescription>
+                {actualProgram ? `${studentTotalCredits}/${programRequiredCredits} program credits left` : "Select a program to see progress"}
+              </CardDescription>
             </div>
             {/* Using Accordion for details to match Shadcn patterns */}
             <Accordion type="single" collapsible className="w-auto">
               <AccordionItem value="item-1" className="border-none">
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <AccordionTrigger className="p-2 hover:no-underline [&[data-state=open]>svg]:rotate-180">
-                      <Button variant="outline" size="sm">
+                    <AccordionTrigger className="p-2 hover:no-underline [&[data-state=open]>svg]:rotate-180" disabled={!actualProgram}>
+                      <Button variant="outline" size="sm" disabled={!actualProgram}>
                         View details <ChevronDown className="h-4 w-4 ml-1 transition-transform duration-200" />
                       </Button>
                     </AccordionTrigger>
@@ -351,21 +487,26 @@ const CourseDashboard: React.FC = () => {
                 </Tooltip>
                 <AccordionContent className="pt-2 text-sm">
                   <h4 className="mb-2 font-semibold text-sm">Program Credits Breakdown</h4>
-                  <ul className="space-y-1 text-xs">
-                    {mockDegreeRequirements.map(req => (
-                      <li key={req.id} className="flex justify-between items-center">
-                        <div className="flex items-center">
-                          {req.progress === 1 && <CheckCircle2 className="h-4 w-4 text-green-600 mr-2 flex-shrink-0" />}
-                          {req.progress > 0 && req.progress < 1 && <CircleDot className="h-4 w-4 text-yellow-500 mr-2 flex-shrink-0" />}
-                          {(req.progress === 0 || req.progress === undefined) && <Circle className="h-4 w-4 text-gray-400 mr-2 flex-shrink-0" />}
-                          <span>{req.name}</span>
-                        </div>
-                        <span className="text-muted-foreground">
-                          {Math.round(req.requiredCredits * req.progress)}/{req.requiredCredits} credits
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
+                  {actualProgramAudit && actualProgramAudit.length > 0 ? (
+                    <ul className="space-y-1 text-xs">
+                      {actualProgramAudit.map(req => (
+                        <li key={req.id} className="flex justify-between items-center">
+                          <div className="flex items-center">
+                            {req.progress === 1 && <CheckCircle2 className="h-4 w-4 text-green-600 mr-2 flex-shrink-0" />}
+                            {req.progress > 0 && req.progress < 1 && <CircleDot className="h-4 w-4 text-yellow-500 mr-2 flex-shrink-0" />}
+                            {(req.progress === 0 || req.progress === undefined || isNaN(req.progress)) && <Circle className="h-4 w-4 text-gray-400 mr-2 flex-shrink-0" />}
+                            <span>{req.name}</span>
+                          </div>
+                          <span className="text-muted-foreground">
+                            {/* Use getRequirementDisplayProgress helper here if desired, or keep simple credit display */}
+                            {req.choiceRequired ? `${req.progressCourses ?? 0}/${req.choiceRequired} courses` : `${Math.round((req.progress ?? 0) * req.requiredCredits)}/${req.requiredCredits} credits`}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">No program selected or requirements not available.</p>
+                  )}
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button 

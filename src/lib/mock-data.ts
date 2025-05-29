@@ -11,7 +11,8 @@ import {
   MultiYearPlan,
   ExportedSchedule,
   PlannedCourse,
-  DegreeRequirementAudit
+  DegreeRequirementAudit,
+  AcademicProgram
 } from "./types";
 
 export const mockCourses: Course[] = [
@@ -419,95 +420,143 @@ export const mockTerms: Term[] = [
 export const mockStudent: StudentInfo = {
   id: "s123456",
   name: "Alex Student",
-  major: "Computer Science",
-  minor: "Art History", // Example
+  major: "Computer Science", // Will be overridden by majorId if used
+  majorId: "bs-cs", // Link to the BS CS program
+  minor: "Art History", // Example, will be overridden by minorId if used
+  minorId: "minor-arthistory", // Link to Art History minor
   gpa: 3.75,            // Example
   expectedGraduationDate: "May 2025", // Example
   interests: ["Artificial Intelligence", "Web Development", "Photography"], // Example
   academicLevel: "Junior",
-  totalCredits: 62,
-  requiredCredits: 120,
-  completedCourses: ["cs101", "math101", "eng101"], // This will be overridden by the line at the end of the file
+  totalCredits: 62, // This would be calculated based on completed courses in a real app
+  requiredCredits: 120, // This would come from the selected AcademicProgram
+  completedCourses: ["cs101", "math101", "eng101", "math105", "eng234", "AH101"], // Updated at the end of file too
   advisorName: "Dr. Academic Advisor"
 };
 
-export const mockDegreeRequirements: DegreeRequirement[] = [
+// Define mockDegreeRequirements directly within the first program or adapt them.
+// For this step, we'll adapt them to the new DegreeRequirement structure.
+const csProgramRequirements: DegreeRequirement[] = [
   {
     id: "core_cs",
     name: "Computer Science Core",
     description: "Fundamental courses for Computer Science.",
     requiredCredits: 22,
-    courses: ["cs101", "CS201", "CS301", "CS310"], 
-    completed: false,
-    progress: 0.25,
-    category: "core",
-    courseMatcher: { type: "specificCourses", values: ["CS201", "CS301", "CS310"] } // Assuming CS101 is done
+    progress: 0.25, // Example progress, would be calculated
+    courseMatcher: { type: "specificCourses", values: ["CS101", "CS201", "CS301", "CS310"] },
+    // Assuming CS101 is completed, progressCourses would be 1 if choiceRequired was set.
+    // For specific courses, progressCourses isn't as relevant unless a subset is chosen.
   },
   {
     id: "core_math",
     name: "Mathematics Core",
     description: "Core mathematics courses required for CS.",
     requiredCredits: 8,
-    courses: ["math105", "MATH201"], 
-    completed: false,
-    progress: 0.5,
-    category: "core",
-    courseMatcher: { type: "specificCourses", values: ["MATH201"] } // Assuming MATH105 is done
+    progress: 0.5, // Example progress
+    courseMatcher: { type: "specificCourses", values: ["MATH105", "MATH201"] },
   },
   {
     id: "major_adv_cs",
     name: "Advanced CS Electives",
     description: "Choose 3 advanced Computer Science electives.",
     requiredCredits: 9, 
-    courses: ["CS410", "CS450", "CS490", "CS420", "CS430"], 
-    completed: false,
     progress: 0,
-    category: "major",
     choiceRequired: 3,
-    courseMatcher: { type: "courseCodePrefix", values: ["CS4"] } // Example: CS4xx courses
+    courseMatcher: { type: "courseCodePrefix", values: ["CS4"] }, // Example: CS4xx courses
+    progressCourses: 0,
   },
   {
     id: "gen_ed_hum",
     name: "Humanities Elective",
     description: "Choose 1 course from Humanities list.",
     requiredCredits: 3,
-    courses: ["eng234", "phil101", "HIST101", "ART100"], 
-    completed: true, // This one is done, so no matcher needed or it won't be used
-    progress: 1,
-    category: "general_education",
+    progress: 1, // Marked as completed
     choiceRequired: 1,
+    choiceCourses: ["ENG234", "PHIL101", "HIST101", "ART100"], 
+    progressCourses: 1, // Assuming ENG234 was taken
   },
   {
     id: "gen_ed_sci",
     name: "Science Elective",
     description: "Choose 1 lab science course.",
     requiredCredits: 4,
-    courses: ["phys210", "bio101", "chem101"],
-    completed: false,
     progress: 0,
-    category: "general_education",
     choiceRequired: 1,
-    courseMatcher: { type: "keyword", values: ["science", "lab"] } // Match courses with "science" AND "lab" keywords
+    courseMatcher: { type: "keyword", values: ["science", "lab"] }, // Match courses with "science" AND "lab" keywords
+    progressCourses: 0,
   },
   {
     id: "univ_req",
     name: "University Seminar",
     description: "Required university seminar.",
     requiredCredits: 1,
-    courses: ["univ100"],
-    completed: false,
     progress: 0,
-    category: "other",
-    courseMatcher: { type: "specificCourses", values: ["univ100"] }
+    courseMatcher: { type: "specificCourses", values: ["UNIV100"] }
   }
 ];
 
-export const mockDegree: Degree = {
-  id: "cs-bs",
-  name: "Bachelor of Science in Computer Science",
-  totalCredits: 120,
-  requirements: mockDegreeRequirements
-};
+export const mockPrograms: AcademicProgram[] = [
+  {
+    id: "bs-cs",
+    name: "Bachelor of Science in Computer Science",
+    type: 'Major',
+    requirements: csProgramRequirements,
+    totalCreditsRequired: 120,
+    description: "Provides a strong foundation in computer science theory and practice."
+  },
+  {
+    id: "ba-engl",
+    name: "Bachelor of Arts in English Literature",
+    type: 'Major',
+    totalCreditsRequired: 120,
+    description: "Explores the rich history and diverse forms of literature in English.",
+    requirements: [
+      { id: "engl-intro", name: "Introductory Literature Survey", requiredCredits: 6, progress: 0, courseMatcher: {type: "courseCodePrefix", values: ["ENGL1"]}},
+      { id: "engl-shakespeare", name: "Shakespearean Studies", requiredCredits: 3, progress: 0, choiceRequired: 1, choiceCourses: ["ENGL301", "ENGL302"]},
+      { id: "engl-poetry", name: "Poetry Workshop", requiredCredits: 3, progress: 0, courseMatcher: {type: "specificCourses", values: ["ENGL250"]}},
+      { id: "engl-theory", name: "Literary Theory", requiredCredits: 3, progress: 0, courseMatcher: {type: "specificCourses", values: ["ENGL400"]}},
+      { id: "engl-sr-sem", name: "Senior Seminar", requiredCredits: 3, progress: 0, courseMatcher: {type: "specificCourses", values: ["ENGL490"]}},
+      { id: "engl-electives", name: "English Electives", requiredCredits: 15, progress: 0, choiceRequired: 5, courseMatcher: {type: "department", values: ["ENGL"]}}
+    ]
+  },
+  {
+    id: "minor-ds",
+    name: "Minor in Data Science",
+    type: 'Minor',
+    totalCreditsRequired: 18,
+    description: "Introduces fundamental concepts and tools in data analysis and interpretation.",
+    requirements: [
+      { id: "ds-intro", name: "Introduction to Data Science", requiredCredits: 3, progress: 0, courseMatcher: {type: "specificCourses", values: ["DS101"]}},
+      { id: "ds-stats", name: "Statistics for Data Science", requiredCredits: 3, progress: 0, courseMatcher: {type: "specificCourses", values: ["STAT210"]}},
+      { id: "ds-ml", name: "Machine Learning Basics", requiredCredits: 3, progress: 0, courseMatcher: {type: "specificCourses", values: ["CS370"]}},
+      { id: "ds-viz", name: "Data Visualization", requiredCredits: 3, progress: 0, courseMatcher: {type: "specificCourses", values: ["DS320"]}},
+      { id: "ds-elective1", name: "Data Science Elective I", requiredCredits: 3, progress: 0, choiceRequired: 1, choiceCourses: ["DS410", "CS475", "STAT350"]},
+      { id: "ds-elective2", name: "Data Science Elective II", requiredCredits: 3, progress: 0, choiceRequired: 1, choiceCourses: ["DS420", "CS480", "ECON420"]}
+    ]
+  },
+  {
+    id: "minor-arthistory",
+    name: "Minor in Art History",
+    type: 'Minor',
+    totalCreditsRequired: 15,
+    description: "Explores the history of art across various cultures and periods.",
+    requirements: [
+      { id: "ah-intro1", name: "Survey of Western Art I", requiredCredits: 3, progress: 0, courseMatcher: {type: "specificCourses", values: ["AH101"]}},
+      { id: "ah-intro2", name: "Survey of Western Art II", requiredCredits: 3, progress: 0, courseMatcher: {type: "specificCourses", values: ["AH102"]}},
+      { id: "ah-nonwest", name: "Non-Western Art", requiredCredits: 3, progress: 0, courseMatcher: {type: "specificCourses", values: ["AH250"]}},
+      { id: "ah-theory", name: "Art History Theory & Methods", requiredCredits: 3, progress: 0, courseMatcher: {type: "specificCourses", values: ["AH300"]}},
+      { id: "ah-elective", name: "Art History Elective (300+ Level)", requiredCredits: 3, progress: 0, courseMatcher: {type: "courseCodePrefix", values: ["AH3", "AH4"]}}
+    ]
+  }
+];
+
+// mockDegree is no longer needed as its data is in mockPrograms[0]
+// export const mockDegree: Degree = {
+//   id: "cs-bs",
+//   name: "Bachelor of Science in Computer Science",
+//   totalCredits: 120,
+//   requirements: csProgramRequirements // Use the adapted requirements
+// };
 
 export const mockMandatoryCourses = [
   {
@@ -554,57 +603,60 @@ export const busyTimeColors = {
 
 export const mockDegreeAuditResult: DegreeAuditResults = {
   studentId: mockStudent.id,
-  degreeId: mockDegree.id,
-  overallProgress: mockStudent.totalCredits / mockDegree.totalCredits,
+  degreeId: mockPrograms[0].id, // Link to the BS CS program ID
+  overallProgress: mockStudent.totalCredits / (mockPrograms[0].totalCreditsRequired || 120),
   totalCreditsEarned: mockStudent.totalCredits,
-  totalCreditsRequired: mockDegree.totalCredits,
-  requirementAudits: [
+  totalCreditsRequired: mockPrograms[0].totalCreditsRequired || 120,
+  requirementAudits: [ // This would need to be dynamically generated based on mockPrograms[0].requirements and student's courses
+    // For simplicity, we'll manually create a few based on the new structure.
+    // This part needs careful regeneration if the requirements changed significantly.
+    // The spread operator `...csProgramRequirements[0]` might not work if the structure is too different.
+    // Let's assume csProgramRequirements are correctly structured DegreeRequirement items.
     {
-      ...mockDegreeRequirements[0], // Core CS
+      ...csProgramRequirements[0], // Core CS
       status: 'partially_fulfilled',
-      fulfilledCourses: ['cs101'],
-      progressCredits: 3,
-      progressCourses: 1,
-    },
+      fulfilledCourses: ['CS101'], // Assuming CS101 is completed by mockStudent
+      progressCredits: 3, // Credits for CS101
+      progressCourses: 1, // 1 course towards the specific list
+    } as DegreeRequirementAudit, // Cast to ensure type compatibility
     {
-      ...mockDegreeRequirements[1], // Core Math
+      ...csProgramRequirements[1], // Core Math
       status: 'partially_fulfilled',
-      fulfilledCourses: ['math105'], // Assuming math101 is an alias or completed
-      progressCredits: 3,
+      fulfilledCourses: ['MATH105'], // Assuming MATH105 is completed by mockStudent
+      progressCredits: 3, // Credits for MATH105
       progressCourses: 1,
-
-    },
+    } as DegreeRequirementAudit,
     {
-      ...mockDegreeRequirements[2], // Advanced CS Electives
+      ...csProgramRequirements[2], // Advanced CS Electives
       status: 'not_fulfilled',
       fulfilledCourses: [],
       progressCredits: 0,
       progressCourses: 0,
-    },
+    } as DegreeRequirementAudit,
     {
-      ...mockDegreeRequirements[3], // Humanities Elective
+      ...csProgramRequirements[3], // Humanities Elective
       status: 'fulfilled',
-      fulfilledCourses: ['eng234'], // From mockStudent.completedCourses
+      fulfilledCourses: ['ENG234'], // Assuming ENG234 is completed by mockStudent
       progressCredits: 3,
       progressCourses: 1,
-    },
+    } as DegreeRequirementAudit,
      {
-      ...mockDegreeRequirements[4], // Science Elective
+      ...csProgramRequirements[4], // Science Elective
       status: 'not_fulfilled',
       fulfilledCourses: [],
       progressCredits: 0,
       progressCourses: 0,
-    },
+    } as DegreeRequirementAudit,
     {
-      ...mockDegreeRequirements[5], // University Seminar
+      ...csProgramRequirements[5], // University Seminar
       status: 'not_fulfilled',
       fulfilledCourses: [],
       progressCredits: 0,
       progressCourses: 0,
-    }
+    } as DegreeRequirementAudit
   ],
   summaryNotes: [
-    `Overall progress: ${Math.round((mockStudent.totalCredits / mockDegree.totalCredits) * 100)}%`,
+    `Overall progress: ${Math.round((mockStudent.totalCredits / (mockPrograms[0].totalCreditsRequired || 120)) * 100)}%`,
     "Core CS requirements partially met.",
     "Humanities requirement fulfilled.",
     "Advanced CS electives and Science elective need attention."
@@ -614,7 +666,7 @@ export const mockDegreeAuditResult: DegreeAuditResults = {
 export const mockMultiYearPlan: MultiYearPlan = {
   id: "plan123",
   studentId: mockStudent.id,
-  degreeId: mockDegree.id,
+  degreeId: mockPrograms[0].id, // Link to the BS CS program ID
   planName: "My CS Graduation Plan",
   plannedCourses: [
     { courseId: "CS201", termId: "fall2024" }, // Assuming CS201 is a valid course code
@@ -639,4 +691,4 @@ export const mockExportedSchedule: ExportedSchedule = {
 };
 
 // Ensure mockStudent has relevant completed courses for the audit
-mockStudent.completedCourses = ["cs101", "math105", "eng234", "ENG101"]; // ENG101 for prereq of eng234
+mockStudent.completedCourses = ["CS101", "MATH105", "ENG234", "ENG101", "AH101"]; // ENG101 for prereq of eng234, AH101 for minor

@@ -58,17 +58,28 @@ export type BusyTimeType =
 export interface StudentInfo {
   id: string;
   name: string;
-  major: string;
-  minor?: string; // Ensure this is optional if not already
+  major: string; // This might become majorId to link to AcademicProgram
+  majorId?: string; // Links to AcademicProgram id
+  minor?: string; // This might become minorId
+  minorId?: string; // Links to AcademicProgram id, optional
   gpa?: number;
   expectedGraduationDate?: string; // e.g., "May 2025"
   interests?: string[];
   academicLevel: 'Freshman' | 'Sophomore' | 'Junior' | 'Senior' | 'Graduate';
   totalCredits: number;
-  requiredCredits: number;
+  requiredCredits: number; // This might be derived from the primary AcademicProgram
   completedCourses: string[];
   currentCourses?: string[];
   advisorName?: string;
+}
+
+export interface AcademicProgram {
+  id: string; // e.g., "bs-cs", "minor-arthistory"
+  name: string; // e.g., "Bachelor of Science in Computer Science"
+  type: 'Major' | 'Minor';
+  requirements: DegreeRequirement[];
+  totalCreditsRequired?: number;
+  description?: string; // Optional: for a brief overview of the program
 }
 
 export interface Term {
@@ -101,19 +112,23 @@ export interface ScheduleConflict {
 export interface DegreeRequirement {
   id: string;
   name: string;
-  description: string;
+  description?: string; // Optional: for more details about the requirement
   requiredCredits: number;
-  courses: string[];
-  completed: boolean;
-  progress: number;
-  category?: 'core' | 'major' | 'elective' | 'concentration' | 'general_education' | 'other';
+  // courses: string[]; // Removed in favor of choiceCourses or specific courseMatcher
+  // completed: boolean; // To be calculated dynamically
+  progress: number; // This will be dynamically calculated for "what-if"
+  // category?: 'core' | 'major' | 'elective' | 'concentration' | 'general_education' | 'other'; // Removed for now, can be added if needed for display logic
   choiceRequired?: number;
-  courseMatcher?: { 
+  choiceCourses?: string[]; // Specific list of course codes if it's a "choose X from list Y" type
+  courseMatcher?: { // Used for broader category requirements, e.g. "3 credits from ARTS"
     type: "department" | "courseCodePrefix" | "keyword" | "specificCourses"; 
     values: string[]; 
   };
+  progressCourses?: number; // How many courses have been completed towards choiceRequired
 }
 
+// The Degree interface might be deprecated or merged into AcademicProgram if AcademicProgram covers all needs.
+// For now, keeping it separate if it's used elsewhere, but AcademicProgram is the focus for "What-If".
 export interface Degree {
   id: string;
   name: string;
