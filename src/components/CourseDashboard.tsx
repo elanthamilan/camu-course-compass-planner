@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"; // Added Dialog components
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"; // Added Tooltip
+import { toast } from "sonner"; // For notifications
 import { mockDegreeRequirements, mockMandatoryCourses } from "@/lib/mock-data"; // Assuming these are still relevant
 import { PlusCircle, Trash2, ArrowRight, ChevronDown, Eye } from "lucide-react"; // Lucide icons
 
@@ -112,6 +113,36 @@ const CourseDashboard: React.FC = () => {
         return semester;
       })
     })));
+  };
+
+  const handleRemoveSemester = (semesterIdToRemove: string) => {
+    setYearsData(prevYearsData => {
+      // First, check if the semester is empty
+      let semesterIsEmpty = false;
+      for (const year of prevYearsData) {
+        const semesterToRemove = year.semesters.find(s => s.id === semesterIdToRemove);
+        if (semesterToRemove) {
+          if (semesterToRemove.courses.length === 0) {
+            semesterIsEmpty = true;
+          }
+          break;
+        }
+      }
+
+      if (!semesterIsEmpty) {
+        toast.error("Cannot remove semester with courses. Please remove all courses first.");
+        return prevYearsData; // Return original data if semester is not empty
+      }
+
+      // If empty, proceed with removal
+      const updatedYearsData = prevYearsData.map(year => ({
+        ...year,
+        semesters: year.semesters.filter(semester => semester.id !== semesterIdToRemove)
+      })).filter(year => year.semesters.length > 0); // Optionally remove year if it becomes empty
+
+      toast.success("Semester removed successfully.");
+      return updatedYearsData;
+    });
   };
 
   const handleOpenAddSemesterDialog = () => {
@@ -416,7 +447,7 @@ const CourseDashboard: React.FC = () => {
                               variant="ghost"
                               size="icon"
                               className="h-7 w-7 text-destructive hover:text-destructive/80"
-                              onClick={() => { /* handleRemoveSemester(semester.id) - Logic to be added */ }}
+                              onClick={() => handleRemoveSemester(semester.id)}
                               disabled={semester.courses.length > 0} // Disable if semester has courses
                               aria-label="Remove semester"
                             >

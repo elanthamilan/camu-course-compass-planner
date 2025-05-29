@@ -48,7 +48,7 @@ const SchedulePage = () => {
         <Header />
       </motion.div>
       
-      <main className="px-4 pb-12 pt-6 flex-grow">
+      <main className="w-full px-4 pb-12 pt-6 flex-grow"> {/* Removed container, mx-auto, max-w-7xl */}
         {semesterId && (
           <motion.div 
             className="mb-4"

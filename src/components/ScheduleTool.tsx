@@ -328,10 +328,10 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
       </div>
       
       {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mt-4">
+      <div className="grid grid-cols-1 lg:grid-cols-6 gap-8 mt-4"> {/* Changed lg:grid-cols-4 to lg:grid-cols-6 and gap-6 to gap-8 */}
         {/* Left Sidebar */}
         <motion.div 
-          className="lg:col-span-1 space-y-4 md:overflow-visible overflow-x-hidden"
+          className="lg:col-span-2 space-y-4 md:overflow-visible overflow-x-hidden" /* Changed lg:col-span-1 to lg:col-span-2 */
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.4, delay: 0.2 }}
@@ -339,9 +339,9 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
           <Accordion type="multiple" defaultValue={["busy-times", "courses"]} className="w-full space-y-4">
             {/* Busy Times Section */}
             <AccordionItem value="busy-times" className="border-b-0">
-              <AccordionTrigger className="flex justify-between items-center p-3 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors [&[data-state=open]>svg]:rotate-180">
-                <h3 className="font-medium flex items-center text-sm">
-                  <Badge variant="outline" className="mr-2">
+              <AccordionTrigger className="flex justify-between items-center p-4 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors [&[data-state=open]>svg]:rotate-180"> {/* p-3 to p-4 */}
+                <h3 className="font-semibold flex items-center text-base"> {/* text-sm to text-base, font-medium to font-semibold */}
+                  <Badge variant="outline" className="mr-2 text-xs"> {/* Ensured badge text size remains smaller */}
                     Busy time ({busyTimes.length})
                   </Badge>
                 </h3>
@@ -385,9 +385,9 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
             
             {/* Courses Section */}
             <AccordionItem value="courses" className="border-b-0">
-               <AccordionTrigger className="flex justify-between items-center p-3 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors [&[data-state=open]>svg]:rotate-180">
-                <h3 className="font-medium flex items-center text-sm">
-                  <Badge variant="outline" className="mr-2">
+               <AccordionTrigger className="flex justify-between items-center p-4 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors [&[data-state=open]>svg]:rotate-180"> {/* p-3 to p-4 */}
+                <h3 className="font-semibold flex items-center text-base"> {/* text-sm to text-base, font-medium to font-semibold */}
+                  <Badge variant="outline" className="mr-2 text-xs"> {/* Ensured badge text size remains smaller */}
                     Courses ({courses.length})
                   </Badge>
                 </h3>
@@ -409,7 +409,7 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
                     {courses.map((course: Course, index: number) => (
                       <motion.div 
                         key={course.id}
-                        className="bg-white border rounded-md p-3 flex flex-col justify-between items-start group hover:shadow-sm transition-all w-full"
+                        className="bg-white border rounded-lg p-4 flex flex-col justify-between items-start group hover:shadow-sm transition-all w-full" /* rounded-md to rounded-lg, p-3 to p-4 */
                         initial={{ opacity: 0, y: 5 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95 }}
@@ -431,13 +431,13 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
                                 >
                                   <div className="flex items-center mb-1">
                                     {lockedCourses.includes(course.id) && <Lock className="h-3 w-3 mr-1.5 text-blue-600 flex-shrink-0" />}
-                                    <span className="font-medium text-sm mr-2">{course.code}</span>
-                                    <Badge variant="secondary" className="text-xs mr-2">{course.credits}cr</Badge>
+                                    <span className="font-medium text-base mr-2">{course.code}</span> {/* text-sm to text-base */}
+                                    <Badge variant="secondary" className="text-xs mr-2">{course.credits}cr</Badge> {/* Credits badge kept at text-xs for differentiation */}
                                   </div>
-                                  <div className="text-xs text-gray-700 mb-1">{course.name}</div>
+                                  <div className="text-sm text-gray-700 mb-1">{course.name}</div> {/* text-xs to text-sm */}
                                   {course.prerequisites && course.prerequisites.length > 0 && (
                                     <div 
-                                      className="text-xs py-0.5 px-1.5 bg-amber-100 text-amber-800 rounded inline-flex items-center cursor-pointer hover:bg-amber-200"
+                                      className="text-xs py-0.5 px-1.5 bg-amber-100 text-amber-800 rounded inline-flex items-center cursor-pointer hover:bg-amber-200" /* Prereq text kept at text-xs */
                                       onClick={() => toggleCourseExpanded(course.id)}
                                     >
                                       Prerequisites
@@ -449,39 +449,53 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
                                   )}
                                 </label>
                               </div>
-                              <div className="flex space-x-0.5"> {/* Reduced space for closer icons */}
+                              <div className="flex space-x-1"> {/* space-x-0.5 to space-x-1 */}
                                 <Tooltip>
                                   <TooltipTrigger asChild>
                                     <Button
                                       variant="ghost"
                                       size="icon"
-                                      className="h-6 w-6"
+                                      className="h-7 w-7" /* h-6 w-6 to h-7 w-7 */
                                       onClick={() => handleToggleCourseLock(course.id)}
                                     >
                                       {lockedCourses.includes(course.id) ? <Lock className="h-4 w-4 text-blue-600" /> : <Unlock className="h-4 w-4" />}
                                     </Button>
                                   </TooltipTrigger>
                                   <TooltipContent>
-                                    <p>{lockedCourses.includes(course.id) ? "Unlock course (allows changes during regeneration)" : "Lock course (preserve in schedule during regeneration)"}</p>
+                                    <p>{lockedCourses.includes(course.id) ? "Unlock this course to allow changes during regeneration." : "Lock this course to prevent changes during regeneration."}</p>
                                   </TooltipContent>
                                 </Tooltip>
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon" 
-                                  className="h-6 w-6"
-                                  onClick={() => toggleCourseExpanded(course.id)}
-                                >
-                                  {expandedCourses[course.id] ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                                </Button>
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon" 
-                                  className="h-6 w-6 text-destructive hover:text-destructive/90"
-                                  onClick={() => handleDeleteCourse(course.id)}
-                                  aria-label="Delete course"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon" 
+                                      className="h-7 w-7" /* h-6 w-6 to h-7 w-7 */
+                                      onClick={() => toggleCourseExpanded(course.id)}
+                                    >
+                                      {expandedCourses[course.id] ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>Show/hide course sections and prerequisites.</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon" 
+                                      className="h-7 w-7 text-destructive hover:text-destructive/90" /* h-6 w-6 to h-7 w-7 */
+                                      onClick={() => handleDeleteCourse(course.id)}
+                                      aria-label="Delete course"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>Remove this course from your current planning list.</p>
+                                  </TooltipContent>
+                                </Tooltip>
                               </div>
                             </div>
                             <AnimatePresence>
@@ -663,7 +677,7 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
         
         {/* Main Schedule View */}
         <motion.div 
-          className="lg:col-span-3"
+          className="lg:col-span-4" /* Changed lg:col-span-3 to lg:col-span-4 */
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.4, delay: 0.3 }}
