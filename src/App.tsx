@@ -10,6 +10,7 @@ import SchedulePage from "./pages/SchedulePage";
 import CartPage from "./pages/CartPage";
 import AdvisorPage from "./pages/AdvisorPage";
 import NotFound from "./pages/NotFound";
+import DegreeAuditPage from "./pages/DegreeAuditPage"; // Import the new page
 
 const queryClient = new QueryClient();
 
@@ -25,6 +26,7 @@ const App = () => (
             <Route path="/schedule" element={<SchedulePage />} />
             <Route path="/cart" element={<CartPage />} />
             <Route path="/advisor" element={<AdvisorPage />} />
+            <Route path="/degree-audit" element={<DegreeAuditPage />} /> {/* Add new route */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

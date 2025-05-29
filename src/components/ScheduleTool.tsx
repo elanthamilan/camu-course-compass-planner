@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react"; // Added useRef
 import TermHeader from "./TermHeader";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,14 +13,22 @@ import EditBusyTimeDialog from "./EditBusyTimeDialog";
 import AIAdvisorDialog from "./AIAdvisor";
 import TunePreferencesDialog from "./TunePreferencesDialog";
 import CompareSchedulesDialog from "./CompareSchedulesDialog";
-import { PlusCircle, Sliders, ArrowLeftRight, ChevronDown, ChevronUp, CalendarPlus, Sparkles, Trash2 } from "lucide-react";
+import { PlusCircle, Sliders, ArrowLeftRight, ChevronDown, ChevronUp, CalendarPlus, Sparkles, Trash2, Download, Upload, Settings, ListChecks, CalendarDays, Edit3, Copy as CopyIcon, Share2 } from "lucide-react"; // Added more icons
 import { motion, AnimatePresence } from "framer-motion";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { downloadJson } from "@/lib/utils"; // Added downloadJson helper
+import { ExportedSchedule, Schedule as ScheduleType, CourseSection as CourseSectionType, BusyTime as BusyTimeType, ScheduleConflict as ScheduleConflictType } from "@/lib/types"; // Added ExportedSchedule type and other types for clarity
+import { v4 as uuidv4 } from 'uuid'; // For generating unique IDs
+import { toast } from "sonner"; // For notifications
 import { Label } from "@/components/ui/label";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"; // Added Accordion imports
+import { SlidersHorizontal } from "lucide-react"; // For Tune Preferences icon
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"; // Ensure DropdownMenu components are fully imported
+import { mockCourses } from "@/lib/mock-data"; // Fallback for allCourses
+
 
 interface ScheduleToolProps {
-  semesterId?: string | null;
+  semesterId?: string | null; // Renamed to _semesterId in function signature
 }
 
 const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) => {
@@ -30,8 +38,13 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
     selectedSchedule, 
     generateSchedules,
     removeCourse,
-    schedules,
+    schedules, 
     selectSchedule,
+    addSchedule, // To add imported schedules
+    currentTerm, 
+    // Assuming `allCourses` from context contains the full catalog for looking up sections.
+    // If not, `mockCourses` will be used as a fallback.
+    allCourses = mockCourses, // Use mockCourses as fallback if allCourses is not in context
     // Context state for section preferences
     selectedSectionMap,
     updateSelectedSectionMap,
@@ -39,6 +52,7 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
     updateExcludeHonorsMap
   } = useSchedule();
 
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [view, setView] = useState("calendar");
   const [isAddBusyTimeOpen, setIsAddBusyTimeOpen] = useState(false);
   const [isEditBusyTimeOpen, setIsEditBusyTimeOpen] = useState(false);
@@ -92,8 +106,120 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
     removeCourse(courseId);
   };
 
+  const handleExportSchedule = () => {
+    if (!selectedSchedule) {
+      toast.error("No schedule selected to export.");
+      return;
+    }
+    if (!currentTerm) { // Ensure currentTerm is available
+      toast.error("Current term context is not available. Cannot export.");
+      return;
+    }
+
+    const exportedScheduleData: ExportedSchedule = {
+      version: "1.0",
+      name: selectedSchedule.name,
+      termId: selectedSchedule.termId || currentTerm.id, // Fallback to currentTerm.id if selectedSchedule.termId is missing
+      exportedSections: selectedSchedule.sections.map(section => ({
+        courseId: section.id.split("-")[0], 
+        sectionId: section.id,
+      })),
+      totalCredits: selectedSchedule.totalCredits,
+    };
+    downloadJson(exportedScheduleData, `${selectedSchedule.name.replace(/\s+/g, '_')}_${exportedScheduleData.termId}.json`);
+    toast.success("Schedule exported successfully!");
+  };
+
+  const handleImportButtonClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      toast.error("No file selected.");
+      return;
+    }
+
+    try {
+      const fileContent = await file.text();
+      const importedData = JSON.parse(fileContent) as ExportedSchedule;
+
+      if (importedData.version !== "1.0" || !importedData.name || !importedData.termId || !Array.isArray(importedData.exportedSections) || typeof importedData.totalCredits !== 'number') {
+        toast.error("Invalid schedule file format.");
+        if (fileInputRef.current) fileInputRef.current.value = ""; // Reset file input
+        return;
+      }
+      
+      const courseCatalog = allCourses; 
+
+      const newSections: CourseSectionType[] = [];
+      let sectionsFound = true;
+      for (const expSection of importedData.exportedSections) {
+        const parentCourse = courseCatalog.find(c => c.id === expSection.courseId || c.code === expSection.courseId);
+        if (parentCourse) {
+          const sectionDetail = parentCourse.sections.find(s => s.id === expSection.sectionId);
+          if (sectionDetail) {
+            newSections.push(sectionDetail);
+          } else {
+            sectionsFound = false;
+            toast.error(`Section ${expSection.sectionId} for course ${expSection.courseId} not found in catalog.`);
+            break; 
+          }
+        } else {
+          sectionsFound = false;
+          toast.error(`Course ${expSection.courseId} not found in catalog.`);
+          break;
+        }
+      }
+
+      if (!sectionsFound) {
+        if (fileInputRef.current) fileInputRef.current.value = ""; // Reset file input
+        return;
+      }
+      
+      const recalculatedTotalCredits = newSections.reduce((acc, section) => {
+          const parentCourse = courseCatalog.find(c => c.id === section.id.split('-')[0] || c.code === section.id.split('-')[0]);
+          return acc + (parentCourse?.credits || 0);
+      }, 0);
+
+      if (recalculatedTotalCredits !== importedData.totalCredits) {
+          toast.info(`Total credits recalculated to ${recalculatedTotalCredits} based on found sections. Original was ${importedData.totalCredits}.`);
+      }
+
+      const newSchedule: ScheduleType = {
+        id: uuidv4(),
+        name: `${importedData.name} (Imported)`,
+        termId: importedData.termId,
+        sections: newSections,
+        totalCredits: recalculatedTotalCredits, 
+        busyTimes: [], 
+        conflicts: [], 
+      };
+
+      addSchedule(newSchedule);
+      selectSchedule(newSchedule.id); 
+      toast.success(`Schedule "${newSchedule.name}" imported successfully!`);
+
+    } catch (error) {
+      console.error("Error importing schedule:", error);
+      toast.error("Failed to import schedule. Ensure the file is a valid JSON.");
+    } finally {
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
   return (
     <div className="animate-fade-in">
+      <input 
+        type="file" 
+        accept=".json" 
+        ref={fileInputRef} 
+        onChange={handleFileChange} 
+        style={{ display: 'none' }} 
+      />
       {/* Term Header with View Toggles */}
       <TermHeader view={view} setView={setView} />
       

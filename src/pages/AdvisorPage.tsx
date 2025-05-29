@@ -40,6 +40,28 @@ const AdvisorPage = () => {
         <div className="bg-white rounded-lg shadow-lg p-4 animate-scale-in">
           <AIAdvisor open={true} onOpenChange={() => {}} />
         </div>
+
+        {/* New Section: Schedule Sharing Information */}
+        <div className="mt-10 bg-white rounded-lg shadow-md p-6 animate-fade-in" style={{animationDelay: "300ms"}}>
+          <h2 className="text-2xl font-semibold text-gray-700 mb-3">Share & Manage Your Schedules</h2>
+          <p className="text-sm text-gray-600 mb-4">
+            You can now easily manage and share your academic schedules:
+          </p>
+          <ul className="list-disc list-inside text-sm text-gray-600 space-y-2">
+            <li>
+              <strong>Export Schedules:</strong> From the "Schedule Tool" page, when viewing a specific schedule, you can use the "Actions" menu to export your schedule as a JSON file. This file contains all the necessary details of your selected courses and sections for that term.
+            </li>
+            <li>
+              <strong>Import Schedules:</strong> If you have a schedule JSON file (either one you exported previously or one shared by an advisor or friend), you can import it back into the "Schedule Tool". Use the "Actions" menu to find the "Import Schedule from File" option. The application will validate the file and add it to your list of schedules.
+            </li>
+            <li>
+              <strong>Collaboration:</strong> This feature is great for discussing your plans with your academic advisor. Simply export your schedule and send them the file. They can then import it into their system to review and provide feedback.
+            </li>
+          </ul>
+          <p className="text-xs text-gray-500 mt-4">
+            Ensure that the term and course catalog of the imported schedule are compatible with the current system for best results. The import process will attempt to match course and section IDs.
+          </p>
+        </div>
       </main>
     </div>
   );

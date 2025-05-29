@@ -102,6 +102,8 @@ export interface DegreeRequirement {
   courses: string[];
   completed: boolean;
   progress: number;
+  category?: 'core' | 'major' | 'elective' | 'concentration' | 'general_education' | 'other';
+  choiceRequired?: number;
 }
 
 export interface Degree {
@@ -134,4 +136,54 @@ export interface SchedulePreferences {
   timePreference: TimePreference;
   avoidFridayClasses: boolean;
   // Future preferences can be added here
+}
+
+// Degree Audit Enhancements
+export type DegreeAuditRuleStatus = 'fulfilled' | 'partially_fulfilled' | 'not_fulfilled' | 'in_progress';
+
+export interface DegreeRequirementAudit extends DegreeRequirement {
+  status: DegreeAuditRuleStatus;
+  fulfilledCourses?: string[]; // Course codes that fulfilled this
+  progressCredits?: number; // Credits achieved for this specific requirement
+  progressCourses?: number; // Number of courses achieved for a 'choiceRequired'
+}
+
+export interface DegreeAuditResults {
+  studentId: string;
+  degreeId: string;
+  overallProgress: number; // Percentage, 0-1
+  totalCreditsEarned: number;
+  totalCreditsRequired: number;
+  requirementAudits: DegreeRequirementAudit[];
+  summaryNotes?: string[]; // e.g., "All core requirements met.", "3 electives still needed."
+}
+
+// Multi-Year Planning Enhancements
+export interface PlannedCourse {
+  courseId: string; // Course code
+  termId: string;   // ID of the term it's planned for
+}
+
+export interface MultiYearPlan {
+  id: string;
+  studentId: string;
+  degreeId: string;
+  planName: string;
+  plannedCourses: PlannedCourse[];
+}
+
+// Sharing Schedules Enhancements
+export interface ExportedScheduleSection {
+  id: string; // section id
+  courseId: string; // parent course id/code
+  crn?: string;
+  // Essential schedule details like days, times, location can be added later if needed
+}
+
+export interface ExportedSchedule {
+  version: string; // To handle format changes later
+  name: string;
+  termId: string;
+  exportedSections: { courseId: string, sectionId: string }[]; // Simplified for now
+  totalCredits: number;
 }

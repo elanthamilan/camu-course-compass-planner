@@ -12,23 +12,24 @@ import { PlusCircle, Trash2, ArrowRight, ChevronDown, Eye } from "lucide-react";
 import CourseSearch from "./CourseSearch"; // Already Shadcn
 import ViewScheduleDialog from "./ViewScheduleDialog"; // Needs check, might be Bootstrap
 import AddSemesterDialog from "./AddSemesterDialog"; // Already Shadcn
+import { Course } from "../lib/types"; // Import global Course type
 
 // Define types (assuming these are correct from previous steps)
-interface CourseData {
-  id: string;
-  code: string;
-  name: string;
-  credits: number;
-  days: string;
-  time: string;
-  prerequisites?: string[];
-}
+// interface CourseData { // Will be replaced by global Course type
+//   id: string;
+//   code: string;
+//   name: string;
+//   credits: number;
+//   days: string;
+//   time: string;
+//   prerequisites?: string[];
+// }
 
 interface SemesterData {
   id: string;
   name: string;
   creditsSelected: number;
-  courses: CourseData[];
+  courses: Course[]; // Use global Course type
 }
 
 interface YearData {
@@ -156,6 +157,37 @@ const CourseDashboard: React.FC = () => {
       return updatedYearsData;
     });
     setIsAddSemesterDialogOpen(false);
+  };
+
+  const handleAddCourseToPlan = (courseToAdd: import("../lib/types").Course, semesterId: string) => {
+    setYearsData(prevYearsData => 
+      prevYearsData.map(year => ({
+        ...year,
+        semesters: year.semesters.map(semester => {
+          if (semester.id === semesterId) {
+            // Check if course already exists in this semester
+            if (semester.courses.some(c => c.id === courseToAdd.id)) {
+              // Potentially show a toast message here: course already in semester
+              console.warn(`Course ${courseToAdd.code} already exists in ${semester.name}`);
+              return semester; 
+            }
+            // Directly use courseToAdd as it's already of type Course (or compatible)
+            const updatedCourses = [...semester.courses, courseToAdd];
+            return {
+              ...semester,
+              courses: updatedCourses,
+              creditsSelected: updatedCourses.reduce((acc, curr) => acc + curr.credits, 0),
+            };
+          }
+          return semester;
+        })
+        // The year.credits field in YearData seems static in the initial data.
+        // The UI correctly sums semester.creditsSelected for the year total.
+        // So, no need to recalculate year.credits here, it might be a target or not used directly.
+      }))
+    );
+    // Potentially show a success toast here
+    console.log(`Added ${courseToAdd.code} to semester ${semesterId}`);
   };
 
   const getStatusBadgeVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
@@ -304,6 +336,16 @@ const CourseDashboard: React.FC = () => {
                         >
                           <Eye size={18} /> 
                         </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-destructive hover:text-destructive/80"
+                          onClick={() => handleRemoveSemester(semester.id)}
+                          disabled={semester.courses.length > 0} // Disable if semester has courses
+                          aria-label="Remove semester"
+                        >
+                          <Trash2 size={16} />
+                        </Button>
                       </div>
                     </div>
                     <CardDescription>
@@ -334,7 +376,11 @@ const CourseDashboard: React.FC = () => {
                                   <Badge variant="secondary" className="mr-1.5">{course.credits} cr</Badge>
                                 </div>
                                 <p className="text-muted-foreground leading-tight">{course.name}</p>
-                                <p className="text-muted-foreground text-[11px] leading-tight">{course.days} {course.time}</p>
+                                {/* course.days and course.time are not part of the global Course type. 
+                                    This will be handled by optional chaining or type adjustment if these fields are truly needed.
+                                    For now, let's assume they might not be displayed or are TBD for planned courses.
+                                */}
+                                {/* <p className="text-muted-foreground text-[11px] leading-tight">{course.days} {course.time}</p> */}
                                 {course.prerequisites && course.prerequisites.length > 0 && (
                                   <p className="mt-1 text-amber-600 text-[11px] leading-tight">
                                     Prereqs: {course.prerequisites.join(', ')}
@@ -396,6 +442,7 @@ const CourseDashboard: React.FC = () => {
         open={isCourseSearchOpen} 
         onOpenChange={setIsCourseSearchOpen}
         termId={selectedSemesterId} // Pass the selected semester ID
+        onAddCourseToPlan={handleAddCourseToPlan} // Pass the new handler
       />
       
       {/* ViewScheduleDialog might need refactoring if it's Bootstrap-based. */}

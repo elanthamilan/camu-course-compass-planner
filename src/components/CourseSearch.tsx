@@ -7,9 +7,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSchedule } from "@/contexts/ScheduleContext";
 import { Course } from "@/lib/types";
 import { mockCourses } from "@/lib/mock-data";
-import { Search, Check, Info, PlusCircle, LogOut, Filter } from "lucide-react"; // Added Filter
+import { Search, Check, Info, PlusCircle, LogOut, Filter, Network } from "lucide-react"; // Added Filter and Network
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Checkbox } from "@/components/ui/checkbox"; // Added Checkbox
+import PrerequisiteGraph from './PrerequisiteGraph'; // Import PrerequisiteGraph
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label"; // Added Label
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // Added Select
@@ -18,13 +19,16 @@ interface CourseSearchProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   termId: string;
+  onAddCourseToPlan: (course: Course, termId: string) => void; // New prop
 }
 
-const CourseSearch: React.FC<CourseSearchProps> = ({ open, onOpenChange, termId }) => {
-  const { addCourse } = useSchedule();
+const CourseSearch: React.FC<CourseSearchProps> = ({ open, onOpenChange, termId, onAddCourseToPlan }) => {
+  // const { addCourse } = useSchedule(); // We'll use the new prop instead for multi-year planning
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTab, setSelectedTab] = useState("required");
   const [selectedAttributes, setSelectedAttributes] = useState<string[]>([]);
+  const [selectedCourseForPrereqView, setSelectedCourseForPrereqView] = useState<string | null>(null);
+  const [isPrereqModalOpen, setIsPrereqModalOpen] = useState(false);
 
   const allAttributes = Array.from(new Set(mockCourses.flatMap(course => course.attributes || []))).sort();
 
@@ -80,11 +84,18 @@ const CourseSearch: React.FC<CourseSearchProps> = ({ open, onOpenChange, termId 
     }
   ];
 
-  const handleAddCourse = (course: Course) => {
-    addCourse(course);
+  const handleAddCourseToPlanInternal = (course: Course) => {
+    onAddCourseToPlan(course, termId); // Use the prop and pass termId
+    // Optionally, provide feedback like a toast, handled by the parent or here
+  };
+
+  const handleOpenPrereqView = (courseId: string) => {
+    setSelectedCourseForPrereqView(courseId);
+    setIsPrereqModalOpen(true);
   };
 
   return (
+    <>
     <Drawer open={open} onOpenChange={onOpenChange}> {/* Changed Dialog to Drawer and added direction */}
       <DrawerContent className="sm:max-w-xl animate-slide-in-right"> {/* Adjusted className for drawer */}
         <DrawerHeader>
@@ -243,11 +254,18 @@ const CourseSearch: React.FC<CourseSearchProps> = ({ open, onOpenChange, termId 
                         </TooltipTrigger>
                         <TooltipContent>View course details</TooltipContent>
                       </Tooltip>
-                      
+                       <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button variant="outline" size="sm" className="h-8 w-8 rounded-full p-0" onClick={() => handleOpenPrereqView(course.id)}>
+                            <Network size={16} />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>View prerequisites</TooltipContent>
+                      </Tooltip>
                       <Button 
                         variant="default" // Changed to default variant
                         size="sm"
-                        onClick={() => handleAddCourse(course as unknown as Course)}
+                        onClick={() => handleAddCourseToPlanInternal(course as unknown as Course)}
                       >
                         <PlusCircle className="h-4 w-4 mr-1.5" />
                         Add
@@ -289,11 +307,18 @@ const CourseSearch: React.FC<CourseSearchProps> = ({ open, onOpenChange, termId 
                         </TooltipTrigger>
                         <TooltipContent>View course details</TooltipContent>
                       </Tooltip>
-                      
+                       <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button variant="outline" size="sm" className="h-8 w-8 rounded-full p-0" onClick={() => handleOpenPrereqView(course.id)}>
+                            <Network size={16} />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>View prerequisites</TooltipContent>
+                      </Tooltip>
                       <Button 
                         variant="default" // Changed to default variant
                         size="sm"
-                        onClick={() => handleAddCourse(course)}
+                        onClick={() => handleAddCourseToPlanInternal(course)}
                       >
                         <PlusCircle className="h-4 w-4 mr-1.5" />
                         Add
@@ -314,6 +339,15 @@ const CourseSearch: React.FC<CourseSearchProps> = ({ open, onOpenChange, termId 
         </DrawerFooter>
       </DrawerContent>
     </Drawer>
+    {isPrereqModalOpen && (
+        <PrerequisiteGraph
+          courseId={selectedCourseForPrereqView}
+          isOpen={isPrereqModalOpen}
+          onOpenChange={setIsPrereqModalOpen}
+          allCourses={mockCourses} // Pass all courses
+        />
+      )}
+    </>
   );
 };
 

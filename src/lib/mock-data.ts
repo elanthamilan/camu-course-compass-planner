@@ -1,5 +1,18 @@
 
-import { Course, BusyTime, Schedule, Term, StudentInfo, Degree, DegreeRequirement } from "./types";
+import { 
+  Course, 
+  BusyTime, 
+  Schedule, 
+  Term, 
+  StudentInfo, 
+  Degree, 
+  DegreeRequirement,
+  DegreeAuditResults,
+  MultiYearPlan,
+  ExportedSchedule,
+  PlannedCourse,
+  DegreeRequirementAudit
+} from "./types";
 
 export const mockCourses: Course[] = [
   {
@@ -372,40 +385,67 @@ export const mockStudent: StudentInfo = {
 
 export const mockDegreeRequirements: DegreeRequirement[] = [
   {
-    id: "core",
-    name: "Core Requirements",
-    description: "Fundamental courses required for all students in this major",
-    requiredCredits: 40,
-    courses: ["cs101", "cs201", "cs301", "math101", "math201", "math301"],
+    id: "core_cs",
+    name: "Computer Science Core",
+    description: "Fundamental courses for Computer Science.",
+    requiredCredits: 22,
+    courses: ["cs101", "CS201", "CS301", "CS310"], // Added more specific courses
     completed: false,
-    progress: 0.6 // 60% complete
+    progress: 0.25,
+    category: "core",
   },
   {
-    id: "major",
-    name: "Major Requirements",
-    description: "Specific courses required for this major",
-    requiredCredits: 30,
-    courses: ["cs310", "cs350", "cs410", "cs450", "cs490"],
+    id: "core_math",
+    name: "Mathematics Core",
+    description: "Core mathematics courses required for CS.",
+    requiredCredits: 8,
+    courses: ["math105", "MATH201"], // MATH201 would be Calculus I
     completed: false,
-    progress: 0.6 // 60% complete
+    progress: 0.5,
+    category: "core",
   },
   {
-    id: "electives",
-    name: "Electives",
-    description: "Optional courses to complete your degree",
-    requiredCredits: 20,
-    courses: [],
+    id: "major_adv_cs",
+    name: "Advanced CS Electives",
+    description: "Choose 3 advanced Computer Science electives.",
+    requiredCredits: 9, // Assuming 3 courses * 3 credits each
+    courses: ["CS410", "CS450", "CS490", "CS420", "CS430"], // Hypothetical advanced courses
     completed: false,
-    progress: 0.6 // 60% complete
+    progress: 0,
+    category: "major",
+    choiceRequired: 3,
   },
   {
-    id: "general",
-    name: "General Education",
-    description: "Broad knowledge courses required for all degrees",
-    requiredCredits: 30,
-    courses: ["eng101", "eng234", "hist101", "phil101", "psyc101"],
+    id: "gen_ed_hum",
+    name: "Humanities Elective",
+    description: "Choose 1 course from Humanities list.",
+    requiredCredits: 3,
+    courses: ["eng234", "phil101", "HIST101", "ART100"], // Added more options
+    completed: true,
+    progress: 1,
+    category: "general_education",
+    choiceRequired: 1,
+  },
+  {
+    id: "gen_ed_sci",
+    name: "Science Elective",
+    description: "Choose 1 lab science course.",
+    requiredCredits: 4,
+    courses: ["phys210", "bio101", "chem101"],
     completed: false,
-    progress: 0.67 // 67% complete
+    progress: 0,
+    category: "general_education",
+    choiceRequired: 1,
+  },
+  {
+    id: "univ_req",
+    name: "University Seminar",
+    description: "Required university seminar.",
+    requiredCredits: 1,
+    courses: ["univ100"],
+    completed: false,
+    progress: 0,
+    category: "other",
   }
 ];
 
@@ -456,3 +496,94 @@ export const busyTimeColors = {
   'reminder': { bg: 'bg-yellow-500', text: 'text-black', icon: 'bell' },
   'other': { bg: 'bg-violet-500', text: 'text-white', icon: 'bookmark' },
 };
+
+// New Mock Data for Degree Audit, Multi-Year Plan, and Exported Schedule
+
+export const mockDegreeAuditResult: DegreeAuditResults = {
+  studentId: mockStudent.id,
+  degreeId: mockDegree.id,
+  overallProgress: mockStudent.totalCredits / mockDegree.totalCredits,
+  totalCreditsEarned: mockStudent.totalCredits,
+  totalCreditsRequired: mockDegree.totalCredits,
+  requirementAudits: [
+    {
+      ...mockDegreeRequirements[0], // Core CS
+      status: 'partially_fulfilled',
+      fulfilledCourses: ['cs101'],
+      progressCredits: 3,
+      progressCourses: 1,
+    },
+    {
+      ...mockDegreeRequirements[1], // Core Math
+      status: 'partially_fulfilled',
+      fulfilledCourses: ['math105'], // Assuming math101 is an alias or completed
+      progressCredits: 3,
+      progressCourses: 1,
+
+    },
+    {
+      ...mockDegreeRequirements[2], // Advanced CS Electives
+      status: 'not_fulfilled',
+      fulfilledCourses: [],
+      progressCredits: 0,
+      progressCourses: 0,
+    },
+    {
+      ...mockDegreeRequirements[3], // Humanities Elective
+      status: 'fulfilled',
+      fulfilledCourses: ['eng234'], // From mockStudent.completedCourses
+      progressCredits: 3,
+      progressCourses: 1,
+    },
+     {
+      ...mockDegreeRequirements[4], // Science Elective
+      status: 'not_fulfilled',
+      fulfilledCourses: [],
+      progressCredits: 0,
+      progressCourses: 0,
+    },
+    {
+      ...mockDegreeRequirements[5], // University Seminar
+      status: 'not_fulfilled',
+      fulfilledCourses: [],
+      progressCredits: 0,
+      progressCourses: 0,
+    }
+  ],
+  summaryNotes: [
+    `Overall progress: ${Math.round((mockStudent.totalCredits / mockDegree.totalCredits) * 100)}%`,
+    "Core CS requirements partially met.",
+    "Humanities requirement fulfilled.",
+    "Advanced CS electives and Science elective need attention."
+  ]
+};
+
+export const mockMultiYearPlan: MultiYearPlan = {
+  id: "plan123",
+  studentId: mockStudent.id,
+  degreeId: mockDegree.id,
+  planName: "My CS Graduation Plan",
+  plannedCourses: [
+    { courseId: "CS201", termId: "fall2024" }, // Assuming CS201 is a valid course code
+    { courseId: "CS301", termId: "spring2025" },
+    { courseId: "MATH201", termId: "fall2024" }, // Assuming MATH201 is a valid course code
+    { courseId: "CS310", termId: "fall2024" },
+    { courseId: "CS410", termId: "spring2025" }, // Advanced elective
+    { courseId: "phys210", termId: "spring2025" }, // Science elective
+    { courseId: "univ100", termId: "fall2024" },
+  ]
+};
+
+export const mockExportedSchedule: ExportedSchedule = {
+  version: "1.0",
+  name: mockSchedules[0].name, // "Balanced Schedule - Morning Classes"
+  termId: mockSchedules[0].termId, // "fall2023" - Note: mockTerms might need a "fall2023" or adjust this
+  exportedSections: mockSchedules[0].sections.map(section => ({
+    courseId: section.id.split("-")[0], // e.g., "cs101"
+    sectionId: section.id, // e.g., "cs101-001"
+  })),
+  totalCredits: mockSchedules[0].totalCredits, // 9
+};
+
+// Ensure mockStudent has relevant completed courses for the audit
+mockStudent.completedCourses = ["cs101", "math105", "eng234", "ENG101"]; // ENG101 for prereq of eng234
