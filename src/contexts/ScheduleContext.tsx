@@ -20,7 +20,7 @@ import {
 interface ScheduleContextType {
   courses: Course[]; 
   busyTimes: BusyTime[];
-  schedules: Schedule[]; 
+  schedules: Schedule[];
   selectedSchedule: Schedule | null;
   currentTerm: Term | null;
   allTerms: Term[];
@@ -44,7 +44,7 @@ interface ScheduleContextType {
   removeSchedule: (scheduleId: string) => void;
   selectSchedule: (scheduleId: string | null) => void;
   
-  generateSchedules: (selectedCourseIds: string[]) => void; 
+  generateSchedules: (selectedCourseIds: string[], fixedSections?: CourseSection[]) => void; 
   
   selectTerm: (termId: string) => void;
   updatePreferences: (newPreferences: Partial<PreferenceSettings>) => void;
@@ -86,6 +86,8 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
   const [schedulePreferences, setSchedulePreferences] = useState<SchedulePreferences>({
     timePreference: "none",
     avoidFridayClasses: false,
+    avoidBackToBack: false,       // New default
+    dayDistribution: "none",    // New default
   });
 
   const [selectedSectionMap, setSelectedSectionMapState] = useState<Record<string, string[] | 'all'>>({});
@@ -191,26 +193,51 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
     if (schedule) setSelectedSchedule(schedule);
   };
 
-  const generateSchedules = (selectedCourseIds: string[]) => {
+  const generateSchedules = (selectedCourseIds: string[], fixedSections: CourseSection[] = []) => {
     toast.info("Generating schedules based on preferences...");
 
     if (!selectedCourseIds || selectedCourseIds.length === 0) {
       toast.error("No courses selected for schedule generation.");
-      setSchedules([]); 
+      setSchedules([]);
+      setSelectedSchedule(null);
+      return;
+    }
+
+    const fixedCourseIds = fixedSections.map(section => section.id.split('-')[0]);
+    
+    // Filter out courses that are already covered by fixedSections from the initial selection
+    const coursesToActuallySchedule = courses.filter(course => 
+      selectedCourseIds.includes(course.id) && !fixedCourseIds.includes(course.id)
+    );
+
+    if (coursesToActuallySchedule.length === 0 && fixedSections.length > 0) {
+      // All selected courses are locked, create one schedule with only fixed sections
+      const newSchedule: Schedule = {
+        id: `gen-sched-${Date.now()}-locked`,
+        name: `Schedule with Locked Courses (${fixedSections.length} courses)`,
+        termId: currentTerm?.id || "",
+        sections: [...fixedSections],
+        busyTimes,
+        totalCredits: fixedSections.reduce((acc, section) => {
+          const parentCourse = courses.find(c => c.id === section.id.split('-')[0]);
+          return acc + (parentCourse?.credits || 0);
+        }, 0),
+        conflicts: [] // Basic conflict check for fixed sections could be added here if needed
+      };
+      setSchedules(prev => [...prev.filter(s => !s.name.startsWith("Generated Schedule")), newSchedule]);
+      setSelectedSchedule(newSchedule);
+      toast.success(`Schedule created with ${fixedSections.length} locked course(s).`);
+      return;
+    }
+    
+    if (coursesToActuallySchedule.length === 0 && fixedSections.length === 0) {
+      toast.error("No courses available to schedule (neither selected nor locked).");
+      setSchedules([]);
       setSelectedSchedule(null);
       return;
     }
     
-    const coursesToSchedule = courses.filter(course => selectedCourseIds.includes(course.id));
-
-    if (coursesToSchedule.length === 0) {
-        toast.error("Selected courses are not in the current planning list.");
-        setSchedules([]); 
-        setSelectedSchedule(null);
-        return;
-    }
-
-    const processedCourses = coursesToSchedule.map(course => {
+    const processedCourses = coursesToActuallySchedule.map(course => {
       let availableSections = course.sections;
       if (excludeHonorsMap[course.id]) {
         availableSections = availableSections.filter(section => section.sectionType !== 'Honors');
@@ -233,63 +260,88 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const foundSchedules: Schedule[] = [];
-    const coursesNotScheduled = new Set<string>(processedCourses.map(c => c.code));
+    // Initialize with all selected course codes (including those that might be locked)
+    const coursesNotScheduled = new Set<string>(selectedCourseIds.map(id => courses.find(c=>c.id === id)?.code || id));
 
-    function buildSchedulesRecursive(courseIndex: number, currentSections: CourseSection[], generatedCount: number): number {
+    function buildSchedulesRecursive(courseIndex: number, currentSectionsAccumulator: CourseSection[], generatedCount: number): number {
       if (generatedCount >= MAX_SCHEDULES_TO_GENERATE) {
         return generatedCount;
       }
 
+      // Base case: all processable courses have been considered
       if (courseIndex === processedCourses.length) {
+        // currentSectionsAccumulator already includes fixedSections from the initial call
+        const finalSections = [...currentSectionsAccumulator];
+        
         const newSchedule: Schedule = {
           id: `gen-sched-${Date.now()}-${foundSchedules.length + 1}`,
-          name: `Generated Schedule ${foundSchedules.length + 1} (${currentSections.length} courses)`,
+          name: `Generated Schedule ${foundSchedules.length + 1} (${finalSections.length} courses)`,
           termId: currentTerm?.id || "",
-          sections: [...currentSections], 
+          sections: finalSections,
           busyTimes,
-          totalCredits: currentSections.reduce((acc, section) => {
-            const parentCourse = courses.find(c => c.id === section.id.split('-')[0]); 
+          totalCredits: finalSections.reduce((acc, section) => {
+            const parentCourse = courses.find(c => c.id === section.id.split('-')[0]);
             return acc + (parentCourse?.credits || 0);
           }, 0),
-          conflicts: [] 
+          conflicts: [] // Basic conflict check could be done here again for the whole schedule
         };
         foundSchedules.push(newSchedule);
-        currentSections.forEach(s => coursesNotScheduled.delete(s.id.split('-')[0].toUpperCase()));
+        // Update coursesNotScheduled based on ALL sections in the final schedule
+        finalSections.forEach(s => {
+          const courseCode = courses.find(c => c.id === s.id.split('-')[0])?.code;
+          if (courseCode) coursesNotScheduled.delete(courseCode);
+        });
         return generatedCount + 1;
       }
 
-      const currentCourse = processedCourses[courseIndex];
+      const currentCourseToProcess = processedCourses[courseIndex];
       let newGeneratedCount = generatedCount;
 
-      for (const section of currentCourse.sections) {
+      for (const section of currentCourseToProcess.sections) {
+        // Conflict check against ALL sections accumulated so far (including fixed ones)
         if (isSectionConflictWithBusyTimes(section, busyTimes) || 
-            isSectionConflictWithOtherSections(section, currentSections)) {
-          continue; 
+            isSectionConflictWithOtherSections(section, currentSectionsAccumulator)) {
+          continue;
         }
 
-        currentSections.push(section);
-        newGeneratedCount = buildSchedulesRecursive(courseIndex + 1, currentSections, newGeneratedCount);
-        currentSections.pop(); 
+        currentSectionsAccumulator.push(section);
+        newGeneratedCount = buildSchedulesRecursive(courseIndex + 1, currentSectionsAccumulator, newGeneratedCount);
+        currentSectionsAccumulator.pop(); // Backtrack
 
         if (newGeneratedCount >= MAX_SCHEDULES_TO_GENERATE) {
-          break; 
+          break;
         }
+      }
+      // If the current course couldn't be scheduled (no valid sections found), 
+      // still try to schedule the remaining courses.
+      if (currentCourseToProcess.sections.length === 0 || !currentSectionsAccumulator.some(s => s.id.startsWith(currentCourseToProcess.id))) {
+         newGeneratedCount = buildSchedulesRecursive(courseIndex + 1, currentSectionsAccumulator, newGeneratedCount);
       }
       return newGeneratedCount;
     }
-
+    
     setTimeout(() => {
-      buildSchedulesRecursive(0, [], 0);
+      // Initial call with fixedSections already included in currentSectionsAccumulator
+      buildSchedulesRecursive(0, [...fixedSections], 0); 
+
       if (foundSchedules.length > 0) {
         setSchedules(prev => [...prev.filter(s => !s.name.startsWith("Generated Schedule")), ...foundSchedules]);
         setSelectedSchedule(foundSchedules[0]);
         toast.success(`${foundSchedules.length} new schedule(s) generated!`);
-        if (coursesNotScheduled.size > 0 && foundSchedules.length < MAX_SCHEDULES_TO_GENERATE) {
-            toast.info(`Could not schedule all selected courses. Unable to place: ${Array.from(coursesNotScheduled).join(', ')}.`);
+        // Update coursesNotScheduled by removing codes of all originally selected courses that ARE in the final schedule
+        const finalScheduledCourseCodes = new Set<string>();
+        foundSchedules.forEach(sch => sch.sections.forEach(sec => {
+            const course = courses.find(c => c.id === sec.id.split('-')[0]);
+            if(course) finalScheduledCourseCodes.add(course.code);
+        }));
+        const trulyNotScheduled = Array.from(coursesNotScheduled).filter(code => !finalScheduledCourseCodes.has(code));
+
+        if (trulyNotScheduled.length > 0 && foundSchedules.length < MAX_SCHEDULES_TO_GENERATE) {
+            toast.info(`Could not schedule all selected courses. Unable to place: ${trulyNotScheduled.join(', ')}.`);
         }
       } else {
-        toast.error("Could not generate any valid schedules with the current selections and constraints.");
-        setSchedules(prev => prev.filter(s => !s.name.startsWith("Generated Schedule"))); 
+        toast.error("Could not generate any valid schedules with the current selections and constraints, including locked courses.");
+        setSchedules(prev => prev.filter(s => !s.name.startsWith("Generated Schedule")));
         setSelectedSchedule(null);
       }
     }, 500);

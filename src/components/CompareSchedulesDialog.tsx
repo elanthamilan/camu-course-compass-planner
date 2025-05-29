@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSchedule } from "@/contexts/ScheduleContext";
@@ -54,6 +54,9 @@ const CompareSchedulesDialog: React.FC<CompareSchedulesDialogProps> = ({ open, o
       <DialogContent className="sm:max-w-5xl max-h-[80vh] flex flex-col animate-scale-in">
         <DialogHeader>
           <DialogTitle>Compare Schedules</DialogTitle>
+          <DialogDescription>
+            Select up to 3 schedules to compare side-by-side or in a calendar view. You can then apply one to your main schedule.
+          </DialogDescription>
         </DialogHeader>
         
         <div className="flex-1 overflow-auto min-h-[400px]">

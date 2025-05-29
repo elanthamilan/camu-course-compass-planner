@@ -23,6 +23,12 @@ export const mockCourses: Course[] = [
     department: "Computer Science",
     color: "#FFA726",
     attributes: ["Technical", "Introductory"], // Added attributes
+    keywords: ["programming", "introduction", "cs"], // Added keywords
+    // Adding new filter fields for testing
+    days: ["M", "W", "F"], 
+    college: "College of Engineering",
+    campus: "North Campus",
+    locationKeywords: ["Science Building"], // Using keywords for broader matching
     sections: [
       {
         id: "cs101-001",
@@ -33,7 +39,7 @@ export const mockCourses: Course[] = [
         schedule: [
           { days: "M,W,F", startTime: "09:00", endTime: "10:00", location: "Science Building 101" }
         ],
-        location: "North Campus",
+        location: "North Campus", // This is section specific, top-level campus is for the course offering
         maxSeats: 30,
         availableSeats: 5,
         locked: true // Added lock status
@@ -60,6 +66,12 @@ export const mockCourses: Course[] = [
     department: "Mathematics",
     color: "#EF5350",
     attributes: ["Quantitative Reasoning", "Introductory"], // Added attributes
+    keywords: ["math", "algebra", "calculus-prep"], // Added keywords
+    // Adding new filter fields for testing
+    days: ["M", "W", "F"],
+    college: "College of Arts and Sciences",
+    campus: "Main Campus",
+    locationKeywords: ["Math Building"],
     sections: [
       {
         id: "math105-001",
@@ -98,6 +110,12 @@ export const mockCourses: Course[] = [
     department: "English",
     color: "#42A5F5",
     attributes: ["Humanities", "Writing Intensive"], // Added attributes
+    keywords: ["english", "writing", "composition"], // Added keywords
+    // Adding new filter fields for testing
+    days: ["M", "W", "T", "Th"], // Has MW and TTh sections
+    college: "College of Liberal Arts",
+    campus: "East Campus",
+    locationKeywords: ["Liberal Arts"],
     sections: [
       {
         id: "eng234-001",
@@ -136,6 +154,12 @@ export const mockCourses: Course[] = [
     department: "Physics",
     color: "#26C6DA",
     attributes: ["Natural Science", "Lab Science", "Quantitative Reasoning"], // Added attributes
+    keywords: ["physics", "mechanics", "science"], // Added keywords
+    // Adding new filter fields
+    days: ["M", "W", "F", "T"], // Has MWF and T sections
+    college: "College of Engineering", // Assuming Physics is under Engineering for this example
+    campus: "North Campus",
+    locationKeywords: ["Science Building", "Science Lab"],
     sections: [
       {
         id: "phys210-001",
@@ -161,6 +185,11 @@ export const mockCourses: Course[] = [
     department: "Philosophy",
     color: "#EC407A",
     attributes: ["Humanities", "Critical Thinking"], // Added attributes
+    keywords: ["philosophy", "logic", "reasoning"], // Added keywords
+    days: ["M", "W", "F"],
+    college: "College of Liberal Arts",
+    campus: "Main Campus",
+    locationKeywords: ["Humanities"],
     sections: [
       {
         id: "phil101-001",
@@ -185,6 +214,10 @@ export const mockCourses: Course[] = [
     department: "Biology",
     color: "#66BB6A",
     attributes: ["Natural Science", "Lab Science"], // Added attributes
+    days: ["M", "W", "F"], // Lecture MWF, Lab W
+    college: "College of Arts and Sciences",
+    campus: "North Campus",
+    locationKeywords: ["Science Building", "Biology Lab"],
     sections: [
       {
         id: "bio101-001",
@@ -211,6 +244,10 @@ export const mockCourses: Course[] = [
     department: "Chemistry",
     color: "#AB47BC",
     attributes: ["Natural Science", "Lab Science"], // Added attributes
+    days: ["M", "W", "F", "Th"], // Lecture MWF, Lab Th
+    college: "College of Arts and Sciences",
+    campus: "North Campus",
+    locationKeywords: ["Science Building", "Chemistry Lab"],
     sections: [
       {
         id: "chem101-001",
@@ -236,6 +273,10 @@ export const mockCourses: Course[] = [
     department: "University",
     color: "#7E57C2",
     attributes: ["Introductory", "University Requirement"], // Added attributes
+    days: ["W"],
+    college: "University College", // Example college
+    campus: "Main Campus",
+    locationKeywords: ["Student Center"],
     sections: [
       {
         id: "univ100-001",
@@ -260,6 +301,10 @@ export const mockCourses: Course[] = [
     department: "Economics",
     color: "#FF7043",
     attributes: ["Social Science", "Quantitative Reasoning"], // Added attributes
+    days: ["M", "W", "F"],
+    college: "Business School",
+    campus: "West Campus",
+    locationKeywords: ["Business Building"],
     sections: [
       {
         id: "econ101-001",
@@ -389,39 +434,42 @@ export const mockDegreeRequirements: DegreeRequirement[] = [
     name: "Computer Science Core",
     description: "Fundamental courses for Computer Science.",
     requiredCredits: 22,
-    courses: ["cs101", "CS201", "CS301", "CS310"], // Added more specific courses
+    courses: ["cs101", "CS201", "CS301", "CS310"], 
     completed: false,
     progress: 0.25,
     category: "core",
+    courseMatcher: { type: "specificCourses", values: ["CS201", "CS301", "CS310"] } // Assuming CS101 is done
   },
   {
     id: "core_math",
     name: "Mathematics Core",
     description: "Core mathematics courses required for CS.",
     requiredCredits: 8,
-    courses: ["math105", "MATH201"], // MATH201 would be Calculus I
+    courses: ["math105", "MATH201"], 
     completed: false,
     progress: 0.5,
     category: "core",
+    courseMatcher: { type: "specificCourses", values: ["MATH201"] } // Assuming MATH105 is done
   },
   {
     id: "major_adv_cs",
     name: "Advanced CS Electives",
     description: "Choose 3 advanced Computer Science electives.",
-    requiredCredits: 9, // Assuming 3 courses * 3 credits each
-    courses: ["CS410", "CS450", "CS490", "CS420", "CS430"], // Hypothetical advanced courses
+    requiredCredits: 9, 
+    courses: ["CS410", "CS450", "CS490", "CS420", "CS430"], 
     completed: false,
     progress: 0,
     category: "major",
     choiceRequired: 3,
+    courseMatcher: { type: "courseCodePrefix", values: ["CS4"] } // Example: CS4xx courses
   },
   {
     id: "gen_ed_hum",
     name: "Humanities Elective",
     description: "Choose 1 course from Humanities list.",
     requiredCredits: 3,
-    courses: ["eng234", "phil101", "HIST101", "ART100"], // Added more options
-    completed: true,
+    courses: ["eng234", "phil101", "HIST101", "ART100"], 
+    completed: true, // This one is done, so no matcher needed or it won't be used
     progress: 1,
     category: "general_education",
     choiceRequired: 1,
@@ -436,6 +484,7 @@ export const mockDegreeRequirements: DegreeRequirement[] = [
     progress: 0,
     category: "general_education",
     choiceRequired: 1,
+    courseMatcher: { type: "keyword", values: ["science", "lab"] } // Match courses with "science" AND "lab" keywords
   },
   {
     id: "univ_req",
@@ -446,6 +495,7 @@ export const mockDegreeRequirements: DegreeRequirement[] = [
     completed: false,
     progress: 0,
     category: "other",
+    courseMatcher: { type: "specificCourses", values: ["univ100"] }
   }
 ];
 

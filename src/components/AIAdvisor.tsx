@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar } from "@/components/ui/avatar";
@@ -144,11 +144,14 @@ const AIAdvisor: React.FC<AIAdvisorProps> = ({ open, onOpenChange }) => {
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-xl max-h-[80vh] flex flex-col animate-scale-in">
-        <DialogHeader>
-          <DialogTitle>AI Course Advisor</DialogTitle>
-        </DialogHeader>
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      <DrawerContent className="w-[400px] sm:w-[540px] max-h-[90vh] flex flex-col">
+        <DrawerHeader>
+          <DrawerTitle>AI Course Advisor</DrawerTitle>
+          <DrawerDescription>
+            Chat with the AI Course Advisor to get personalized recommendations and answers to your course planning questions.
+          </DrawerDescription>
+        </DrawerHeader>
         
         <div className="flex-1 overflow-y-auto p-4 bg-gray-50 rounded-md mb-4">
           {renderMessages()}
@@ -185,17 +188,19 @@ const AIAdvisor: React.FC<AIAdvisorProps> = ({ open, onOpenChange }) => {
           </Button>
         </div>
         
-        <DialogFooter className="sm:justify-between border-t pt-2">
+        <DrawerFooter className="sm:justify-between border-t pt-4">
           <div className="text-xs text-gray-500">
             Your AI advisor has access to your academic record and program requirements.
           </div>
-          <Button variant="outline" onClick={() => onOpenChange(false)} className="text-sm">
-            <LogOut className="h-4 w-4 mr-2" /> {/* Added LogOut icon */}
-            Close
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          <DrawerClose asChild>
+            <Button variant="outline" className="text-sm">
+              <LogOut className="h-4 w-4 mr-2" /> {/* Added LogOut icon */}
+              Close
+            </Button>
+          </DrawerClose>
+        </DrawerFooter>
+      </DrawerContent>
+    </Drawer>
   );
 };
 

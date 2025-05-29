@@ -13,19 +13,21 @@ import EditBusyTimeDialog from "./EditBusyTimeDialog";
 import AIAdvisorDialog from "./AIAdvisor";
 import TunePreferencesDialog from "./TunePreferencesDialog";
 import CompareSchedulesDialog from "./CompareSchedulesDialog";
-import { PlusCircle, Sliders, ArrowLeftRight, ChevronDown, ChevronUp, CalendarPlus, Sparkles, Trash2, Download, Upload, Settings, ListChecks, CalendarDays, Edit3, Copy as CopyIcon, Share2 } from "lucide-react"; // Added more icons
+import { PlusCircle, Sliders, ArrowLeftRight, ChevronDown, ChevronUp, CalendarPlus, Sparkles, Trash2, Download, Upload, Settings, ListChecks, CalendarDays, Edit3, Copy as CopyIcon, Share2, Lock, Unlock } from "lucide-react"; // Added Lock, Unlock icons
 import { motion, AnimatePresence } from "framer-motion";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { downloadJson } from "@/lib/utils"; // Added downloadJson helper
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"; // Added Tooltip
 import { ExportedSchedule, Schedule as ScheduleType, CourseSection as CourseSectionType, BusyTime as BusyTimeType, ScheduleConflict as ScheduleConflictType } from "@/lib/types"; // Added ExportedSchedule type and other types for clarity
 import { v4 as uuidv4 } from 'uuid'; // For generating unique IDs
 import { toast } from "sonner"; // For notifications
 import { Label } from "@/components/ui/label";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"; // Added Accordion imports
 import { SlidersHorizontal } from "lucide-react"; // For Tune Preferences icon
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"; // Ensure DropdownMenu components are fully imported
+// DropdownMenu components were already imported, ensuring they are complete
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuLabel } from "@/components/ui/dropdown-menu"; 
 import { mockCourses } from "@/lib/mock-data"; // Fallback for allCourses
-
+import CourseSearch from "./CourseSearch"; // Import CourseSearch
 
 interface ScheduleToolProps {
   semesterId?: string | null; // Renamed to _semesterId in function signature
@@ -41,18 +43,19 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
     schedules, 
     selectSchedule,
     addSchedule, // To add imported schedules
-    currentTerm, 
-    // Assuming `allCourses` from context contains the full catalog for looking up sections.
-    // If not, `mockCourses` will be used as a fallback.
-    allCourses = mockCourses, // Use mockCourses as fallback if allCourses is not in context
-    // Context state for section preferences
+    currentTerm,
+    allCourses = mockCourses,
     selectedSectionMap,
     updateSelectedSectionMap,
     excludeHonorsMap,
-    updateExcludeHonorsMap
+    updateExcludeHonorsMap,
+    removeSchedule, // Added for delete functionality
+    setSchedules, // Added for rename functionality (assuming direct update)
+    // addCourse is already in useSchedule() from context, ensure it's used
   } = useSchedule();
 
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [isCourseSearchDrawerOpen, setIsCourseSearchDrawerOpen] = useState(false); // State for CourseSearch drawer
   const [view, setView] = useState("calendar");
   const [isAddBusyTimeOpen, setIsAddBusyTimeOpen] = useState(false);
   const [isEditBusyTimeOpen, setIsEditBusyTimeOpen] = useState(false);
@@ -63,6 +66,7 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
   const [selectedCourses, setSelectedCourses] = useState<string[]>([]); // This manages which courses are considered for generation
   const [isGenerating, setIsGenerating] = useState(false);
   const [expandedCourses, setExpandedCourses] = useState<Record<string, boolean>>({});
+  const [lockedCourses, setLockedCourses] = useState<string[]>([]); // State for locked courses
 
   // Initialize selectedCourses (which courses are chosen to be in the schedule plan)
   useEffect(() => {
@@ -88,8 +92,31 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
 
   const handleGenerateSchedule = () => {
     setIsGenerating(true);
-    // Pass the selectedCourse IDs from the ScheduleTool's state to the context function
-    generateSchedules(selectedCourses); 
+    
+    const fixedSectionsForGeneration: CourseSection[] = [];
+    if (selectedSchedule && lockedCourses.length > 0) {
+      // Ensure we use the sections from the *currently selected* schedule for locked courses
+      // And that these locked courses are also part of the `selectedCourses` for generation
+      const selectedLockedCourseIds = lockedCourses.filter(lcId => selectedCourses.includes(lcId));
+
+      selectedSchedule.sections.forEach(section => {
+        const courseIdOfSection = section.id.split('-')[0];
+        if (selectedLockedCourseIds.includes(courseIdOfSection)) {
+          // Check if this section is one of the preferred sections for this locked course, if applicable
+          // This logic assumes that if a course is locked, its section in the selectedSchedule is the one to keep.
+          fixedSectionsForGeneration.push(section);
+        }
+      });
+      
+      if (fixedSectionsForGeneration.length !== selectedLockedCourseIds.length) {
+        toast.warn("Some locked courses were part of the selection for generation but not found in the current base schedule. They will be scheduled dynamically if possible.");
+        // Potentially clear fixedSectionsForGeneration if partial locking isn't desired or well-supported by generateSchedules
+      }
+    }
+    
+    // Pass the selectedCourse IDs from the ScheduleTool's state and the fixed sections
+    generateSchedules(selectedCourses, fixedSectionsForGeneration); 
+    
     setTimeout(() => {
       setIsGenerating(false);
     }, 800); // Keep timeout for simulating generation delay
@@ -211,6 +238,73 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
     }
   };
 
+  const handleDuplicateSchedule = () => {
+    if (!selectedSchedule) {
+      toast.error("No schedule selected to duplicate.");
+      return;
+    }
+    const newSchedule: ScheduleType = {
+      ...JSON.parse(JSON.stringify(selectedSchedule)), // Deep copy
+      id: uuidv4(),
+      name: `${selectedSchedule.name} (Copy)`,
+    };
+    addSchedule(newSchedule);
+    selectSchedule(newSchedule.id); // Optionally select the new schedule
+    toast.success(`Schedule "${newSchedule.name}" duplicated successfully!`);
+  };
+
+  const handleRenameSchedule = () => {
+    if (!selectedSchedule) {
+      toast.error("No schedule selected to rename.");
+      return;
+    }
+    const newName = prompt("Enter new name for the schedule:", selectedSchedule.name);
+    if (newName && newName.trim() !== "") {
+      const updatedSchedules = schedules.map(s => 
+        s.id === selectedSchedule.id ? { ...s, name: newName.trim() } : s
+      );
+      setSchedules(updatedSchedules); // Assuming setSchedules updates the context or local state
+      // If selectedSchedule in context is not automatically updated by setSchedules,
+      // you might need to call selectSchedule again with the updated object or just its ID.
+      // For simplicity, we assume setSchedules handles this or the reference updates.
+      // To be safe, if selectSchedule takes an object:
+      // selectSchedule({ ...selectedSchedule, name: newName.trim() });
+      toast.success(`Schedule renamed to "${newName.trim()}"!`);
+    } else if (newName !== null) { // User clicked OK but left it empty
+      toast.error("Schedule name cannot be empty.");
+    }
+  };
+
+  const handleDeleteSelectedSchedule = () => {
+    if (!selectedSchedule) {
+      toast.error("No schedule selected to delete.");
+      return;
+    }
+    if (schedules.length <= 1) {
+      toast.error("Cannot delete the last remaining schedule.");
+      return;
+    }
+    const scheduleNameToDelete = selectedSchedule.name;
+    removeSchedule(selectedSchedule.id);
+    // selectSchedule(null); // Deselect or select the next available one if desired
+    toast.success(`Schedule "${scheduleNameToDelete}" deleted.`);
+  };
+
+  const handleToggleCourseLock = (courseId: string) => {
+    const course = courses.find(c => c.id === courseId);
+    if (!course) return;
+
+    setLockedCourses(prevLocked => {
+      if (prevLocked.includes(courseId)) {
+        toast.success(`${course.code} unlocked! It can now be changed by regeneration.`);
+        return prevLocked.filter(id => id !== courseId);
+      } else {
+        toast.success(`${course.code} locked! It will be preserved during regeneration.`);
+        return [...prevLocked, courseId];
+      }
+    });
+  };
+
   return (
     <div className="animate-fade-in">
       <input 
@@ -222,6 +316,16 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
       />
       {/* Term Header with View Toggles */}
       <TermHeader view={view} setView={setView} />
+
+      {/* Relocated Buttons */}
+      <div className="mt-4 flex flex-wrap gap-2"> {/* Use flex-wrap for responsiveness */}
+        <Button variant="outline" onClick={() => setIsCompareOpen(true)} size="sm">
+          <ArrowLeftRight className="h-4 w-4 mr-2" /> Compare Schedules
+        </Button>
+        <Button variant="outline" onClick={() => setIsPreferencesOpen(true)} size="sm">
+          <SlidersHorizontal className="h-4 w-4 mr-2" /> Tune Preferences
+        </Button>
+      </div>
       
       {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mt-4">
@@ -290,26 +394,15 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
                 {/* Chevron will be added by AccordionTrigger */}
               </AccordionTrigger>
               <AccordionContent className="pt-3 space-y-3">
-                <div className="flex space-x-1 mb-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    className="h-8 flex-1 text-xs" // Adjusted for smaller screens
-                    onClick={() => setIsCompareOpen(true)}
-                  >
-                    <ArrowLeftRight className="h-3 w-3 mr-1" /> {/* Adjusted icon size */}
-                    Compare
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    className="h-8 flex-1 text-xs" // Adjusted for smaller screens
-                    onClick={() => setIsPreferencesOpen(true)}
-                  >
-                    <Sliders className="h-3 w-3 mr-1" /> {/* Adjusted icon size */}
-                    Preferences
-                  </Button>
-                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full mb-3"
+                  onClick={() => setIsCourseSearchDrawerOpen(true)}
+                >
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  Add/Manage Courses for Planning
+                </Button>
                 
                 <div className="space-y-2 max-h-[350px] overflow-y-auto pr-1"> {/* Adjusted max-h */}
                   <AnimatePresence>
@@ -337,6 +430,7 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
                                   className="cursor-pointer"
                                 >
                                   <div className="flex items-center mb-1">
+                                    {lockedCourses.includes(course.id) && <Lock className="h-3 w-3 mr-1.5 text-blue-600 flex-shrink-0" />}
                                     <span className="font-medium text-sm mr-2">{course.code}</span>
                                     <Badge variant="secondary" className="text-xs mr-2">{course.credits}cr</Badge>
                                   </div>
@@ -356,6 +450,21 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
                                 </label>
                               </div>
                               <div className="flex space-x-0.5"> {/* Reduced space for closer icons */}
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-6 w-6"
+                                      onClick={() => handleToggleCourseLock(course.id)}
+                                    >
+                                      {lockedCourses.includes(course.id) ? <Lock className="h-4 w-4 text-blue-600" /> : <Unlock className="h-4 w-4" />}
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>{lockedCourses.includes(course.id) ? "Unlock course (allows changes during regeneration)" : "Lock course (preserve in schedule during regeneration)"}</p>
+                                  </TooltipContent>
+                                </Tooltip>
                                 <Button 
                                   variant="ghost" 
                                   size="icon" 
@@ -586,13 +695,45 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
 
           <div className="space-y-2 mb-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-medium text-lg">
-                {selectedSchedule?.name || "No Schedule Selected"}
-              </h3>
-              <div className="flex items-center space-x-1">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
+                <h3 className="font-medium text-lg truncate max-w-[calc(100%-180px)] sm:max-w-[calc(100%-220px)]" title={selectedSchedule?.name || "No Schedule Selected"}>
+                  {selectedSchedule?.name || "No Schedule Selected"}
+                </h3>
+                <div className="flex items-center space-x-1">
+                  {/* Schedule Actions Dropdown */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm" disabled={!selectedSchedule}>
+                        Actions <ChevronDown className="h-4 w-4 ml-1.5" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                      <DropdownMenuItem onClick={handleExportSchedule} disabled={!selectedSchedule}>
+                        <Download className="mr-2 h-4 w-4" /> Export Schedule
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={handleImportButtonClick}> {/* Still generic import */}
+                        <Upload className="mr-2 h-4 w-4" /> Import Schedule
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={handleDuplicateSchedule} disabled={!selectedSchedule}>
+                        <CopyIcon className="mr-2 h-4 w-4" /> Duplicate Schedule
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={handleRenameSchedule} disabled={!selectedSchedule}>
+                        <Edit3 className="mr-2 h-4 w-4" /> Rename Schedule
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem 
+                        onClick={handleDeleteSelectedSchedule} 
+                        disabled={!selectedSchedule} 
+                        className="text-destructive hover:!bg-destructive hover:!text-destructive-foreground focus:!bg-destructive focus:!text-destructive-foreground"
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" /> Delete Schedule
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
                   onClick={() => setIsAIAdvisorOpen(true)}
                   className="flex items-center text-purple-600 hover:text-purple-700 hover:bg-purple-50"
                 >
@@ -665,6 +806,16 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
       <CompareSchedulesDialog
         open={isCompareOpen}
         onOpenChange={setIsCompareOpen}
+      />
+
+      <CourseSearch
+        open={isCourseSearchDrawerOpen}
+        onOpenChange={setIsCourseSearchDrawerOpen}
+        // termId is omitted: this instance is for adding to the global planning list
+        onCourseSelected={(course) => {
+          addCourse(course); // addCourse is from useSchedule context
+          // setIsCourseSearchDrawerOpen(false); // Optionally close drawer after adding
+        }}
       />
     </div>
   );

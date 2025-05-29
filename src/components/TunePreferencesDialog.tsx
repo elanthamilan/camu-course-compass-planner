@@ -25,11 +25,15 @@ const TunePreferencesDialog: React.FC<TunePreferencesDialogProps> = ({ open, onO
   
   const [localTimePreference, setLocalTimePreference] = useState<TimePreference>(schedulePreferences.timePreference);
   const [localAvoidFriday, setLocalAvoidFriday] = useState<boolean>(schedulePreferences.avoidFridayClasses);
+  const [localAvoidBackToBack, setLocalAvoidBackToBack] = useState<boolean>(schedulePreferences.avoidBackToBack || false);
+  const [localDayDistribution, setLocalDayDistribution] = useState<'spread' | 'compact' | 'none'>(schedulePreferences.dayDistribution || 'none');
 
   useEffect(() => {
     if (open) {
       setLocalTimePreference(schedulePreferences.timePreference);
       setLocalAvoidFriday(schedulePreferences.avoidFridayClasses);
+      setLocalAvoidBackToBack(schedulePreferences.avoidBackToBack || false);
+      setLocalDayDistribution(schedulePreferences.dayDistribution || 'none');
     }
   }, [open, schedulePreferences]);
 
@@ -37,6 +41,8 @@ const TunePreferencesDialog: React.FC<TunePreferencesDialogProps> = ({ open, onO
     updateSchedulePreferences({
       timePreference: localTimePreference,
       avoidFridayClasses: localAvoidFriday,
+      avoidBackToBack: localAvoidBackToBack,
+      dayDistribution: localDayDistribution,
     });
     onOpenChange(false); // Close dialog
   };
@@ -89,6 +95,42 @@ const TunePreferencesDialog: React.FC<TunePreferencesDialogProps> = ({ open, onO
               />
               <Label htmlFor="avoid-friday">Avoid Friday classes if possible</Label>
             </div>
+          </div>
+
+          {/* Class Pacing Section */}
+          <div>
+            <Label className="font-semibold">Class Pacing</Label>
+            <div className="mt-2 flex items-center space-x-2">
+              <Checkbox
+                id="avoid-back-to-back"
+                checked={localAvoidBackToBack}
+                onCheckedChange={(checked) => setLocalAvoidBackToBack(checked as boolean)}
+              />
+              <Label htmlFor="avoid-back-to-back">Try to avoid back-to-back classes (e.g., allow for breaks)</Label>
+            </div>
+          </div>
+
+          {/* Weekly Schedule Layout Section */}
+          <div>
+            <Label className="font-semibold">Weekly Schedule Layout</Label>
+            <RadioGroup
+              value={localDayDistribution}
+              onValueChange={(value) => setLocalDayDistribution(value as 'spread' | 'compact' | 'none')}
+              className="mt-2 space-y-2"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="none" id="dist-none" />
+                <Label htmlFor="dist-none">No preference</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="spread" id="dist-spread" />
+                <Label htmlFor="dist-spread">Prefer spreading classes throughout the week</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="compact" id="dist-compact" />
+                <Label htmlFor="dist-compact">Prefer a compact schedule (classes on fewer days)</Label>
+              </div>
+            </RadioGroup>
           </div>
         </div>
         <DialogFooter>

@@ -11,6 +11,7 @@ export interface Course {
   department: string;
   color?: string;
   attributes?: string[]; // Added for course attributes
+  keywords?: string[]; // For courseMatcher type "keyword"
 }
 
 export interface CourseSection {
@@ -104,6 +105,10 @@ export interface DegreeRequirement {
   progress: number;
   category?: 'core' | 'major' | 'elective' | 'concentration' | 'general_education' | 'other';
   choiceRequired?: number;
+  courseMatcher?: { 
+    type: "department" | "courseCodePrefix" | "keyword" | "specificCourses"; 
+    values: string[]; 
+  };
 }
 
 export interface Degree {
@@ -133,9 +138,10 @@ export interface AIRecommendation {
 export type TimePreference = "none" | "morning" | "afternoon" | "evening";
 
 export interface SchedulePreferences {
-  timePreference: TimePreference;
+  timePreference: TimePreference; // "none", "morning", "afternoon", "evening"
   avoidFridayClasses: boolean;
-  // Future preferences can be added here
+  avoidBackToBack?: boolean;         // New
+  dayDistribution?: "spread" | "compact" | "none"; // New
 }
 
 // Degree Audit Enhancements
@@ -162,6 +168,15 @@ export interface DegreeAuditResults {
 export interface PlannedCourse {
   courseId: string; // Course code
   termId: string;   // ID of the term it's planned for
+}
+
+// Specific type for items in mockMandatoryCourses
+export interface MandatoryCourseEntry {
+  code: string;
+  name: string;
+  status: "Completed" | "In Progress" | "Not Started";
+  credits?: number; // Optional for now, but good to have
+  prerequisites?: string[]; // Optional
 }
 
 export interface MultiYearPlan {

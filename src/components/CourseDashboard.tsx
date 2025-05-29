@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"; // Added Dialog components
 import { mockDegreeRequirements, mockMandatoryCourses } from "@/lib/mock-data"; // Assuming these are still relevant
 import { PlusCircle, Trash2, ArrowRight, ChevronDown, Eye } from "lucide-react"; // Lucide icons
 
@@ -79,6 +80,8 @@ const CourseDashboard: React.FC = () => {
   const [viewingSemester] = useState<SemesterData | null>(null);
   const [yearsData, setYearsData] = useState<YearData[]>(initialYearsData);
   const [isAddSemesterDialogOpen, setIsAddSemesterDialogOpen] = useState(false);
+  const [isMandatoryCoursesDialogOpen, setIsMandatoryCoursesDialogOpen] = useState(false); // State for new dialog
+  const [isProgramCreditsDialogOpen, setIsProgramCreditsDialogOpen] = useState(false); // State for Program Credits Dialog
   
   const navigate = useNavigate();
 
@@ -209,6 +212,42 @@ const CourseDashboard: React.FC = () => {
   const mandatoryCoursesLeft = totalMandatoryCourses - completedMandatoryCourses;
   const mandatoryProgressValue = (completedMandatoryCourses / totalMandatoryCourses) * 100;
 
+  const remainingMandatoryCourses = mockMandatoryCourses.filter(c => c.status !== "Completed");
+  const unmetDegreeRequirements = mockDegreeRequirements.filter(req => req.progress < 1);
+
+  // This would ideally come from context or student data
+  const studentCompletedCourses = ["CS101", "MATH105", "ENG234"]; 
+
+
+  // Helper function to find suggested courses for a requirement
+  const getSuggestedCourses = (requirement: import("../lib/types").DegreeRequirement) => {
+    if (!requirement.courseMatcher) return [];
+    
+    const { type, values } = requirement.courseMatcher;
+    let suggested = [];
+
+    switch (type) {
+      case "department":
+        suggested = mockCourses.filter(course => values.includes(course.department));
+        break;
+      case "courseCodePrefix":
+        suggested = mockCourses.filter(course => values.some(prefix => course.code.startsWith(prefix)));
+        break;
+      case "keyword":
+        suggested = mockCourses.filter(course => 
+          course.keywords && values.some(keyword => course.keywords!.includes(keyword))
+        );
+        break;
+      case "specificCourses":
+        suggested = mockCourses.filter(course => values.includes(course.code));
+        break;
+      default:
+        return [];
+    }
+    // Filter out already completed courses and take a sample
+    return suggested.filter(course => !studentCompletedCourses.includes(course.code)).slice(0, 3);
+  };
+
 
   return (
     <div className="py-3 space-y-6"> {/* Replaced Container fluid and added space-y */}
@@ -251,6 +290,14 @@ const CourseDashboard: React.FC = () => {
                       </li>
                     ))}
                   </ul>
+                  <Button 
+                    variant="link" 
+                    size="sm" 
+                    onClick={() => setIsProgramCreditsDialogOpen(true)}
+                    className="mt-2 text-xs"
+                  >
+                    View Course Options for Requirements
+                  </Button>
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
@@ -442,7 +489,7 @@ const CourseDashboard: React.FC = () => {
         open={isCourseSearchOpen} 
         onOpenChange={setIsCourseSearchOpen}
         termId={selectedSemesterId} // Pass the selected semester ID
-        onAddCourseToPlan={handleAddCourseToPlan} // Pass the new handler
+        onCourseSelected={handleAddCourseToPlan} // Updated prop name
       />
       
       {/* ViewScheduleDialog might need refactoring if it's Bootstrap-based. */}
@@ -461,6 +508,97 @@ const CourseDashboard: React.FC = () => {
         onOpenChange={setIsAddSemesterDialogOpen}
         onAddSemester={handleAddSemesterSubmit}
       />
+
+      {/* Mandatory Courses Dialog */}
+      <Dialog open={isMandatoryCoursesDialogOpen} onOpenChange={setIsMandatoryCoursesDialogOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Remaining Mandatory Courses</DialogTitle>
+            <DialogDescription>
+              These are the mandatory courses you still need to complete for your degree.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-3 max-h-[60vh] overflow-y-auto">
+            {remainingMandatoryCourses.length > 0 ? (
+              remainingMandatoryCourses.map(course => (
+                <div key={course.code} className="border-b pb-2 last:border-0 last:pb-0">
+                  <h4 className="font-semibold">{course.code} - {course.name}</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Credits: {course.credits !== undefined ? course.credits : "N/A"}
+                  </p>
+                  {course.prerequisites && course.prerequisites.length > 0 && (
+                    <p className="text-sm text-muted-foreground">
+                      Prerequisites: {course.prerequisites.join(', ')}
+                    </p>
+                  )}
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground">All mandatory courses have been completed or are in progress.</p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsMandatoryCoursesDialogOpen(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Program Credits/Requirements Dialog */}
+      <Dialog open={isProgramCreditsDialogOpen} onOpenChange={setIsProgramCreditsDialogOpen}>
+        <DialogContent className="sm:max-w-2xl"> {/* Wider dialog */}
+          <DialogHeader>
+            <DialogTitle>Course Options for Degree Requirements</DialogTitle>
+            <DialogDescription>
+              Here are some course suggestions for your unmet degree requirements.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-4 max-h-[70vh] overflow-y-auto">
+            {unmetDegreeRequirements.length > 0 ? (
+              unmetDegreeRequirements.map(req => {
+                const suggestedCourses = getSuggestedCourses(req);
+                const creditsToComplete = req.requiredCredits * (1 - req.progress);
+                return (
+                  <div key={req.id} className="p-3 border rounded-md bg-background/50">
+                    <h4 className="font-semibold text-md mb-1">{req.name}</h4>
+                    <p className="text-xs text-muted-foreground mb-2">
+                      {creditsToComplete} credits remaining.
+                      {req.choiceRequired && ` Choose ${req.choiceRequired - (req.progressCourses || 0)} more.`}
+                    </p>
+                    {suggestedCourses.length > 0 ? (
+                      <ul className="space-y-1.5">
+                        {suggestedCourses.map(course => (
+                          <li key={course.id} className="text-xs p-2 border rounded-md bg-background hover:bg-muted/50">
+                            <div className="flex justify-between items-center">
+                              <div>
+                                <span className="font-medium">{course.code}</span> - {course.name}
+                                <span className="text-muted-foreground ml-1">({course.credits} cr)</span>
+                              </div>
+                              {/* Placeholder for an "Add to Plan" button for each suggested course */}
+                              {/* <Button size="xs" variant="outline" className="px-1.5 py-0.5 h-auto">Add</Button> */}
+                            </div>
+                            {course.prerequisites && course.prerequisites.length > 0 && (
+                              <p className="text-xs text-amber-600 mt-0.5">Prereqs: {course.prerequisites.join(', ')}</p>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-xs text-muted-foreground italic">
+                        Specific course suggestions not available based on current matcher, or all suggestions already completed. Check course catalog or academic advisor.
+                      </p>
+                    )}
+                  </div>
+                );
+              })
+            ) : (
+              <p className="text-sm text-muted-foreground text-center">All degree requirements appear to be met or in progress. Congratulations!</p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsProgramCreditsDialogOpen(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

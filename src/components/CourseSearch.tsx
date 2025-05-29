@@ -14,21 +14,27 @@ import PrerequisiteGraph from './PrerequisiteGraph'; // Import PrerequisiteGraph
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label"; // Added Label
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // Added Select
+import { Dialog, DialogContent, DialogHeader, DialogTitle as DialogTitleShad, DialogDescription as DialogDescriptionShad, DialogFooter } from "@/components/ui/dialog"; // For Course Info Dialog
+import { Badge } from "@/components/ui/badge"; // For displaying attributes in Course Info Dialog
 
 interface CourseSearchProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  termId: string;
-  onAddCourseToPlan: (course: Course, termId: string) => void; // New prop
+  termId?: string; // Made termId optional
+  onCourseSelected: (course: Course, termId?: string) => void; // Renamed prop
 }
 
-const CourseSearch: React.FC<CourseSearchProps> = ({ open, onOpenChange, termId, onAddCourseToPlan }) => {
-  // const { addCourse } = useSchedule(); // We'll use the new prop instead for multi-year planning
+const CourseSearch: React.FC<CourseSearchProps> = ({ open, onOpenChange, termId, onCourseSelected }) => {
+  const { courses: contextCourses } = useSchedule(); // Get existing courses for planning list
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTab, setSelectedTab] = useState("required");
   const [selectedAttributes, setSelectedAttributes] = useState<string[]>([]);
   const [selectedCourseForPrereqView, setSelectedCourseForPrereqView] = useState<string | null>(null);
   const [isPrereqModalOpen, setIsPrereqModalOpen] = useState(false);
+
+  // State for Course Info Modal
+  const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
+  const [selectedCourseForInfo, setSelectedCourseForInfo] = useState<Course | null>(null);
 
   const allAttributes = Array.from(new Set(mockCourses.flatMap(course => course.attributes || []))).sort();
 
@@ -85,8 +91,8 @@ const CourseSearch: React.FC<CourseSearchProps> = ({ open, onOpenChange, termId,
   ];
 
   const handleAddCourseToPlanInternal = (course: Course) => {
-    onAddCourseToPlan(course, termId); // Use the prop and pass termId
-    // Optionally, provide feedback like a toast, handled by the parent or here
+    onCourseSelected(course, termId); // Use the renamed prop and pass optional termId
+    // Feedback (toast) is now expected to be handled by the caller or the context's addCourse
   };
 
   const handleOpenPrereqView = (courseId: string) => {
@@ -94,15 +100,38 @@ const CourseSearch: React.FC<CourseSearchProps> = ({ open, onOpenChange, termId,
     setIsPrereqModalOpen(true);
   };
 
+  const handleOpenInfoModal = (course: Course) => {
+    setSelectedCourseForInfo(course);
+    setIsInfoModalOpen(true);
+  };
+
   return (
     <>
     <Drawer open={open} onOpenChange={onOpenChange}> {/* Changed Dialog to Drawer and added direction */}
-      <DrawerContent className="sm:max-w-xl animate-slide-in-right"> {/* Adjusted className for drawer */}
+      {/*
+        NOTE: The className of DrawerContent was previously modified to h-[90vh] and flex flex-col.
+        Since the file was reset, these changes are gone. This task focuses only on the Info Dialog.
+        If the height adjustment is still desired, it would need to be reapplied in a separate step or task.
+      */}
+      <DrawerContent className="sm:max-w-xl animate-slide-in-right"> 
         <DrawerHeader>
-          <DrawerTitle className="text-xl">Search for courses to add in {termId.replace(/([A-Z])/g, ' $1').trim()}</DrawerTitle>
+          <DrawerTitle className="text-xl">
+            {termId 
+              ? `Search for courses to add in ${termId.replace(/([A-Z])/g, ' $1').trim()}`
+              : "Search Courses for Planning"}
+          </DrawerTitle>
+          <DrawerDescription> 
+            {termId
+              ? `Find and select courses for ${termId.replace(/([A-Z])/g, ' $1').trim()}. You can view required or all available courses.`
+              : "Browse and select courses to add to your overall planning list."}
+          </DrawerDescription>
         </DrawerHeader>
         
-        <div className="space-y-4 p-4"> {/* Added padding for drawer content */}
+        {/*
+          NOTE: The className of this div was previously modified to flex-grow overflow-y-auto.
+          This change is also gone due to the reset.
+        */}
+        <div className="space-y-4 p-4"> 
           <div className="flex space-x-2">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
@@ -248,7 +277,7 @@ const CourseSearch: React.FC<CourseSearchProps> = ({ open, onOpenChange, termId,
                     <div className="flex space-x-2">
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Button variant="outline" size="sm" className="h-8 w-8 rounded-full p-0">
+                          <Button variant="outline" size="sm" className="h-8 w-8 rounded-full p-0" onClick={() => handleOpenInfoModal(course as unknown as Course)}>
                             <Info size={16} />
                           </Button>
                         </TooltipTrigger>
@@ -346,6 +375,84 @@ const CourseSearch: React.FC<CourseSearchProps> = ({ open, onOpenChange, termId,
           onOpenChange={setIsPrereqModalOpen}
           allCourses={mockCourses} // Pass all courses
         />
+      )}
+
+      {/* Course Information Dialog */}
+      {selectedCourseForInfo && (
+        <Dialog open={isInfoModalOpen} onOpenChange={setIsInfoModalOpen}>
+          <DialogContent className="sm:max-w-lg">
+            <DialogHeader>
+              <DialogTitleShad>{selectedCourseForInfo.code} - {selectedCourseForInfo.name}</DialogTitleShad>
+              <DialogDescriptionShad>
+                Detailed information for {selectedCourseForInfo.name}. This dialog shows comprehensive details about the course including description, credits, prerequisites, and more.
+              </DialogDescriptionShad>
+            </DialogHeader>
+            <div className="py-4 space-y-3 text-sm">
+              <div>
+                <h4 className="font-semibold mb-1">Description:</h4>
+                <p className="text-gray-700">{selectedCourseForInfo.description || "No description available."}</p>
+              </div>
+              <div>
+                <h4 className="font-semibold">Credits:</h4>
+                <p className="text-gray-700">{selectedCourseForInfo.credits}</p>
+              </div>
+              <div>
+                <h4 className="font-semibold">Department:</h4>
+                <p className="text-gray-700">{selectedCourseForInfo.department || "N/A"}</p>
+              </div>
+              {selectedCourseForInfo.prerequisites && selectedCourseForInfo.prerequisites.length > 0 && (
+                <div>
+                  <h4 className="font-semibold">Prerequisites:</h4>
+                  <p className="text-gray-700">{selectedCourseForInfo.prerequisites.join(', ')}</p>
+                </div>
+              )}
+              {selectedCourseForInfo.corequisites && selectedCourseForInfo.corequisites.length > 0 && (
+                <div>
+                  <h4 className="font-semibold">Corequisites:</h4>
+                  <p className="text-gray-700">{selectedCourseForInfo.corequisites.join(', ')}</p>
+                </div>
+              )}
+              {selectedCourseForInfo.attributes && selectedCourseForInfo.attributes.length > 0 && (
+                <div>
+                  <h4 className="font-semibold mb-1">Attributes:</h4>
+                  <div className="flex flex-wrap gap-1">
+                    {selectedCourseForInfo.attributes.map(attr => (
+                      <Badge key={attr} variant="secondary">{attr}</Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {/* Displaying new fields from mock data if available */}
+              {selectedCourseForInfo.college && (
+                 <div>
+                    <h4 className="font-semibold">College:</h4>
+                    <p className="text-gray-700">{selectedCourseForInfo.college}</p>
+                  </div>
+              )}
+              {selectedCourseForInfo.campus && (
+                 <div>
+                    <h4 className="font-semibold">Campus:</h4>
+                    <p className="text-gray-700">{selectedCourseForInfo.campus}</p>
+                  </div>
+              )}
+               {selectedCourseForInfo.locationKeywords && selectedCourseForInfo.locationKeywords.length > 0 && (
+                <div>
+                  <h4 className="font-semibold">Typical Locations:</h4>
+                  <p className="text-gray-700">{selectedCourseForInfo.locationKeywords.join(', ')}</p>
+                </div>
+              )}
+              {selectedCourseForInfo.sections && selectedCourseForInfo.sections.length > 0 && (
+                 <div>
+                    <h4 className="font-semibold">Sections Available:</h4>
+                    <p className="text-gray-700">{selectedCourseForInfo.sections.length} section(s) typically offered.</p>
+                  </div>
+              )}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsInfoModalOpen(false)}>Close</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
     </>
   );

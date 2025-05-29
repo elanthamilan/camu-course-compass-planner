@@ -8,9 +8,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+// import { Input } from "@/components/ui/input"; // No longer needed for year
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // Added Select
 
 interface AddSemesterDialogProps {
   open: boolean;
@@ -19,7 +20,10 @@ interface AddSemesterDialogProps {
 }
 
 const AddSemesterDialog: React.FC<AddSemesterDialogProps> = ({ open, onOpenChange, onAddSemester }) => {
-  const [year, setYear] = useState<string>(String(new Date().getFullYear())); // Default to current year
+  const currentModelYear = new Date().getFullYear();
+  const yearOptions = Array.from({ length: 4 }, (_, i) => String(currentModelYear + i));
+  
+  const [year, setYear] = useState<string>(yearOptions[0]); // Initialize with the first option
   const [semesterType, setSemesterType] = useState<string>('Fall'); // Default semester type
 
   const handleSubmit = () => {
@@ -43,16 +47,21 @@ const AddSemesterDialog: React.FC<AddSemesterDialogProps> = ({ open, onOpenChang
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="academicYear" className="text-right">
+            <Label htmlFor="academicYearSelect" className="text-right">
               Academic Year
             </Label>
-            <Input
-              id="academicYear"
-              value={year}
-              onChange={(e) => setYear(e.target.value)}
-              placeholder="e.g., 2024"
-              className="col-span-3"
-            />
+            <Select value={year} onValueChange={setYear}>
+              <SelectTrigger id="academicYearSelect" className="col-span-3">
+                <SelectValue placeholder="Select year" />
+              </SelectTrigger>
+              <SelectContent>
+                {yearOptions.map(option => (
+                  <SelectItem key={option} value={option}>
+                    {option} 
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label className="text-right">Semester Type</Label>
