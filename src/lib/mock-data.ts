@@ -1,4 +1,3 @@
-
 import { 
   Course, 
   BusyTime, 
@@ -23,27 +22,26 @@ export const mockCourses: Course[] = [
     credits: 3,
     department: "Computer Science",
     color: "#FFA726",
-    attributes: ["Technical", "Introductory"], // Added attributes
-    keywords: ["programming", "introduction", "cs"], // Added keywords
-    // Adding new filter fields for testing
+    attributes: ["Technical", "Introductory"], 
+    keywords: ["programming", "introduction", "cs"], 
     days: ["M", "W", "F"], 
     college: "College of Engineering",
     campus: "North Campus",
-    locationKeywords: ["Science Building"], // Using keywords for broader matching
+    locationKeywords: ["Science Building"], 
     sections: [
       {
         id: "cs101-001",
-        sectionType: "Lab", // Added sectionType
+        sectionType: "Lab", 
         crn: "12345",
         instructor: "Dr. John Smith",
         sectionNumber: "001",
         schedule: [
           { days: "M,W,F", startTime: "09:00", endTime: "10:00", location: "Science Building 101" }
         ],
-        location: "North Campus", // This is section specific, top-level campus is for the course offering
+        location: "North Campus", 
         maxSeats: 30,
         availableSeats: 5,
-        locked: true // Added lock status
+        locked: true 
       },
       {
         id: "cs101-002",
@@ -66,9 +64,8 @@ export const mockCourses: Course[] = [
     credits: 3,
     department: "Mathematics",
     color: "#EF5350",
-    attributes: ["Quantitative Reasoning", "Introductory"], // Added attributes
-    keywords: ["math", "algebra", "calculus-prep"], // Added keywords
-    // Adding new filter fields for testing
+    attributes: ["Quantitative Reasoning", "Introductory"], 
+    keywords: ["math", "algebra", "calculus-prep"], 
     days: ["M", "W", "F"],
     college: "College of Arts and Sciences",
     campus: "Main Campus",
@@ -76,7 +73,7 @@ export const mockCourses: Course[] = [
     sections: [
       {
         id: "math105-001",
-        sectionType: "Standard", // Added sectionType
+        sectionType: "Standard", 
         crn: "23451",
         instructor: "Dr. Robert Johnson",
         sectionNumber: "001",
@@ -98,7 +95,32 @@ export const mockCourses: Course[] = [
         location: "Main Campus",
         maxSeats: 35,
         availableSeats: 3,
-        locked: true // Added lock status
+        locked: true 
+      }
+    ]
+  },
+  {
+    id: "eng101", // Ensured ENG101 exists for ENG234 prerequisite
+    code: "ENG101",
+    name: "Composition I",
+    credits: 3,
+    department: "English",
+    color: "#42A5FF", // Different color from ENG234
+    attributes: ["Humanities", "Writing Intensive", "Introductory"],
+    keywords: ["english", "writing", "composition", "foundational"],
+    days: ["M", "W", "F"], 
+    college: "College of Liberal Arts",
+    campus: "East Campus",
+    locationKeywords: ["Liberal Arts"],
+    sections: [
+      {
+        id: "eng101-001",
+        sectionType: "Standard",
+        crn: "34501",
+        instructor: "Prof. David Copperfield",
+        sectionNumber: "001",
+        schedule: [ { days: "M,W,F", startTime: "09:00", endTime: "10:00", location: "Liberal Arts 101" } ],
+        location: "East Campus", maxSeats: 25, availableSeats: 10
       }
     ]
   },
@@ -107,42 +129,32 @@ export const mockCourses: Course[] = [
     code: "ENG234",
     name: "Composition II",
     credits: 3,
-    prerequisites: ["eng101"],
+    prerequisites: ["ENG101"], // Corrected to use code
     department: "English",
     color: "#42A5F5",
-    attributes: ["Humanities", "Writing Intensive"], // Added attributes
-    keywords: ["english", "writing", "composition"], // Added keywords
-    // Adding new filter fields for testing
-    days: ["M", "W", "T", "Th"], // Has MW and TTh sections
+    attributes: ["Humanities", "Writing Intensive"], 
+    keywords: ["english", "writing", "composition"], 
+    days: ["M", "W", "T", "Th"], 
     college: "College of Liberal Arts",
     campus: "East Campus",
     locationKeywords: ["Liberal Arts"],
     sections: [
       {
         id: "eng234-001",
-        sectionType: "Standard", // Added sectionType
+        sectionType: "Standard", 
         crn: "34551",
         instructor: "Prof. Mark Antony",
         sectionNumber: "001",
-        schedule: [
-          { days: "M,W", startTime: "10:00", endTime: "11:30", location: "Liberal Arts 301" }
-        ],
-        location: "East Campus",
-        maxSeats: 25,
-        availableSeats: 6
+        schedule: [ { days: "M,W", startTime: "10:00", endTime: "11:30", location: "Liberal Arts 301" } ],
+        location: "East Campus", maxSeats: 25, availableSeats: 6
       },
       {
         id: "eng234-002",
         crn: "34552",
         instructor: "Prof. Julia Caesar",
         sectionNumber: "002",
-        schedule: [
-          { days: "T,Th", startTime: "14:00", endTime: "15:30", location: "Liberal Arts 302" }
-        ],
-        location: "East Campus",
-        maxSeats: 25,
-        availableSeats: 4,
-        sectionType: "Honors" // Added sectionType
+        schedule: [ { days: "T,Th", startTime: "14:00", endTime: "15:30", location: "Liberal Arts 302" } ],
+        location: "East Campus", maxSeats: 25, availableSeats: 4, sectionType: "Honors" 
       }
     ]
   },
@@ -151,20 +163,19 @@ export const mockCourses: Course[] = [
     code: "PHYS210",
     name: "Physics I: Mechanics",
     credits: 4,
-    corequisites: ["math201"],
+    corequisites: ["math201"], // Assuming math201 exists or will be added
     department: "Physics",
     color: "#26C6DA",
-    attributes: ["Natural Science", "Lab Science", "Quantitative Reasoning"], // Added attributes
-    keywords: ["physics", "mechanics", "science"], // Added keywords
-    // Adding new filter fields
-    days: ["M", "W", "F", "T"], // Has MWF and T sections
-    college: "College of Engineering", // Assuming Physics is under Engineering for this example
+    attributes: ["Natural Science", "Lab Science", "Quantitative Reasoning"], 
+    keywords: ["physics", "mechanics", "science"], 
+    days: ["M", "W", "F", "T"], 
+    college: "College of Engineering", 
     campus: "North Campus",
     locationKeywords: ["Science Building", "Science Lab"],
     sections: [
       {
         id: "phys210-001",
-        sectionType: "Lab", // Added sectionType
+        sectionType: "Lab", 
         crn: "45151",
         instructor: "Dr. Albert Newton",
         sectionNumber: "001",
@@ -172,11 +183,12 @@ export const mockCourses: Course[] = [
           { days: "M,W,F", startTime: "13:00", endTime: "14:00", location: "Science Building 301" },
           { days: "T", startTime: "13:00", endTime: "16:00", location: "Science Lab 101" }
         ],
-        location: "North Campus",
-        maxSeats: 24,
-        availableSeats: 2
+        location: "North Campus", maxSeats: 24, availableSeats: 2
       }
     ]
+  },
+  { // Minimal entry for math201, a corequisite for PHYS210
+    id: "math201", code: "MATH201", name: "Calculus I", credits: 4, department: "Mathematics", sections: [] 
   },
   {
     id: "phil101",
@@ -185,330 +197,149 @@ export const mockCourses: Course[] = [
     credits: 3,
     department: "Philosophy",
     color: "#EC407A",
-    attributes: ["Humanities", "Critical Thinking"], // Added attributes
-    keywords: ["philosophy", "logic", "reasoning"], // Added keywords
+    attributes: ["Humanities", "Critical Thinking"], 
+    keywords: ["philosophy", "logic", "reasoning"], 
     days: ["M", "W", "F"],
-    college: "College of Liberal Arts",
-    campus: "Main Campus",
-    locationKeywords: ["Humanities"],
+    college: "College of Liberal Arts", campus: "Main Campus", locationKeywords: ["Humanities"],
     sections: [
       {
-        id: "phil101-001",
-        sectionType: "Standard", // Added sectionType
-        crn: "51231",
-        instructor: "Dr. Sophie Wisdom",
-        sectionNumber: "001",
-        schedule: [
-          { days: "M,W,F", startTime: "11:00", endTime: "12:00", location: "Humanities 101" }
-        ],
-        location: "Main Campus",
-        maxSeats: 40,
-        availableSeats: 18
+        id: "phil101-001", sectionType: "Standard", crn: "51231", instructor: "Dr. Sophie Wisdom", sectionNumber: "001",
+        schedule: [ { days: "M,W,F", startTime: "11:00", endTime: "12:00", location: "Humanities 101" } ],
+        location: "Main Campus", maxSeats: 40, availableSeats: 18
       }
     ]
   },
   {
-    id: "bio101",
-    code: "BIO101",
-    name: "Introduction to Biology",
-    credits: 4,
-    department: "Biology",
-    color: "#66BB6A",
-    attributes: ["Natural Science", "Lab Science"], // Added attributes
-    days: ["M", "W", "F"], // Lecture MWF, Lab W
-    college: "College of Arts and Sciences",
-    campus: "North Campus",
-    locationKeywords: ["Science Building", "Biology Lab"],
+    id: "bio101", code: "BIO101", name: "Introduction to Biology", credits: 4, department: "Biology", color: "#66BB6A",
+    attributes: ["Natural Science", "Lab Science"], days: ["M", "W", "F"], college: "College of Arts and Sciences", campus: "North Campus", locationKeywords: ["Science Building", "Biology Lab"],
     sections: [
       {
-        id: "bio101-001",
-        sectionType: "Lab", // Added sectionType
-        crn: "61425",
-        instructor: "Dr. Gene Splicing",
-        sectionNumber: "001",
-        schedule: [
-          { days: "M,W,F", startTime: "09:00", endTime: "10:00", location: "Science Building 201" },
-          { days: "W", startTime: "14:00", endTime: "17:00", location: "Biology Lab 101" }
-        ],
-        location: "North Campus",
-        maxSeats: 24,
-        availableSeats: 0,
-        waitlistCount: 5
+        id: "bio101-001", sectionType: "Lab", crn: "61425", instructor: "Dr. Gene Splicing", sectionNumber: "001",
+        schedule: [ { days: "M,W,F", startTime: "09:00", endTime: "10:00", location: "Science Building 201" }, { days: "W", startTime: "14:00", endTime: "17:00", location: "Biology Lab 101" } ],
+        location: "North Campus", maxSeats: 24, availableSeats: 0, waitlistCount: 5
       }
     ]
   },
   {
-    id: "chem101",
-    code: "CHEM101",
-    name: "General Chemistry",
-    credits: 4,
-    department: "Chemistry",
-    color: "#AB47BC",
-    attributes: ["Natural Science", "Lab Science"], // Added attributes
-    days: ["M", "W", "F", "Th"], // Lecture MWF, Lab Th
-    college: "College of Arts and Sciences",
-    campus: "North Campus",
-    locationKeywords: ["Science Building", "Chemistry Lab"],
+    id: "chem101", code: "CHEM101", name: "General Chemistry", credits: 4, department: "Chemistry", color: "#AB47BC",
+    attributes: ["Natural Science", "Lab Science"], days: ["M", "W", "F", "Th"], college: "College of Arts and Sciences", campus: "North Campus", locationKeywords: ["Science Building", "Chemistry Lab"],
     sections: [
       {
-        id: "chem101-001",
-        sectionType: "Lab", // Added sectionType
-        crn: "71523",
-        instructor: "Dr. Molecule",
-        sectionNumber: "001",
-        schedule: [
-          { days: "M,W,F", startTime: "13:00", endTime: "14:00", location: "Science Building 401" },
-          { days: "Th", startTime: "13:00", endTime: "16:00", location: "Chemistry Lab 101" }
-        ],
-        location: "North Campus",
-        maxSeats: 24,
-        availableSeats: 7
+        id: "chem101-001", sectionType: "Lab", crn: "71523", instructor: "Dr. Molecule", sectionNumber: "001",
+        schedule: [ { days: "M,W,F", startTime: "13:00", endTime: "14:00", location: "Science Building 401" }, { days: "Th", startTime: "13:00", endTime: "16:00", location: "Chemistry Lab 101" } ],
+        location: "North Campus", maxSeats: 24, availableSeats: 7
       }
     ]
   },
   {
-    id: "univ100",
-    code: "UNIV100",
-    name: "University Seminar",
-    credits: 1,
-    department: "University",
-    color: "#7E57C2",
-    attributes: ["Introductory", "University Requirement"], // Added attributes
-    days: ["W"],
-    college: "University College", // Example college
-    campus: "Main Campus",
-    locationKeywords: ["Student Center"],
+    id: "univ100", code: "UNIV100", name: "University Seminar", credits: 1, department: "University", color: "#7E57C2",
+    attributes: ["Introductory", "University Requirement"], days: ["W"], college: "University College", campus: "Main Campus", locationKeywords: ["Student Center"],
     sections: [
       {
-        id: "univ100-001",
-        sectionType: "Standard", // Added sectionType
-        crn: "81625",
-        instructor: "Dr. Campus Guide",
-        sectionNumber: "001",
-        schedule: [
-          { days: "W", startTime: "14:00", endTime: "15:00", location: "Student Center 101" }
-        ],
-        location: "Main Campus",
-        maxSeats: 30,
-        availableSeats: 11
+        id: "univ100-001", sectionType: "Standard", crn: "81625", instructor: "Dr. Campus Guide", sectionNumber: "001",
+        schedule: [ { days: "W", startTime: "14:00", endTime: "15:00", location: "Student Center 101" } ],
+        location: "Main Campus", maxSeats: 30, availableSeats: 11
       }
     ]
   },
   {
-    id: "econ101",
-    code: "ECON101",
-    name: "Principles of Microeconomics",
-    credits: 3,
-    department: "Economics",
-    color: "#FF7043",
-    attributes: ["Social Science", "Quantitative Reasoning"], // Added attributes
-    days: ["M", "W", "F"],
-    college: "Business School",
-    campus: "West Campus",
-    locationKeywords: ["Business Building"],
+    id: "econ101", code: "ECON101", name: "Principles of Microeconomics", credits: 3, department: "Economics", color: "#FF7043",
+    attributes: ["Social Science", "Quantitative Reasoning"], days: ["M", "W", "F"], college: "Business School", campus: "West Campus", locationKeywords: ["Business Building"],
     sections: [
       {
-        id: "econ101-001",
-        sectionType: "Standard", // Added sectionType
-        crn: "91725",
-        instructor: "Dr. Market",
-        sectionNumber: "001",
-        schedule: [
-          { days: "M,W,F", startTime: "10:00", endTime: "11:00", location: "Business Building 101" }
-        ],
-        location: "West Campus",
-        maxSeats: 45,
-        availableSeats: 15
+        id: "econ101-001", sectionType: "Standard", crn: "91725", instructor: "Dr. Market", sectionNumber: "001",
+        schedule: [ { days: "M,W,F", startTime: "10:00", endTime: "11:00", location: "Business Building 101" } ],
+        location: "West Campus", maxSeats: 45, availableSeats: 15
       }
     ]
-  }
+  },
+  // Test courses for prerequisite graph
+  { id: "test100", code: "TEST100", name: "Test Base Course", credits: 3, department: "Testing", sections: [{id: "test100-001", crn: "00100", instructor:"Staff", sectionNumber:"001", schedule:[], location:"", maxSeats:10, availableSeats:10}] },
+  { id: "test200", code: "TEST200", name: "Test Mid Course", credits: 3, department: "Testing", prerequisites: ["TEST100"], sections: [{id: "test200-001", crn: "00200", instructor:"Staff", sectionNumber:"001", schedule:[], location:"", maxSeats:10, availableSeats:10}] },
+  { id: "test300", code: "TEST300", name: "Test Top Course", credits: 3, department: "Testing", prerequisites: ["TEST200"], sections: [{id: "test300-001", crn: "00300", instructor:"Staff", sectionNumber:"001", schedule:[], location:"", maxSeats:10, availableSeats:10}] },
+  { id: "test400", code: "TEST400", name: "Test Course with Missing Prereq", credits: 3, department: "Testing", prerequisites: ["XYZ123"], sections: [{id: "test400-001", crn: "00400", instructor:"Staff", sectionNumber:"001", schedule:[], location:"", maxSeats:10, availableSeats:10}] },
+  // Circular dependency test courses
+  { id: "circ1", code: "CIRC1", name: "Circular 1", credits: 3, department: "Testing", prerequisites: ["CIRC2"], sections: [{id: "circ1-001", crn: "00501", instructor:"Staff", sectionNumber:"001", schedule:[], location:"", maxSeats:10, availableSeats:10}] },
+  { id: "circ2", code: "CIRC2", name: "Circular 2", credits: 3, department: "Testing", prerequisites: ["CIRC1"], sections: [{id: "circ2-001", crn: "00502", instructor:"Staff", sectionNumber:"001", schedule:[], location:"", maxSeats:10, availableSeats:10}] },
 ];
 
 export const mockBusyTimes: BusyTime[] = [
-  {
-    id: "bt1",
-    title: "Spanish Language Study Group",
-    days: ["M", "W", "F"],
-    startTime: "15:00",
-    endTime: "16:00",
-    type: "study"
-  },
-  {
-    id: "bt2",
-    title: "University Soccer Team Practice",
-    days: ["T", "Th"],
-    startTime: "16:00",
-    endTime: "18:00",
-    type: "personal"
-  },
-  {
-    id: "bt3",
-    title: "Part-time Job at Campus Bookstore",
-    days: ["M", "W", "F"],
-    startTime: "17:00",
-    endTime: "19:00",
-    type: "work"
-  }
+  { id: "bt1", title: "Spanish Language Study Group", days: ["M", "W", "F"], startTime: "15:00", endTime: "16:00", type: "study" },
+  { id: "bt2", title: "University Soccer Team Practice", days: ["T", "Th"], startTime: "16:00", endTime: "18:00", type: "personal" },
+  { id: "bt3", title: "Part-time Job at Campus Bookstore", days: ["M", "W", "F"], startTime: "17:00", endTime: "19:00", type: "work" }
 ];
 
 export const mockSchedules: Schedule[] = [
   {
-    id: "sched1",
-    name: "Balanced Schedule - Morning Classes",
-    termId: "fall2023",
-    sections: [
-      mockCourses[0].sections[0],  // CS101 - MWF 9-10
-      mockCourses[1].sections[0],  // MATH105 - MWF 8-9
-      mockCourses[2].sections[0]   // ENG234 - MW 10-11:30
-    ],
-    busyTimes: mockBusyTimes,
-    totalCredits: 9,
-    conflicts: []
+    id: "sched1", name: "Balanced Schedule - Morning Classes", termId: "fall2023",
+    sections: [ mockCourses[0].sections[0], mockCourses[1].sections[0], mockCourses[2].sections[0] ],
+    busyTimes: mockBusyTimes, totalCredits: 9, conflicts: []
   },
   {
-    id: "sched2",
-    name: "Afternoon Schedule - T/Th Focus",
-    termId: "fall2023",
-    sections: [
-      mockCourses[0].sections[1],  // CS101 - TTh 13-14:30
-      mockCourses[1].sections[1],  // MATH105 - TTh 11-12:30
-      mockCourses[2].sections[1]   // ENG234 - TTh 14-15:30
-    ],
-    busyTimes: mockBusyTimes,
-    totalCredits: 9,
-    conflicts: [
-      {
-        type: "time",
-        description: "Conflict between ENG234 and Part-time Job",
-        courses: ["eng234"],
-        severity: "warning"
-      }
-    ]
+    id: "sched2", name: "Afternoon Schedule - T/Th Focus", termId: "fall2023",
+    sections: [ mockCourses[0].sections[1], mockCourses[1].sections[1], mockCourses[2].sections[1] ],
+    busyTimes: mockBusyTimes, totalCredits: 9,
+    conflicts: [ { type: "time", description: "Conflict between ENG234 and Part-time Job", courses: ["eng234"], severity: "warning" } ]
   }
 ];
 
 export const mockTerms: Term[] = [
-  {
-    id: "summer2024",
-    name: "Summer 2024",
-    startDate: new Date("2024-05-15"),
-    endDate: new Date("2024-08-15"),
-    registrationStartDate: new Date("2024-04-01"),
-    registrationEndDate: new Date("2024-05-10"),
-    courses: mockCourses
-  },
-  {
-    id: "fall2024",
-    name: "Fall 2024",
-    startDate: new Date("2024-08-25"),
-    endDate: new Date("2024-12-15"),
-    registrationStartDate: new Date("2024-07-01"),
-    registrationEndDate: new Date("2024-08-20"),
-    courses: mockCourses
-  },
-  {
-    id: "spring2025",
-    name: "Spring 2025",
-    startDate: new Date("2025-01-15"),
-    endDate: new Date("2025-05-10"),
-    registrationStartDate: new Date("2024-11-01"),
-    registrationEndDate: new Date("2024-01-10"),
-    courses: mockCourses
-  }
+  { id: "summer2024", name: "Summer 2024", startDate: new Date("2024-05-15"), endDate: new Date("2024-08-15"), registrationStartDate: new Date("2024-04-01"), registrationEndDate: new Date("2024-05-10"), courses: mockCourses },
+  { id: "fall2024", name: "Fall 2024", startDate: new Date("2024-08-25"), endDate: new Date("2024-12-15"), registrationStartDate: new Date("2024-07-01"), registrationEndDate: new Date("2024-08-20"), courses: mockCourses },
+  { id: "spring2025", name: "Spring 2025", startDate: new Date("2025-01-15"), endDate: new Date("2025-05-10"), registrationStartDate: new Date("2024-11-01"), registrationEndDate: new Date("2024-01-10"), courses: mockCourses }
 ];
 
 export const mockStudent: StudentInfo = {
   id: "s123456",
   name: "Alex Student",
-  major: "Computer Science", // Will be overridden by majorId if used
-  majorId: "bs-cs", // Link to the BS CS program
-  minor: "Art History", // Example, will be overridden by minorId if used
-  minorId: "minor-arthistory", // Link to Art History minor
-  gpa: 3.75,            // Example
-  expectedGraduationDate: "May 2025", // Example
-  interests: ["Artificial Intelligence", "Web Development", "Photography"], // Example
+  major: "Computer Science", 
+  majorId: "bs-cs", 
+  minor: "Art History", 
+  minorId: "minor-arthistory", 
+  gpa: 3.75,            
+  expectedGraduationDate: "May 2025", 
+  interests: ["Artificial Intelligence", "Web Development", "Photography"], 
   academicLevel: "Junior",
-  totalCredits: 62, // This would be calculated based on completed courses in a real app
-  requiredCredits: 120, // This would come from the selected AcademicProgram
-  completedCourses: ["cs101", "math101", "eng101", "math105", "eng234", "AH101"], // Updated at the end of file too
+  totalCredits: 62, 
+  requiredCredits: 120, 
+  completedCourses: ["CS101", "MATH105", "ENG101", "AH101"], // ENG101 for prereq of eng234, AH101 for minor
   advisorName: "Dr. Academic Advisor"
 };
 
-// Define mockDegreeRequirements directly within the first program or adapt them.
-// For this step, we'll adapt them to the new DegreeRequirement structure.
 const csProgramRequirements: DegreeRequirement[] = [
   {
-    id: "core_cs",
-    name: "Computer Science Core",
-    description: "Fundamental courses for Computer Science.",
-    requiredCredits: 22,
-    progress: 0.25, // Example progress, would be calculated
+    id: "core_cs", name: "Computer Science Core", description: "Fundamental courses for Computer Science.", requiredCredits: 22, progress: 0.25, 
     courseMatcher: { type: "specificCourses", values: ["CS101", "CS201", "CS301", "CS310"] },
-    // Assuming CS101 is completed, progressCourses would be 1 if choiceRequired was set.
-    // For specific courses, progressCourses isn't as relevant unless a subset is chosen.
   },
   {
-    id: "core_math",
-    name: "Mathematics Core",
-    description: "Core mathematics courses required for CS.",
-    requiredCredits: 8,
-    progress: 0.5, // Example progress
+    id: "core_math", name: "Mathematics Core", description: "Core mathematics courses required for CS.", requiredCredits: 8, progress: 0.5, 
     courseMatcher: { type: "specificCourses", values: ["MATH105", "MATH201"] },
   },
   {
-    id: "major_adv_cs",
-    name: "Advanced CS Electives",
-    description: "Choose 3 advanced Computer Science electives.",
-    requiredCredits: 9, 
-    progress: 0,
-    choiceRequired: 3,
-    courseMatcher: { type: "courseCodePrefix", values: ["CS4"] }, // Example: CS4xx courses
-    progressCourses: 0,
+    id: "major_adv_cs", name: "Advanced CS Electives", description: "Choose 3 advanced Computer Science electives.", requiredCredits: 9, progress: 0,
+    choiceRequired: 3, courseMatcher: { type: "courseCodePrefix", values: ["CS4"] }, progressCourses: 0,
   },
   {
-    id: "gen_ed_hum",
-    name: "Humanities Elective",
-    description: "Choose 1 course from Humanities list.",
-    requiredCredits: 3,
-    progress: 1, // Marked as completed
-    choiceRequired: 1,
-    choiceCourses: ["ENG234", "PHIL101", "HIST101", "ART100"], 
-    progressCourses: 1, // Assuming ENG234 was taken
+    id: "gen_ed_hum", name: "Humanities Elective", description: "Choose 1 course from Humanities list.", requiredCredits: 3, progress: 1, 
+    choiceRequired: 1, choiceCourses: ["ENG234", "PHIL101", "HIST101", "ART100"], progressCourses: 1, 
   },
   {
-    id: "gen_ed_sci",
-    name: "Science Elective",
-    description: "Choose 1 lab science course.",
-    requiredCredits: 4,
-    progress: 0,
-    choiceRequired: 1,
-    courseMatcher: { type: "keyword", values: ["science", "lab"] }, // Match courses with "science" AND "lab" keywords
-    progressCourses: 0,
+    id: "gen_ed_sci", name: "Science Elective", description: "Choose 1 lab science course.", requiredCredits: 4, progress: 0,
+    choiceRequired: 1, courseMatcher: { type: "keyword", values: ["science", "lab"] }, progressCourses: 0,
   },
   {
-    id: "univ_req",
-    name: "University Seminar",
-    description: "Required university seminar.",
-    requiredCredits: 1,
-    progress: 0,
+    id: "univ_req", name: "University Seminar", description: "Required university seminar.", requiredCredits: 1, progress: 0,
     courseMatcher: { type: "specificCourses", values: ["UNIV100"] }
   }
 ];
 
 export const mockPrograms: AcademicProgram[] = [
   {
-    id: "bs-cs",
-    name: "Bachelor of Science in Computer Science",
-    type: 'Major',
-    requirements: csProgramRequirements,
-    totalCreditsRequired: 120,
+    id: "bs-cs", name: "Bachelor of Science in Computer Science", type: 'Major', requirements: csProgramRequirements, totalCreditsRequired: 120,
     description: "Provides a strong foundation in computer science theory and practice."
   },
   {
-    id: "ba-engl",
-    name: "Bachelor of Arts in English Literature",
-    type: 'Major',
-    totalCreditsRequired: 120,
+    id: "ba-engl", name: "Bachelor of Arts in English Literature", type: 'Major', totalCreditsRequired: 120,
     description: "Explores the rich history and diverse forms of literature in English.",
     requirements: [
       { id: "engl-intro", name: "Introductory Literature Survey", requiredCredits: 6, progress: 0, courseMatcher: {type: "courseCodePrefix", values: ["ENGL1"]}},
@@ -520,10 +351,7 @@ export const mockPrograms: AcademicProgram[] = [
     ]
   },
   {
-    id: "minor-ds",
-    name: "Minor in Data Science",
-    type: 'Minor',
-    totalCreditsRequired: 18,
+    id: "minor-ds", name: "Minor in Data Science", type: 'Minor', totalCreditsRequired: 18,
     description: "Introduces fundamental concepts and tools in data analysis and interpretation.",
     requirements: [
       { id: "ds-intro", name: "Introduction to Data Science", requiredCredits: 3, progress: 0, courseMatcher: {type: "specificCourses", values: ["DS101"]}},
@@ -535,10 +363,7 @@ export const mockPrograms: AcademicProgram[] = [
     ]
   },
   {
-    id: "minor-arthistory",
-    name: "Minor in Art History",
-    type: 'Minor',
-    totalCreditsRequired: 15,
+    id: "minor-arthistory", name: "Minor in Art History", type: 'Minor', totalCreditsRequired: 15,
     description: "Explores the history of art across various cultures and periods.",
     requirements: [
       { id: "ah-intro1", name: "Survey of Western Art I", requiredCredits: 3, progress: 0, courseMatcher: {type: "specificCourses", values: ["AH101"]}},
@@ -550,42 +375,14 @@ export const mockPrograms: AcademicProgram[] = [
   }
 ];
 
-// mockDegree is no longer needed as its data is in mockPrograms[0]
-// export const mockDegree: Degree = {
-//   id: "cs-bs",
-//   name: "Bachelor of Science in Computer Science",
-//   totalCredits: 120,
-//   requirements: csProgramRequirements // Use the adapted requirements
-// };
-
 export const mockMandatoryCourses = [
-  {
-    code: "CS101",
-    name: "Introduction to Computer Science",
-    status: "Completed"
-  },
-  {
-    code: "CS201",
-    name: "Data Structures",
-    status: "In Progress"
-  },
-  {
-    code: "CS301",
-    name: "Algorithms",
-    status: "Not Started"
-  },
-  {
-    code: "MATH101",
-    name: "Calculus I",
-    status: "Completed"
-  }
+  { code: "CS101", name: "Introduction to Computer Science", status: "Completed" },
+  { code: "CS201", name: "Data Structures", status: "In Progress" },
+  { code: "CS301", name: "Algorithms", status: "Not Started" },
+  { code: "MATH101", name: "Calculus I", status: "Completed" }
 ];
 
-export const timeSlots = [
-  "7 AM", "8 AM", "9 AM", "10 AM", "11 AM", "12 PM", 
-  "1 PM", "2 PM", "3 PM", "4 PM", "5 PM", "6 PM", "7 PM", "8 PM"
-];
-
+export const timeSlots = [ "7 AM", "8 AM", "9 AM", "10 AM", "11 AM", "12 PM", "1 PM", "2 PM", "3 PM", "4 PM", "5 PM", "6 PM", "7 PM", "8 PM" ];
 export const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 export const busyTimeColors = {
@@ -599,61 +396,19 @@ export const busyTimeColors = {
   'other': { bg: 'bg-violet-500', text: 'text-white', icon: 'bookmark' },
 };
 
-// New Mock Data for Degree Audit, Multi-Year Plan, and Exported Schedule
-
 export const mockDegreeAuditResult: DegreeAuditResults = {
   studentId: mockStudent.id,
-  degreeId: mockPrograms[0].id, // Link to the BS CS program ID
+  degreeId: mockPrograms[0].id, 
   overallProgress: mockStudent.totalCredits / (mockPrograms[0].totalCreditsRequired || 120),
   totalCreditsEarned: mockStudent.totalCredits,
   totalCreditsRequired: mockPrograms[0].totalCreditsRequired || 120,
-  requirementAudits: [ // This would need to be dynamically generated based on mockPrograms[0].requirements and student's courses
-    // For simplicity, we'll manually create a few based on the new structure.
-    // This part needs careful regeneration if the requirements changed significantly.
-    // The spread operator `...csProgramRequirements[0]` might not work if the structure is too different.
-    // Let's assume csProgramRequirements are correctly structured DegreeRequirement items.
-    {
-      ...csProgramRequirements[0], // Core CS
-      status: 'partially_fulfilled',
-      fulfilledCourses: ['CS101'], // Assuming CS101 is completed by mockStudent
-      progressCredits: 3, // Credits for CS101
-      progressCourses: 1, // 1 course towards the specific list
-    } as DegreeRequirementAudit, // Cast to ensure type compatibility
-    {
-      ...csProgramRequirements[1], // Core Math
-      status: 'partially_fulfilled',
-      fulfilledCourses: ['MATH105'], // Assuming MATH105 is completed by mockStudent
-      progressCredits: 3, // Credits for MATH105
-      progressCourses: 1,
-    } as DegreeRequirementAudit,
-    {
-      ...csProgramRequirements[2], // Advanced CS Electives
-      status: 'not_fulfilled',
-      fulfilledCourses: [],
-      progressCredits: 0,
-      progressCourses: 0,
-    } as DegreeRequirementAudit,
-    {
-      ...csProgramRequirements[3], // Humanities Elective
-      status: 'fulfilled',
-      fulfilledCourses: ['ENG234'], // Assuming ENG234 is completed by mockStudent
-      progressCredits: 3,
-      progressCourses: 1,
-    } as DegreeRequirementAudit,
-     {
-      ...csProgramRequirements[4], // Science Elective
-      status: 'not_fulfilled',
-      fulfilledCourses: [],
-      progressCredits: 0,
-      progressCourses: 0,
-    } as DegreeRequirementAudit,
-    {
-      ...csProgramRequirements[5], // University Seminar
-      status: 'not_fulfilled',
-      fulfilledCourses: [],
-      progressCredits: 0,
-      progressCourses: 0,
-    } as DegreeRequirementAudit
+  requirementAudits: [ 
+    { ...csProgramRequirements[0], status: 'partially_fulfilled', fulfilledCourses: ['CS101'], progressCredits: 3, progressCourses: 1 } as DegreeRequirementAudit,
+    { ...csProgramRequirements[1], status: 'partially_fulfilled', fulfilledCourses: ['MATH105'], progressCredits: 3, progressCourses: 1 } as DegreeRequirementAudit,
+    { ...csProgramRequirements[2], status: 'not_fulfilled', fulfilledCourses: [], progressCredits: 0, progressCourses: 0 } as DegreeRequirementAudit,
+    { ...csProgramRequirements[3], status: 'fulfilled', fulfilledCourses: ['ENG234'], progressCredits: 3, progressCourses: 1 } as DegreeRequirementAudit,
+    { ...csProgramRequirements[4], status: 'not_fulfilled', fulfilledCourses: [], progressCredits: 0, progressCourses: 0 } as DegreeRequirementAudit,
+    { ...csProgramRequirements[5], status: 'not_fulfilled', fulfilledCourses: [], progressCredits: 0, progressCourses: 0 } as DegreeRequirementAudit
   ],
   summaryNotes: [
     `Overall progress: ${Math.round((mockStudent.totalCredits / (mockPrograms[0].totalCreditsRequired || 120)) * 100)}%`,
@@ -664,31 +419,24 @@ export const mockDegreeAuditResult: DegreeAuditResults = {
 };
 
 export const mockMultiYearPlan: MultiYearPlan = {
-  id: "plan123",
-  studentId: mockStudent.id,
-  degreeId: mockPrograms[0].id, // Link to the BS CS program ID
-  planName: "My CS Graduation Plan",
+  id: "plan123", studentId: mockStudent.id, degreeId: mockPrograms[0].id, planName: "My CS Graduation Plan",
   plannedCourses: [
-    { courseId: "CS201", termId: "fall2024" }, // Assuming CS201 is a valid course code
-    { courseId: "CS301", termId: "spring2025" },
-    { courseId: "MATH201", termId: "fall2024" }, // Assuming MATH201 is a valid course code
-    { courseId: "CS310", termId: "fall2024" },
-    { courseId: "CS410", termId: "spring2025" }, // Advanced elective
-    { courseId: "phys210", termId: "spring2025" }, // Science elective
+    { courseId: "CS201", termId: "fall2024" }, { courseId: "CS301", termId: "spring2025" },
+    { courseId: "MATH201", termId: "fall2024" }, { courseId: "CS310", termId: "fall2024" },
+    { courseId: "CS410", termId: "spring2025" }, { courseId: "phys210", termId: "spring2025" },
     { courseId: "univ100", termId: "fall2024" },
   ]
 };
 
 export const mockExportedSchedule: ExportedSchedule = {
-  version: "1.0",
-  name: mockSchedules[0].name, // "Balanced Schedule - Morning Classes"
-  termId: mockSchedules[0].termId, // "fall2023" - Note: mockTerms might need a "fall2023" or adjust this
-  exportedSections: mockSchedules[0].sections.map(section => ({
-    courseId: section.id.split("-")[0], // e.g., "cs101"
-    sectionId: section.id, // e.g., "cs101-001"
-  })),
-  totalCredits: mockSchedules[0].totalCredits, // 9
+  version: "1.0", name: mockSchedules[0].name, termId: mockSchedules[0].termId, 
+  exportedSections: mockSchedules[0].sections.map(section => ({ courseId: section.id.split("-")[0], sectionId: section.id })),
+  totalCredits: mockSchedules[0].totalCredits, 
 };
 
 // Ensure mockStudent has relevant completed courses for the audit
-mockStudent.completedCourses = ["CS101", "MATH105", "ENG234", "ENG101", "AH101"]; // ENG101 for prereq of eng234, AH101 for minor
+// This was already done when mockStudent was defined earlier.
+// mockStudent.completedCourses = ["CS101", "MATH105", "ENG101", "AH101"]; 
+// ENG101 for prereq of eng234. AH101 for art history minor.
+
+[end of src/lib/mock-data.ts]
