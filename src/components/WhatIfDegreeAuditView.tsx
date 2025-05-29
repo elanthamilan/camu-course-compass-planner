@@ -2,17 +2,20 @@ import React from 'react';
 import { AcademicProgram, DegreeRequirement } from '@/lib/types'; // Adjust path if needed
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button'; // Added Button import
 import { CheckCircle2, CircleDot, Circle } from 'lucide-react'; // For status icons
 
 interface WhatIfDegreeAuditViewProps {
   whatIfProgram: AcademicProgram | null;
   whatIfRequirements: DegreeRequirement[] | null;
+  onFindCoursesForRequirement: (requirement: DegreeRequirement) => void;
   // studentCompletedCourses?: string[]; // Optional, for more detailed display later
 }
 
 const WhatIfDegreeAuditView: React.FC<WhatIfDegreeAuditViewProps> = ({
   whatIfProgram,
   whatIfRequirements,
+  onFindCoursesForRequirement,
 }) => {
   if (!whatIfProgram || !whatIfRequirements || whatIfRequirements.length === 0) {
     return (
@@ -83,6 +86,16 @@ const WhatIfDegreeAuditView: React.FC<WhatIfDegreeAuditViewProps> = ({
                   {getRequirementDisplayProgress(req)}
                 </Badge>
               </div>
+              {(req.progress ?? 0) < 1 && (
+                <Button
+                  variant="link"
+                  size="sm"
+                  className="mt-1 text-xs px-0 h-auto" // Link-like styling
+                  onClick={() => onFindCoursesForRequirement(req)}
+                >
+                  Find Courses for this Requirement
+                </Button>
+              )}
               {/* Optional: Display which courses fulfilled this requirement in the what-if scenario */}
               {/* This would require passing studentCompletedCourses and enhancing logic here */}
             </li>

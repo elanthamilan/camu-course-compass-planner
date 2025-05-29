@@ -1,11 +1,11 @@
 
-import React, { useState } from "react";
-import { Drawer, DrawerContent, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"; // Changed Dialog to Drawer
+import React, { useState, useEffect, useMemo } from "react"; // Added useEffect, useMemo
+import { Drawer, DrawerContent, DrawerFooter, DrawerHeader, DrawerTitle, DrawerDescription } from "@/components/ui/drawer"; // Changed Dialog to Drawer, added DrawerDescription
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSchedule } from "@/contexts/ScheduleContext";
-import { Course } from "@/lib/types";
+import { Course, DegreeRequirement } from "@/lib/types"; // Added DegreeRequirement for CourseMatcher
 import { mockCourses } from "@/lib/mock-data";
 import { Search, Check, Info, PlusCircle, LogOut, Filter, Network } from "lucide-react"; // Added Filter and Network
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -20,16 +20,35 @@ import { Badge } from "@/components/ui/badge"; // For displaying attributes in C
 interface CourseSearchProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  termId?: string; // Made termId optional
-  onCourseSelected: (course: Course, termId?: string) => void; // Renamed prop
+  termId?: string; 
+  onCourseSelected: (course: Course, termId?: string) => void;
+  initialFilterCriteria?: { 
+    type: 'matcher', 
+    matcher: DegreeRequirement['courseMatcher'] // Use the type from DegreeRequirement
+  } | { 
+    type: 'choice', 
+    courses: string[] 
+  } | null;
+  contextualDrawerTitle?: string | null;
 }
 
-const CourseSearch: React.FC<CourseSearchProps> = ({ open, onOpenChange, termId, onCourseSelected }) => {
-  const { courses: contextCourses, studentInfo } = useSchedule(); // Get existing courses for planning list and studentInfo
+const CourseSearch: React.FC<CourseSearchProps> = ({ 
+  open, 
+  onOpenChange, 
+  termId, 
+  onCourseSelected,
+  initialFilterCriteria,
+  contextualDrawerTitle 
+}) => {
+  const { studentInfo } = useSchedule(); 
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedTab, setSelectedTab] = useState("required");
+  const [selectedTab, setSelectedTab] = useState("required"); // "required" or "all"
   const [selectedAttributes, setSelectedAttributes] = useState<string[]>([]);
   const [filterPrerequisitesCleared, setFilterPrerequisitesCleared] = useState<boolean>(false);
+  
+  const [baseCourseList, setBaseCourseList] = useState<Course[]>(mockCourses);
+  const [initialFiltersApplied, setInitialFiltersApplied] = useState(false);
+
   const [selectedCourseForPrereqView, setSelectedCourseForPrereqView] = useState<string | null>(null);
   const [isPrereqModalOpen, setIsPrereqModalOpen] = useState(false);
 
@@ -48,23 +67,83 @@ const CourseSearch: React.FC<CourseSearchProps> = ({ open, onOpenChange, termId,
   };
   
   const completedCourseCodes = studentInfo?.completedCourses || [];
-  
-  // Filter courses based on search term and attributes
-  const filteredCourses = mockCourses.filter(course => {
-    const searchMatch = course.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        course.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const attributeMatch = selectedAttributes.length === 0 || 
-                           selectedAttributes.every(attr => course.attributes?.includes(attr));
-    
-    const prerequisitesClearedMatch = !filterPrerequisitesCleared || 
-      (course.prerequisites ?? []).length === 0 ||
-      (course.prerequisites ?? []).every(prereqCode => completedCourseCodes.includes(prereqCode));
-      
-    return searchMatch && attributeMatch && prerequisitesClearedMatch;
-  }).map(course => ({ ...course, description: course.description || "No description available." }));
 
+  useEffect(() => {
+    if (!open) {
+      setInitialFiltersApplied(false); // Reset when drawer closes
+      // Optionally reset other filters too, like searchTerm, selectedAttributes etc.
+      // setSearchTerm(""); 
+      // setSelectedAttributes([]);
+      // setFilterPrerequisitesCleared(false);
+    }
+  }, [open]);
+
+  useEffect(() => {
+    // Reset if criteria change, to allow re-application of new initial filters
+    setInitialFiltersApplied(false);
+  }, [initialFilterCriteria]);
+
+  useEffect(() => {
+    if (open && initialFilterCriteria && !initialFiltersApplied) {
+      let preFiltered = mockCourses;
+      if (initialFilterCriteria.type === 'matcher' && initialFilterCriteria.matcher) {
+        const { type, values } = initialFilterCriteria.matcher;
+        preFiltered = mockCourses.filter(course => {
+          if (type === "department") return values.includes(course.department || "");
+          if (type === "specificCourses") return values.includes(course.code);
+          if (type === "courseCodePrefix") return values.some(prefix => course.code.startsWith(prefix));
+          if (type === "keyword") return course.keywords && values.some(kw => course.keywords!.includes(kw));
+          return true; 
+        });
+      } else if (initialFilterCriteria.type === 'choice') {
+        preFiltered = mockCourses.filter(course => initialFilterCriteria.courses.includes(course.code));
+      }
+      setBaseCourseList(preFiltered);
+      setInitialFiltersApplied(true);
+    } else if (!initialFilterCriteria && open) { 
+      // If drawer opens without new criteria, or criteria are cleared, reset to full list
+      // Only reset if initialFiltersApplied is true, meaning we were previously filtered by initialCriteria
+      if (initialFiltersApplied) {
+         setBaseCourseList(mockCourses);
+         // setInitialFiltersApplied(false); // debatable: reset this only if criteria truly change or drawer closes
+      } else if (!initialFiltersApplied && baseCourseList !== mockCourses) {
+         // If filters were never applied (e.g. criteria became null before opening)
+         // ensure base list is correct.
+         setBaseCourseList(mockCourses);
+      }
+    }
+  }, [open, initialFilterCriteria, initialFiltersApplied]);
+
+
+  const derivedFilteredCourses = useMemo(() => {
+    let coursesToFilter = baseCourseList;
+
+    if (filterPrerequisitesCleared) {
+      coursesToFilter = coursesToFilter.filter(course => 
+        (course.prerequisites ?? []).length === 0 ||
+        (course.prerequisites ?? []).every(prereqCode => completedCourseCodes.includes(prereqCode))
+      );
+    }
+  
+    if (searchTerm) {
+      coursesToFilter = coursesToFilter.filter(course =>
+        course.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        course.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+  
+    if (selectedAttributes.length > 0) {
+      coursesToFilter = coursesToFilter.filter(course =>
+        selectedAttributes.every(attr => course.attributes?.includes(attr))
+      );
+    }
+    
+    return coursesToFilter.map(course => ({ ...course, description: course.description || "No description available." }));
+  }, [baseCourseList, searchTerm, selectedAttributes, filterPrerequisitesCleared, completedCourseCodes]);
 
   // Required courses for the student's degree (example) - also apply attribute filtering
+  // This mock 'requiredCourses' list should ideally also be filtered by 'derivedFilteredCourses' logic if it's meant to be dynamic
+  // For now, it's a static list.
   const requiredCourses = [ // This should ideally be fetched or dynamically determined based on degree requirements
     {
       id: "cs202", // Mock data, should be filtered if attributes are applied globally
@@ -121,20 +200,22 @@ const CourseSearch: React.FC<CourseSearchProps> = ({ open, onOpenChange, termId,
         Since the file was reset, these changes are gone. This task focuses only on the Info Dialog.
         If the height adjustment is still desired, it would need to be reapplied in a separate step or task.
       */}
-      <DrawerContent className="h-[90vh] sm:max-w-xl animate-slide-in-right flex flex-col"> 
+      <DrawerContent className="h-[90vh] sm:max-w-xl animate-slide-in-right flex flex-col">
         <DrawerHeader>
           <DrawerTitle className="text-xl">
-            {termId 
-              ? `Search for courses to add in ${termId.replace(/([A-Z])/g, ' $1').trim()}`
-              : "Search Courses for Planning"}
+            {contextualDrawerTitle ||
+              (termId 
+                ? `Search for courses to add in ${termId.replace(/([A-Z])/g, ' $1').trim()}`
+                : "Search Courses for Planning")}
           </DrawerTitle>
           <DrawerDescription> 
-            {termId
-              ? `Find and select courses for ${termId.replace(/([A-Z])/g, ' $1').trim()}. You can view required or all available courses.`
-              : "Browse and select courses to add to your overall planning list."}
+            {contextualDrawerTitle 
+              ? `Showing courses related to: ${contextualDrawerTitle.replace("Find Courses for ", "")}`
+              : termId
+                ? `Find and select courses for ${termId.replace(/([A-Z])/g, ' $1').trim()}. You can view required or all available courses.`
+                : "Browse and select courses to add to your overall planning list."}
           </DrawerDescription>
         </DrawerHeader>
-        
         {/*
           NOTE: The className of this div was previously modified to flex-grow overflow-y-auto.
           This change is also gone due to the reset.
@@ -388,7 +469,7 @@ const CourseSearch: React.FC<CourseSearchProps> = ({ open, onOpenChange, termId,
             
             <TabsContent value="all" className="mt-4">
               <div className="space-y-3">
-                {filteredCourses.map(course => (
+                {derivedFilteredCourses.map(course => (
                   <div 
                     key={course.id} 
                     className="border rounded-md p-3 flex justify-between items-center bg-white hover:bg-gray-50 transition-colors animate-fade-in"
