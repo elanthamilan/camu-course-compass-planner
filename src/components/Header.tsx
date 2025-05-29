@@ -18,8 +18,8 @@ const Header: React.FC = () => {
 
   return (
     <> {/* Added Fragment to wrap header and AIAdvisor */}
-    <header className="bg-background border-b shadow-sm sticky top-0 z-50">
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+    <header className="bg-background border-b shadow-sm sticky top-0 z-50 w-full">
+      <div className="container mx-auto px-4 h-16 flex items-center justify-between max-w-7xl">
         {/* Left section: Back button or Brand */}
         <div className="flex items-center">
           {!isRoot ? (
@@ -33,8 +33,8 @@ const Header: React.FC = () => {
               <ArrowLeft className="h-5 w-5" />
             </Button>
           ) : null}
-          <Link 
-            to="/" 
+          <Link
+            to="/"
             className={`text-xl font-bold text-foreground hover:text-primary transition-colors ${isRoot ? 'ml-10' : ''}`} // ml-10 roughly equivalent to icon button width + margin
           >
             Course Planner
@@ -45,8 +45,8 @@ const Header: React.FC = () => {
         <nav className="hidden md:flex items-center space-x-2">
           {/* Render other nav items if any */}
           {navItems.map((item) => (
-            <Button 
-              key={item.to} 
+            <Button
+              key={item.to}
               variant="outline"
               asChild
             >
@@ -57,8 +57,8 @@ const Header: React.FC = () => {
             </Button>
           ))}
           {/* AI Advisor Button for Desktop */}
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={() => setIsAiAdvisorOpen(true)}
           >
             <Sparkles className="h-4 w-4 mr-2" />
@@ -79,7 +79,7 @@ const Header: React.FC = () => {
               <nav className="flex flex-col space-y-4 mt-8">
                 {/* Render other nav items if any */}
                 {navItems.map((item) => (
-                  <Button 
+                  <Button
                     key={`mobile-${item.to}`}
                     variant="ghost"
                     className="justify-start text-base"
@@ -92,14 +92,14 @@ const Header: React.FC = () => {
                   </Button>
                 ))}
                 {/* AI Advisor Button for Mobile */}
-                <Button 
-                  variant="ghost" 
+                <Button
+                  variant="ghost"
                   className="justify-start text-base"
                   onClick={() => {
                     // Close the sheet first, then open the drawer
                     // This assumes Sheet onOpenChange is implicitly handled by SheetTrigger
                     // If not, would need to manage Sheet's open state too.
-                    setIsAiAdvisorOpen(true); 
+                    setIsAiAdvisorOpen(true);
                   }}
                 >
                   <Sparkles className="h-4 w-4 mr-2" />
