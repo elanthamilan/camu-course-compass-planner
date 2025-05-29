@@ -113,7 +113,7 @@ const CourseSearch: React.FC<CourseSearchProps> = ({ open, onOpenChange, termId,
         Since the file was reset, these changes are gone. This task focuses only on the Info Dialog.
         If the height adjustment is still desired, it would need to be reapplied in a separate step or task.
       */}
-      <DrawerContent className="sm:max-w-xl animate-slide-in-right"> 
+      <DrawerContent className="h-[90vh] sm:max-w-xl animate-slide-in-right flex flex-col"> 
         <DrawerHeader>
           <DrawerTitle className="text-xl">
             {termId 
@@ -131,7 +131,7 @@ const CourseSearch: React.FC<CourseSearchProps> = ({ open, onOpenChange, termId,
           NOTE: The className of this div was previously modified to flex-grow overflow-y-auto.
           This change is also gone due to the reset.
         */}
-        <div className="space-y-4 p-4"> 
+        <div className="flex-grow overflow-y-auto space-y-4 p-4"> 
           <div className="flex space-x-2">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
@@ -293,7 +293,7 @@ const CourseSearch: React.FC<CourseSearchProps> = ({ open, onOpenChange, termId,
                 <p className="text-green-700 text-xs mt-1">These courses help you complete your degree requirements faster</p>
               </div>
               
-              <div className="space-y-3 max-h-60 overflow-y-auto">
+              <div className="space-y-3">
                 {requiredCourses.map(course => (
                   <div 
                     key={course.id} 
@@ -359,7 +359,7 @@ const CourseSearch: React.FC<CourseSearchProps> = ({ open, onOpenChange, termId,
             </TabsContent>
             
             <TabsContent value="all" className="mt-4">
-              <div className="space-y-3 max-h-60 overflow-y-auto">
+              <div className="space-y-3">
                 {filteredCourses.map(course => (
                   <div 
                     key={course.id} 

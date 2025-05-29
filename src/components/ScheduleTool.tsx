@@ -430,7 +430,7 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
                                   className="cursor-pointer"
                                 >
                                   <div className="flex items-center mb-1">
-                                    {lockedCourses.includes(course.id) && <Lock className="h-3 w-3 mr-1.5 text-blue-600 flex-shrink-0" />}
+                                    {lockedCourses.includes(course.id) && <Lock className="h-4 w-4 mr-2 text-blue-600 flex-shrink-0" />}
                                     <span className="font-medium text-base mr-2">{course.code}</span> {/* text-sm to text-base */}
                                     <Badge variant="secondary" className="text-xs mr-2">{course.credits}cr</Badge> {/* Credits badge kept at text-xs for differentiation */}
                                   </div>
@@ -455,7 +455,7 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
                                     <Button
                                       variant="ghost"
                                       size="icon"
-                                      className="h-7 w-7" /* h-6 w-6 to h-7 w-7 */
+                                      className="h-8 w-8" /* h-6 w-6 to h-8 w-8 */
                                       onClick={() => handleToggleCourseLock(course.id)}
                                     >
                                       {lockedCourses.includes(course.id) ? <Lock className="h-4 w-4 text-blue-600" /> : <Unlock className="h-4 w-4" />}
@@ -470,7 +470,7 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
                                     <Button 
                                       variant="ghost" 
                                       size="icon" 
-                                      className="h-7 w-7" /* h-6 w-6 to h-7 w-7 */
+                                      className="h-8 w-8" /* h-6 w-6 to h-8 w-8 */
                                       onClick={() => toggleCourseExpanded(course.id)}
                                     >
                                       {expandedCourses[course.id] ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -485,7 +485,7 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
                                     <Button 
                                       variant="ghost" 
                                       size="icon" 
-                                      className="h-7 w-7 text-destructive hover:text-destructive/90" /* h-6 w-6 to h-7 w-7 */
+                                      className="h-8 w-8 text-destructive hover:text-destructive/90" /* h-6 w-6 to h-8 w-8 */
                                       onClick={() => handleDeleteCourse(course.id)}
                                       aria-label="Delete course"
                                     >

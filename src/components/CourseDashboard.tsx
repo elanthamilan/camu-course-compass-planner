@@ -117,28 +117,43 @@ const CourseDashboard: React.FC = () => {
 
   const handleRemoveSemester = (semesterIdToRemove: string) => {
     setYearsData(prevYearsData => {
-      // First, check if the semester is empty
-      let semesterIsEmpty = false;
+      let semesterFoundAndEmpty = false;
+      let yearOfSemester: YearData | null = null;
+      let semesterCoursesCount = 0;
+
+      // Find the semester and check if it's empty
       for (const year of prevYearsData) {
-        const semesterToRemove = year.semesters.find(s => s.id === semesterIdToRemove);
-        if (semesterToRemove) {
-          if (semesterToRemove.courses.length === 0) {
-            semesterIsEmpty = true;
+        const semester = year.semesters.find(s => s.id === semesterIdToRemove);
+        if (semester) {
+          yearOfSemester = year;
+          semesterCoursesCount = semester.courses.length;
+          if (semester.courses.length === 0) {
+            semesterFoundAndEmpty = true;
           }
           break;
         }
       }
 
-      if (!semesterIsEmpty) {
-        toast.error("Cannot remove semester with courses. Please remove all courses first.");
-        return prevYearsData; // Return original data if semester is not empty
+      if (!yearOfSemester) { // Semester not found at all
+        toast.error("Semester not found.");
+        return prevYearsData;
       }
 
-      // If empty, proceed with removal
-      const updatedYearsData = prevYearsData.map(year => ({
-        ...year,
-        semesters: year.semesters.filter(semester => semester.id !== semesterIdToRemove)
-      })).filter(year => year.semesters.length > 0); // Optionally remove year if it becomes empty
+      if (!semesterFoundAndEmpty) {
+        toast.error(`Cannot remove semester with ${semesterCoursesCount} course(s). Please remove all courses first.`);
+        return prevYearsData;
+      }
+
+      // Proceed with removal
+      const updatedYearsData = prevYearsData.map(year => {
+        if (year.year === yearOfSemester!.year) { // yearOfSemester will not be null if we reach here
+          return {
+            ...year,
+            semesters: year.semesters.filter(semester => semester.id !== semesterIdToRemove)
+          };
+        }
+        return year;
+      }).filter(year => year.semesters.length > 0); // Filter out years that become empty
 
       toast.success("Semester removed successfully.");
       return updatedYearsData;
@@ -448,7 +463,7 @@ const CourseDashboard: React.FC = () => {
                               size="icon"
                               className="h-7 w-7 text-destructive hover:text-destructive/80"
                               onClick={() => handleRemoveSemester(semester.id)}
-                              disabled={semester.courses.length > 0} // Disable if semester has courses
+                              // disabled={semester.courses.length > 0} // Check is now inside handler
                               aria-label="Remove semester"
                             >
                               <Trash2 size={16} />
