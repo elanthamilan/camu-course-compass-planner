@@ -7,7 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"; // Added Dialog components
-import { mockDegreeRequirements, mockMandatoryCourses, mockCourses } from "@/lib/mock-data"; // Assuming these are still relevant
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"; // Added Tooltip
+import { mockDegreeRequirements, mockMandatoryCourses } from "@/lib/mock-data"; // Assuming these are still relevant
 import { PlusCircle, Trash2, ArrowRight, ChevronDown, Eye } from "lucide-react"; // Lucide icons
 
 import CourseSearch from "./CourseSearch"; // Already Shadcn
@@ -35,8 +36,8 @@ interface SemesterData {
 
 interface YearData {
   year: string;
-  credits: number;
-  schedules: number;
+  credits: number; 
+  schedules: number; 
   semesters: SemesterData[];
 }
 
@@ -82,14 +83,14 @@ const CourseDashboard: React.FC = () => {
   const [isAddSemesterDialogOpen, setIsAddSemesterDialogOpen] = useState(false);
   const [isMandatoryCoursesDialogOpen, setIsMandatoryCoursesDialogOpen] = useState(false); // State for new dialog
   const [isProgramCreditsDialogOpen, setIsProgramCreditsDialogOpen] = useState(false); // State for Program Credits Dialog
-
+  
   const navigate = useNavigate();
 
   const handleOpenCourseSearch = (semesterId: string) => {
     setSelectedSemesterId(semesterId);
     setIsCourseSearchOpen(true);
   };
-
+  
   const handleOpenSchedulePage = (semesterId: string) => {
     // Assuming semesterId is in the format "Summer2024", "Fall2024" etc.
     // The SchedulePage might expect a termId that matches this format.
@@ -121,7 +122,7 @@ const CourseDashboard: React.FC = () => {
     const { year: dialogYearStr, semesterType } = data;
     const academicYearStr = `${dialogYearStr} - ${parseInt(dialogYearStr) + 1}`;
     // Ensure semesterId is unique and consistent, e.g., "Summer2024"
-    const semesterId = `${semesterType.replace(/\s+/g, '')}${dialogYearStr}`;
+    const semesterId = `${semesterType.replace(/\s+/g, '')}${dialogYearStr}`; 
     const semesterName = `${semesterType} ${dialogYearStr}`;
 
 
@@ -162,17 +163,8 @@ const CourseDashboard: React.FC = () => {
     setIsAddSemesterDialogOpen(false);
   };
 
-  const handleRemoveSemester = (semesterId: string) => {
-    setYearsData(prevYearsData =>
-      prevYearsData.map(year => ({
-        ...year,
-        semesters: year.semesters.filter(semester => semester.id !== semesterId)
-      })).filter(year => year.semesters.length > 0) // Remove years with no semesters
-    );
-  };
-
   const handleAddCourseToPlan = (courseToAdd: import("../lib/types").Course, semesterId: string) => {
-    setYearsData(prevYearsData =>
+    setYearsData(prevYearsData => 
       prevYearsData.map(year => ({
         ...year,
         semesters: year.semesters.map(semester => {
@@ -181,7 +173,7 @@ const CourseDashboard: React.FC = () => {
             if (semester.courses.some(c => c.id === courseToAdd.id)) {
               // Potentially show a toast message here: course already in semester
               console.warn(`Course ${courseToAdd.code} already exists in ${semester.name}`);
-              return semester;
+              return semester; 
             }
             // Directly use courseToAdd as it's already of type Course (or compatible)
             const updatedCourses = [...semester.courses, courseToAdd];
@@ -207,7 +199,7 @@ const CourseDashboard: React.FC = () => {
     if (status === "In Progress") return "secondary"; // Use secondary for in-progress
     return "outline"; // Use outline for not started or other states
   };
-
+  
   // Calculate total credits left for the program.
   // Assuming studentInfo would come from a context or prop in a real app.
   const studentTotalCredits = 62; // Mock data for now
@@ -225,13 +217,13 @@ const CourseDashboard: React.FC = () => {
   const unmetDegreeRequirements = mockDegreeRequirements.filter(req => req.progress < 1);
 
   // This would ideally come from context or student data
-  const studentCompletedCourses = ["CS101", "MATH105", "ENG234"];
+  const studentCompletedCourses = ["CS101", "MATH105", "ENG234"]; 
 
 
   // Helper function to find suggested courses for a requirement
   const getSuggestedCourses = (requirement: import("../lib/types").DegreeRequirement) => {
     if (!requirement.courseMatcher) return [];
-
+    
     const { type, values } = requirement.courseMatcher;
     let suggested = [];
 
@@ -243,7 +235,7 @@ const CourseDashboard: React.FC = () => {
         suggested = mockCourses.filter(course => values.some(prefix => course.code.startsWith(prefix)));
         break;
       case "keyword":
-        suggested = mockCourses.filter(course =>
+        suggested = mockCourses.filter(course => 
           course.keywords && values.some(keyword => course.keywords!.includes(keyword))
         );
         break;
@@ -259,9 +251,9 @@ const CourseDashboard: React.FC = () => {
 
 
   return (
-    <div className="py-3 space-y-6 w-full overflow-x-hidden"> {/* Replaced Container fluid and added space-y */}
+    <div className="py-3 space-y-6"> {/* Replaced Container fluid and added space-y */}
       {/* Top Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card>
           <CardHeader className="pb-2 flex flex-row items-center justify-between">
             <div>
@@ -271,23 +263,19 @@ const CourseDashboard: React.FC = () => {
             {/* Using Accordion for details to match Shadcn patterns */}
             <Accordion type="single" collapsible className="w-auto">
               <AccordionItem value="item-1" className="border-none">
-                <AccordionTrigger className="p-2 hover:no-underline [&[data-state=open]>svg]:rotate-180">
-                   <div className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 rounded-md px-3">
-                     View details <ChevronDown className="h-4 w-4 ml-1 transition-transform duration-200" />
-                   </div>
-                </AccordionTrigger>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <AccordionTrigger className="p-2 hover:no-underline [&[data-state=open]>svg]:rotate-180">
+                      <Button variant="outline" size="sm">
+                        View details <ChevronDown className="h-4 w-4 ml-1 transition-transform duration-200" />
+                      </Button>
+                    </AccordionTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Show/hide a detailed breakdown of your program credit requirements.</p>
+                  </TooltipContent>
+                </Tooltip>
                 <AccordionContent className="pt-2 text-sm">
-                  {/* Content moved to AccordionContent */}
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          </CardHeader>
-          <CardContent className="pt-0"> {/* pt-0 because progress bar acts as separator */}
-            <Progress value={programProgressValue} className="h-2" />
-            {/* Accordion content for Program Credits Breakdown */}
-            <Accordion type="single" collapsible className="w-full mt-2">
-              <AccordionItem value="program-details-content" className="border-none -mb-4"> {/* Negative margin to reduce space taken by AccordionContent padding */}
-                <AccordionContent>
                   <h4 className="mb-2 font-semibold text-sm">Program Credits Breakdown</h4>
                   <ul className="space-y-1 text-xs">
                     {mockDegreeRequirements.map(req => (
@@ -299,17 +287,27 @@ const CourseDashboard: React.FC = () => {
                       </li>
                     ))}
                   </ul>
-                  <Button
-                    variant="link"
-                    size="sm"
-                    onClick={() => setIsProgramCreditsDialogOpen(true)}
-                    className="mt-2 text-xs"
-                  >
-                    View Course Options for Requirements
-                  </Button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="link" 
+                        size="sm" 
+                        onClick={() => setIsProgramCreditsDialogOpen(true)}
+                        className="mt-2 text-xs px-0 h-auto" // Adjusted padding and height for link button
+                      >
+                        View Course Options for Requirements
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>See course suggestions for fulfilling unmet degree requirements.</p>
+                    </TooltipContent>
+                  </Tooltip>
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
+          </CardHeader>
+          <CardContent className="pt-0"> {/* pt-0 because progress bar acts as separator */}
+            <Progress value={programProgressValue} className="h-2" />
           </CardContent>
         </Card>
 
@@ -321,23 +319,19 @@ const CourseDashboard: React.FC = () => {
             </div>
              <Accordion type="single" collapsible className="w-auto">
               <AccordionItem value="item-1" className="border-none">
-                <AccordionTrigger className="p-2 hover:no-underline [&[data-state=open]>svg]:rotate-180">
-                   <div className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 rounded-md px-3">
-                     View details <ChevronDown className="h-4 w-4 ml-1 transition-transform duration-200" />
-                   </div>
-                </AccordionTrigger>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <AccordionTrigger className="p-2 hover:no-underline [&[data-state=open]>svg]:rotate-180">
+                      <Button variant="outline" size="sm">
+                        View details <ChevronDown className="h-4 w-4 ml-1 transition-transform duration-200" />
+                      </Button>
+                    </AccordionTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Show/hide the list of mandatory courses and their current status.</p>
+                  </TooltipContent>
+                </Tooltip>
                 <AccordionContent className="pt-2 text-sm">
-                  {/* Content moved to AccordionContent */}
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <Progress value={mandatoryProgressValue} className="h-2" />
-             {/* Accordion content for Mandatory Courses */}
-            <Accordion type="single" collapsible className="w-full mt-2">
-              <AccordionItem value="mandatory-courses-content" className="border-none -mb-4">
-                <AccordionContent>
                   <h4 className="mb-2 font-semibold text-sm">Mandatory Courses</h4>
                   <ul className="space-y-1 text-xs">
                     {mockMandatoryCourses.map(course => (
@@ -352,6 +346,21 @@ const CourseDashboard: React.FC = () => {
                       </li>
                     ))}
                   </ul>
+                   <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="link" 
+                        size="sm" 
+                        onClick={() => setIsMandatoryCoursesDialogOpen(true)}
+                        className="mt-2 text-xs px-0 h-auto" // Adjusted padding and height for link button
+                      >
+                        View Remaining Mandatory Courses
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>See a filtered list of mandatory courses you still need to complete.</p>
+                    </TooltipContent>
+                  </Tooltip>
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
@@ -369,46 +378,60 @@ const CourseDashboard: React.FC = () => {
                 {year.semesters.reduce((acc, sem) => acc + sem.creditsSelected, 0)} credits · {year.schedules} Schedules
               </p>
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {year.semesters.map((semester) => (
                 <Card key={semester.id} className="flex flex-col">
                   <CardHeader>
                     <div className="flex justify-between items-center">
                       <CardTitle className="text-lg">{semester.name.replace(/\s\d{4}$/, "")}</CardTitle>
                       <div className="flex space-x-1">
-                        <Button
-                          variant="ghost" size="icon" className="h-7 w-7"
-                          onClick={() => handleOpenCourseSearch(semester.id)}
-                          aria-label="Add course to semester"
-                        >
-                          <PlusCircle size={18} />
-                        </Button>
-                        {/* Replaced CalendarWeek with Eye for View Schedule, as it navigates to a schedule page */}
-                        <Button
-                          variant="ghost" size="icon" className="h-7 w-7"
-                          onClick={() => handleOpenSchedulePage(semester.id)}
-                          aria-label="View schedule for semester"
-                        >
-                          <Eye size={18} />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 text-destructive hover:text-destructive/80"
-                          onClick={() => handleRemoveSemester(semester.id)}
-                          disabled={semester.courses.length > 0} // Disable if semester has courses
-                          aria-label="Remove semester"
-                        >
-                          <Trash2 size={16} />
-                        </Button>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button 
+                              variant="ghost" size="icon" className="h-7 w-7"
+                              onClick={() => handleOpenCourseSearch(semester.id)}
+                              aria-label="Add course to semester"
+                            >
+                              <PlusCircle size={18} />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent><p>Add a course to this semester.</p></TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button 
+                              variant="ghost" size="icon" className="h-7 w-7"
+                              onClick={() => handleOpenSchedulePage(semester.id)}
+                              aria-label="View schedule for semester"
+                            >
+                              <Eye size={18} /> 
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent><p>View or generate schedules for this semester.</p></TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-destructive hover:text-destructive/80"
+                              onClick={() => { /* handleRemoveSemester(semester.id) - Logic to be added */ }}
+                              disabled={semester.courses.length > 0} // Disable if semester has courses
+                              aria-label="Remove semester"
+                            >
+                              <Trash2 size={16} />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent><p>Remove this semester (only if empty).</p></TooltipContent>
+                        </Tooltip>
                       </div>
                     </div>
                     <CardDescription>
                       {semester.creditsSelected}/18 credits selected
                     </CardDescription>
                   </CardHeader>
-
+                  
                   <CardContent className="flex-grow">
                     {/* University Select - Placeholder, can be made functional if needed */}
                     <Select defaultValue="case-western">
@@ -420,7 +443,7 @@ const CourseDashboard: React.FC = () => {
                         <SelectItem value="cleveland-state">Cleveland State University</SelectItem>
                       </SelectContent>
                     </Select>
-
+                    
                     {semester.courses.length > 0 ? (
                       <ul className="space-y-3">
                         {semester.courses.map(course => (
@@ -432,7 +455,7 @@ const CourseDashboard: React.FC = () => {
                                   <Badge variant="secondary" className="mr-1.5">{course.credits} cr</Badge>
                                 </div>
                                 <p className="text-muted-foreground leading-tight">{course.name}</p>
-                                {/* course.days and course.time are not part of the global Course type.
+                                {/* course.days and course.time are not part of the global Course type. 
                                     This will be handled by optional chaining or type adjustment if these fields are truly needed.
                                     For now, let's assume they might not be displayed or are TBD for planned courses.
                                 */}
@@ -443,13 +466,18 @@ const CourseDashboard: React.FC = () => {
                                   </p>
                                 )}
                               </div>
-                              <Button
-                                variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive/80"
-                                onClick={() => handleDeleteCourse(semester.id, course.id)}
-                                aria-label="Delete course"
-                              >
-                                <Trash2 size={14} />
-                              </Button>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive/80"
+                                    onClick={() => handleDeleteCourse(semester.id, course.id)}
+                                    aria-label="Delete course"
+                                  >
+                                    <Trash2 size={14} />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent><p>Remove this course from the semester.</p></TooltipContent>
+                              </Tooltip>
                             </div>
                           </li>
                         ))}
@@ -459,53 +487,68 @@ const CourseDashboard: React.FC = () => {
                     )}
                   </CardContent>
                   <CardFooter className="flex gap-2 pt-4"> {/* Added pt-4 for spacing */}
-                     <Button
-                        onClick={() => handleOpenCourseSearch(semester.id)}
-                        variant="outline"
-                        size="sm"
-                        className="w-full"
-                      >
-                        <PlusCircle size={14} className="mr-1.5" /> Add courses
-                      </Button>
-                      <Button
-                        onClick={() => handleOpenSchedulePage(semester.id)}
-                        variant="default" // Changed to default for primary action
-                        size="sm"
-                        className="w-full"
-                      >
-                        View Schedule <ArrowRight size={14} className="ml-1.5" />
-                      </Button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          onClick={() => handleOpenCourseSearch(semester.id)}
+                          variant="outline"
+                          size="sm"
+                          className="w-full"
+                        >
+                          <PlusCircle size={14} className="mr-1.5" /> Add courses
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent><p>Search and add courses to this semester.</p></TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          onClick={() => handleOpenSchedulePage(semester.id)}
+                          variant="default" // Changed to default for primary action
+                          size="sm"
+                          className="w-full"
+                        >
+                          View Schedule <ArrowRight size={14} className="ml-1.5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent><p>Open the detailed scheduling tool for this semester.</p></TooltipContent>
+                    </Tooltip>
                   </CardFooter>
                 </Card>
               ))}
             </div>
-
+            
             <div className="flex justify-center mt-4">
-              <Button
-                variant="outline"
-                onClick={handleOpenAddSemesterDialog}
-                className="w-full max-w-md border-dashed hover:border-solid"
-              >
-                <PlusCircle size={16} className="mr-2" /> Add Semester
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    onClick={handleOpenAddSemesterDialog}
+                    className="w-full max-w-md border-dashed hover:border-solid"
+                  >
+                    <PlusCircle size={16} className="mr-2" /> Add Semester
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent><p>Add a new academic semester to your plan.</p></TooltipContent>
+              </Tooltip>
             </div>
           </div>
         ))}
       </div>
 
       {/* Dialogs */}
-      <CourseSearch
-        open={isCourseSearchOpen}
+      <CourseSearch 
+        open={isCourseSearchOpen} 
         onOpenChange={setIsCourseSearchOpen}
         termId={selectedSemesterId} // Pass the selected semester ID
         onCourseSelected={handleAddCourseToPlan} // Updated prop name
       />
-
+      
       {/* ViewScheduleDialog might need refactoring if it's Bootstrap-based. */}
       {/* For now, assuming its props are compatible. */}
       {viewingSemester && (
-        <ViewScheduleDialog
-          open={isViewScheduleOpen}
+        <ViewScheduleDialog 
+          open={isViewScheduleOpen} 
           onOpenChange={setIsViewScheduleOpen}
           semesterName={viewingSemester.name}
           courses={viewingSemester.courses} // This prop might need adjustment based on ViewScheduleDialog's needs
@@ -513,7 +556,7 @@ const CourseDashboard: React.FC = () => {
       )}
 
       <AddSemesterDialog
-        open={isAddSemesterDialogOpen}
+        open={isAddSemesterDialogOpen} 
         onOpenChange={setIsAddSemesterDialogOpen}
         onAddSemester={handleAddSemesterSubmit}
       />

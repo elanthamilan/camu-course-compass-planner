@@ -11,14 +11,14 @@ import {
 } from "@/lib/types";
 import { mockCourses, mockBusyTimes, mockSchedules, mockTerms, mockStudent } from "@/lib/mock-data";
 import { toast } from "sonner";
-import {
-  isSectionConflictWithBusyTimes,
-  isSectionConflictWithOtherSections
+import { 
+  isSectionConflictWithBusyTimes, 
+  isSectionConflictWithOtherSections 
 } from "./ScheduleContextUtils"; // Import helpers
 
 // Interface and defaultPreferences remain the same as before the shopping cart additions
 interface ScheduleContextType {
-  courses: Course[];
+  courses: Course[]; 
   busyTimes: BusyTime[];
   schedules: Schedule[];
   selectedSchedule: Schedule | null;
@@ -27,39 +27,39 @@ interface ScheduleContextType {
   studentInfo: StudentInfo;
   preferences: PreferenceSettings;
   schedulePreferences: SchedulePreferences;
-
+  
   shoppingCart: Schedule | null; // Added shopping cart state
-
-  setCourses: (courses: Course[]) => void;
-  addCourse: (course: Course) => void;
-  removeCourse: (courseId: string) => void;
-
+  
+  setCourses: (courses: Course[]) => void; 
+  addCourse: (course: Course) => void; 
+  removeCourse: (courseId: string) => void; 
+  
   setBusyTimes: (busyTimes: BusyTime[]) => void;
   addBusyTime: (busyTime: BusyTime) => void;
   updateBusyTime: (busyTime: BusyTime) => void;
   removeBusyTime: (busyTimeId: string) => void;
-
+  
   setSchedules: (schedules: Schedule[]) => void;
-  addSchedule: (schedule: Schedule) => void;
+  addSchedule: (schedule: Schedule) => void; 
   removeSchedule: (scheduleId: string) => void;
   selectSchedule: (scheduleId: string | null) => void;
-
-  generateSchedules: (selectedCourseIds: string[], fixedSections?: CourseSection[]) => void;
-
+  
+  generateSchedules: (selectedCourseIds: string[], fixedSections?: CourseSection[]) => void; 
+  
   selectTerm: (termId: string) => void;
   updatePreferences: (newPreferences: Partial<PreferenceSettings>) => void;
   updateSchedulePreferences: (newPreferences: Partial<SchedulePreferences>) => void;
-
-  addSectionToSchedule: (section: CourseSection) => void;
-  removeSectionFromSchedule: (sectionId: string) => void;
-
-  moveToCart: () => void;
-  clearCart: () => void;
+  
+  addSectionToSchedule: (section: CourseSection) => void; 
+  removeSectionFromSchedule: (sectionId: string) => void; 
+  
+  moveToCart: () => void; 
+  clearCart: () => void; 
   compareSchedules: (scheduleIds: string[]) => void;
 
-  selectedSectionMap: Record<string, string[] | 'all'>;
+  selectedSectionMap: Record<string, string[] | 'all'>; 
   updateSelectedSectionMap: (courseId: string, selection: string[] | 'all') => void;
-  excludeHonorsMap: Record<string, boolean>;
+  excludeHonorsMap: Record<string, boolean>; 
   updateExcludeHonorsMap: (courseId: string, exclude: boolean) => void;
 }
 
@@ -72,10 +72,10 @@ const defaultPreferences: PreferenceSettings = {
 };
 
 const ScheduleContext = createContext<ScheduleContextType | undefined>(undefined);
-const MAX_SCHEDULES_TO_GENERATE = 5;
+const MAX_SCHEDULES_TO_GENERATE = 5; 
 
 export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
-  const [courses, setCourses] = useState<Course[]>(mockCourses.slice(0,3));
+  const [courses, setCourses] = useState<Course[]>(mockCourses.slice(0,3)); 
   const [busyTimes, setBusyTimes] = useState<BusyTime[]>(mockBusyTimes);
   const [schedules, setSchedules] = useState<Schedule[]>(mockSchedules);
   const [selectedSchedule, setSelectedSchedule] = useState<Schedule | null>(mockSchedules.length > 0 ? mockSchedules[0] : null);
@@ -98,13 +98,13 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
     const newSectionMap: Record<string, string[] | 'all'> = {};
     const newExcludeHonorsMap: Record<string, boolean> = {};
     courses.forEach(course => {
-      newSectionMap[course.id] = selectedSectionMap[course.id] || 'all';
-      newExcludeHonorsMap[course.id] = excludeHonorsMap[course.id] || false;
+      newSectionMap[course.id] = selectedSectionMap[course.id] || 'all'; 
+      newExcludeHonorsMap[course.id] = excludeHonorsMap[course.id] || false; 
     });
     setSelectedSectionMapState(newSectionMap);
     setExcludeHonorsMapState(newExcludeHonorsMap);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [courses]);
+  }, [courses]); 
 
   const updateSelectedSectionMap = (courseId: string, selection: string[] | 'all') => {
     setSelectedSectionMapState(prev => ({ ...prev, [courseId]: selection }));
@@ -113,15 +113,15 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
   const updateExcludeHonorsMap = (courseId: string, exclude: boolean) => {
     setExcludeHonorsMapState(prev => ({ ...prev, [courseId]: exclude }));
   };
-
+  
   const addCourse = (course: Course) => {
     setCourses(prevCourses => {
       if (prevCourses.find(c => c.id === course.id)) {
         toast.info(`${course.code} is already in your selected courses for planning.`);
         return prevCourses;
       }
-      updateSelectedSectionMap(course.id, 'all');
-      updateExcludeHonorsMap(course.id, false);
+      updateSelectedSectionMap(course.id, 'all'); 
+      updateExcludeHonorsMap(course.id, false);   
       toast.success(`Added ${course.code}: ${course.name} to your course list for planning.`);
       return [...prevCourses, course];
     });
@@ -184,20 +184,13 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  const selectSchedule = (scheduleId: string | null, updatedSchedule?: Schedule) => {
+  const selectSchedule = (scheduleId: string | null) => {
     if (!scheduleId) {
       setSelectedSchedule(null);
       return;
     }
-
-    if (updatedSchedule) {
-      // Update the schedule in the schedules array and set as selected
-      setSchedules(prev => prev.map(s => s.id === scheduleId ? updatedSchedule : s));
-      setSelectedSchedule(updatedSchedule);
-    } else {
-      const schedule = schedules.find(s => s.id === scheduleId);
-      if (schedule) setSelectedSchedule(schedule);
-    }
+    const schedule = schedules.find(s => s.id === scheduleId);
+    if (schedule) setSelectedSchedule(schedule);
   };
 
   const generateSchedules = (selectedCourseIds: string[], fixedSections: CourseSection[] = []) => {
@@ -211,9 +204,9 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const fixedCourseIds = fixedSections.map(section => section.id.split('-')[0]);
-
+    
     // Filter out courses that are already covered by fixedSections from the initial selection
-    const coursesToActuallySchedule = courses.filter(course =>
+    const coursesToActuallySchedule = courses.filter(course => 
       selectedCourseIds.includes(course.id) && !fixedCourseIds.includes(course.id)
     );
 
@@ -236,14 +229,14 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
       toast.success(`Schedule created with ${fixedSections.length} locked course(s).`);
       return;
     }
-
+    
     if (coursesToActuallySchedule.length === 0 && fixedSections.length === 0) {
       toast.error("No courses available to schedule (neither selected nor locked).");
       setSchedules([]);
       setSelectedSchedule(null);
       return;
     }
-
+    
     const processedCourses = coursesToActuallySchedule.map(course => {
       let availableSections = course.sections;
       if (excludeHonorsMap[course.id]) {
@@ -258,7 +251,7 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
 
     if (processedCourses.length === 0) {
       toast.error("No courses with available sections after applying preferences.");
-      setSchedules([]);
+      setSchedules([]); 
       setSelectedSchedule(null);
       return;
     }
@@ -279,7 +272,7 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
       if (courseIndex === processedCourses.length) {
         // currentSectionsAccumulator already includes fixedSections from the initial call
         const finalSections = [...currentSectionsAccumulator];
-
+        
         const newSchedule: Schedule = {
           id: `gen-sched-${Date.now()}-${foundSchedules.length + 1}`,
           name: `Generated Schedule ${foundSchedules.length + 1} (${finalSections.length} courses)`,
@@ -306,7 +299,7 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
 
       for (const section of currentCourseToProcess.sections) {
         // Conflict check against ALL sections accumulated so far (including fixed ones)
-        if (isSectionConflictWithBusyTimes(section, busyTimes) ||
+        if (isSectionConflictWithBusyTimes(section, busyTimes) || 
             isSectionConflictWithOtherSections(section, currentSectionsAccumulator)) {
           continue;
         }
@@ -319,17 +312,17 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
           break;
         }
       }
-      // If the current course couldn't be scheduled (no valid sections found),
+      // If the current course couldn't be scheduled (no valid sections found), 
       // still try to schedule the remaining courses.
       if (currentCourseToProcess.sections.length === 0 || !currentSectionsAccumulator.some(s => s.id.startsWith(currentCourseToProcess.id))) {
          newGeneratedCount = buildSchedulesRecursive(courseIndex + 1, currentSectionsAccumulator, newGeneratedCount);
       }
       return newGeneratedCount;
     }
-
+    
     setTimeout(() => {
       // Initial call with fixedSections already included in currentSectionsAccumulator
-      buildSchedulesRecursive(0, [...fixedSections], 0);
+      buildSchedulesRecursive(0, [...fixedSections], 0); 
 
       if (foundSchedules.length > 0) {
         setSchedules(prev => [...prev.filter(s => !s.name.startsWith("Generated Schedule")), ...foundSchedules]);
@@ -381,7 +374,7 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
       if (hasSectionForCourse) {
         updatedSections = prev.sections.filter(s => !s.id.startsWith(`${courseId}-`));
       }
-      const parentCourse = courses.find(c => c.id === courseId);
+      const parentCourse = courses.find(c => c.id === courseId); 
       return {
         ...prev,
         sections: [...updatedSections, section],
@@ -439,7 +432,7 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
         studentInfo: _studentInfo,
         preferences,
         schedulePreferences,
-        shoppingCart,
+        shoppingCart, 
         selectedSectionMap,
         updateSelectedSectionMap,
         excludeHonorsMap,
@@ -455,14 +448,14 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
         addSchedule,
         removeSchedule,
         selectSchedule,
-        generateSchedules,
+        generateSchedules, 
         selectTerm,
         updatePreferences,
         updateSchedulePreferences,
         addSectionToSchedule,
         removeSectionFromSchedule,
-        moveToCart,
-        clearCart,
+        moveToCart, 
+        clearCart,  
         compareSchedules
       }}
     >

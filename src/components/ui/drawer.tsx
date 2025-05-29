@@ -5,7 +5,6 @@ import { cn } from "@/lib/utils";
 
 const Drawer = DialogPrimitive.Root;
 const DrawerTrigger = DialogPrimitive.Trigger;
-const DrawerClose = DialogPrimitive.Close;
 
 const DrawerPortal = ({ ...props }: DialogPrimitive.DialogPortalProps) => (
   <DialogPrimitive.Portal {...props} />
@@ -108,7 +107,6 @@ DrawerDescription.displayName = DialogPrimitive.Description.displayName;
 export {
   Drawer,
   DrawerTrigger,
-  DrawerClose,
   DrawerContent,
   DrawerHeader,
   DrawerFooter,
