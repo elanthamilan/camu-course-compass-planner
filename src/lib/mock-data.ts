@@ -420,11 +420,14 @@ export const mockStudent: StudentInfo = {
   id: "s123456",
   name: "Alex Student",
   major: "Computer Science",
-  minor: "Mathematics",
+  minor: "Art History", // Example
+  gpa: 3.75,            // Example
+  expectedGraduationDate: "May 2025", // Example
+  interests: ["Artificial Intelligence", "Web Development", "Photography"], // Example
   academicLevel: "Junior",
   totalCredits: 62,
   requiredCredits: 120,
-  completedCourses: ["cs101", "math101", "eng101"],
+  completedCourses: ["cs101", "math101", "eng101"], // This will be overridden by the line at the end of the file
   advisorName: "Dr. Academic Advisor"
 };
 

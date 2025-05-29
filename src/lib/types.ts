@@ -59,7 +59,10 @@ export interface StudentInfo {
   id: string;
   name: string;
   major: string;
-  minor?: string;
+  minor?: string; // Ensure this is optional if not already
+  gpa?: number;
+  expectedGraduationDate?: string; // e.g., "May 2025"
+  interests?: string[];
   academicLevel: 'Freshman' | 'Sophomore' | 'Junior' | 'Senior' | 'Graduate';
   totalCredits: number;
   requiredCredits: number;

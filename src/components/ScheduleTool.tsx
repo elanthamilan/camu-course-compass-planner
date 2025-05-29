@@ -13,7 +13,7 @@ import EditBusyTimeDialog from "./EditBusyTimeDialog";
 import AIAdvisorDialog from "./AIAdvisor";
 import TunePreferencesDialog from "./TunePreferencesDialog";
 import CompareSchedulesDialog from "./CompareSchedulesDialog";
-import { PlusCircle, Sliders, ArrowLeftRight, ChevronDown, ChevronUp, CalendarPlus, Sparkles, Trash2, Download, Upload, Settings, ListChecks, CalendarDays, Edit3, Copy as CopyIcon, Share2, Lock, Unlock } from "lucide-react"; // Added Lock, Unlock icons
+import { PlusCircle, Sliders, ArrowLeftRight, ChevronDown, ChevronUp, CalendarPlus, Sparkles, Trash2, Download, Upload, Settings, ListChecks, CalendarDays, Edit3, Copy as CopyIcon, Share2, Lock, Unlock, AlertTriangle } from "lucide-react"; // Added Lock, Unlock icons, AlertTriangle
 import { motion, AnimatePresence } from "framer-motion";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { downloadJson } from "@/lib/utils"; // Added downloadJson helper
@@ -51,9 +51,11 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
     updateExcludeHonorsMap,
     removeSchedule, // Added for delete functionality
     setSchedules, // Added for rename functionality (assuming direct update)
+    studentInfo, // Added studentInfo
     // addCourse is already in useSchedule() from context, ensure it's used
   } = useSchedule();
 
+  const completedCourseCodes = studentInfo?.completedCourses || [];
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [isCourseSearchDrawerOpen, setIsCourseSearchDrawerOpen] = useState(false); // State for CourseSearch drawer
   const [view, setView] = useState("calendar");
@@ -513,6 +515,22 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
                                       <div className="bg-amber-50 p-1.5 rounded text-xs text-amber-900">
                                         {course.prerequisites.join(", ")}
                                       </div>
+                                      {// Prerequisite Warning Logic
+                                        (() => { // IIFE to manage variable scope and return JSX
+                                          const coursePrerequisites = course.prerequisites ?? [];
+                                          const metPrerequisites = coursePrerequisites.length > 0 && coursePrerequisites.every(prereqCode => completedCourseCodes.includes(prereqCode));
+
+                                          if (coursePrerequisites.length > 0 && !metPrerequisites) {
+                                            return (
+                                              <div className="mt-1.5 flex items-center text-xs text-amber-700 bg-amber-50 p-1.5 rounded border border-amber-200">
+                                                <AlertTriangle className="h-4 w-4 mr-1.5 flex-shrink-0" />
+                                                <span>Some prerequisites may not be met.</span>
+                                              </div>
+                                            );
+                                          }
+                                          return null; // Return null if no warning is needed
+                                        })()
+                                      }
                                     </div>
                                   )}
                                   

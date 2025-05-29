@@ -9,8 +9,9 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"; // Added Dialog components
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"; // Added Tooltip
 import { toast } from "sonner"; // For notifications
-import { mockDegreeRequirements, mockMandatoryCourses } from "@/lib/mock-data"; // Assuming these are still relevant
-import { PlusCircle, Trash2, ArrowRight, ChevronDown, Eye } from "lucide-react"; // Lucide icons
+import { mockDegreeRequirements, mockMandatoryCourses, mockStudent } from "@/lib/mock-data"; // Assuming these are still relevant
+import { PlusCircle, Trash2, ArrowRight, ChevronDown, Eye, CheckCircle2, CircleDot, Circle } from "lucide-react"; // Lucide icons
+import { useSchedule } from '@/contexts/ScheduleContext'; // Ensure this import is present
 
 import CourseSearch from "./CourseSearch"; // Already Shadcn
 import ViewScheduleDialog from "./ViewScheduleDialog"; // Needs check, might be Bootstrap
@@ -76,6 +77,9 @@ const initialYearsData: YearData[] = [
 // Prop onAddSemester is not used in the provided React Bootstrap version, so it's removed for now.
 // If it's needed, it should be passed from Index.tsx and handled appropriately.
 const CourseDashboard: React.FC = () => {
+  const { studentInfo: contextStudentInfo } = useSchedule(); // Using studentInfo from context
+  const studentInfo = contextStudentInfo || mockStudent; // Fallback to mockStudent if context is not yet populated
+
   const [isCourseSearchOpen, setIsCourseSearchOpen] = useState(false);
   const [selectedSemesterId, setSelectedSemesterId] = useState(""); // Changed to selectedSemesterId for clarity
   const [isViewScheduleOpen, setIsViewScheduleOpen] = useState(false);
@@ -247,11 +251,10 @@ const CourseDashboard: React.FC = () => {
   };
   
   // Calculate total credits left for the program.
-  // Assuming studentInfo would come from a context or prop in a real app.
-  const studentTotalCredits = 62; // Mock data for now
-  const programRequiredCredits = 120; // Mock data for now
+  const studentTotalCredits = studentInfo.totalCredits;
+  const programRequiredCredits = studentInfo.requiredCredits;
   const creditsLeft = programRequiredCredits - studentTotalCredits;
-  const programProgressValue = (studentTotalCredits / programRequiredCredits) * 100;
+  const programProgressValue = programRequiredCredits > 0 ? (studentTotalCredits / programRequiredCredits) * 100 : 0;
 
   // Calculate mandatory courses left.
   const completedMandatoryCourses = mockMandatoryCourses.filter(c => c.status === "Completed").length;
@@ -298,6 +301,24 @@ const CourseDashboard: React.FC = () => {
 
   return (
     <div className="py-3 space-y-6"> {/* Replaced Container fluid and added space-y */}
+      {/* New Student Profile Summary Card */}
+      <Card className="w-full mb-4">
+        <CardHeader>
+          <CardTitle>My Academic Snapshot</CardTitle>
+          <CardDescription>Summary of your academic standing and interests.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-2 text-sm">
+          <p className="text-lg font-semibold">{studentInfo.name}</p>
+          <p><span className="font-semibold">Major:</span> {studentInfo.major}</p>
+          {studentInfo.minor && <p><span className="font-semibold">Minor:</span> {studentInfo.minor}</p>}
+          <p><span className="font-semibold">GPA:</span> {studentInfo.gpa ? studentInfo.gpa.toFixed(2) : "N/A"}</p>
+          <p><span className="font-semibold">Expected Graduation:</span> {studentInfo.expectedGraduationDate || "N/A"}</p>
+          {studentInfo.interests && studentInfo.interests.length > 0 && (
+            <p><span className="font-semibold">Interests:</span> {studentInfo.interests.join(', ')}</p>
+          )}
+        </CardContent>
+      </Card>
+      
       {/* Top Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card>
@@ -325,8 +346,13 @@ const CourseDashboard: React.FC = () => {
                   <h4 className="mb-2 font-semibold text-sm">Program Credits Breakdown</h4>
                   <ul className="space-y-1 text-xs">
                     {mockDegreeRequirements.map(req => (
-                      <li key={req.id} className="flex justify-between">
-                        <span>{req.name}</span>
+                      <li key={req.id} className="flex justify-between items-center">
+                        <div className="flex items-center">
+                          {req.progress === 1 && <CheckCircle2 className="h-4 w-4 text-green-600 mr-2 flex-shrink-0" />}
+                          {req.progress > 0 && req.progress < 1 && <CircleDot className="h-4 w-4 text-yellow-500 mr-2 flex-shrink-0" />}
+                          {(req.progress === 0 || req.progress === undefined) && <Circle className="h-4 w-4 text-gray-400 mr-2 flex-shrink-0" />}
+                          <span>{req.name}</span>
+                        </div>
                         <span className="text-muted-foreground">
                           {Math.round(req.requiredCredits * req.progress)}/{req.requiredCredits} credits
                         </span>
@@ -382,9 +408,14 @@ const CourseDashboard: React.FC = () => {
                   <ul className="space-y-1 text-xs">
                     {mockMandatoryCourses.map(course => (
                       <li key={course.code} className="flex justify-between items-center">
-                        <div>
-                          <span className="font-medium">{course.code}: </span>
-                          <span>{course.name}</span>
+                        <div className="flex items-center">
+                          {course.status === "Completed" && <CheckCircle2 className="h-4 w-4 text-green-600 mr-2 flex-shrink-0" />}
+                          {course.status === "In Progress" && <CircleDot className="h-4 w-4 text-yellow-500 mr-2 flex-shrink-0" />}
+                          {course.status !== "Completed" && course.status !== "In Progress" && <Circle className="h-4 w-4 text-gray-400 mr-2 flex-shrink-0" />}
+                          <div>
+                            <span className="font-medium">{course.code}: </span>
+                            <span>{course.name}</span>
+                          </div>
                         </div>
                         <Badge variant={getStatusBadgeVariant(course.status)}>
                           {course.status}
@@ -533,32 +564,7 @@ const CourseDashboard: React.FC = () => {
                     )}
                   </CardContent>
                   <CardFooter className="flex gap-2 pt-4"> {/* Added pt-4 for spacing */}
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          onClick={() => handleOpenCourseSearch(semester.id)}
-                          variant="outline"
-                          size="sm"
-                          className="w-full"
-                        >
-                          <PlusCircle size={14} className="mr-1.5" /> Add courses
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent><p>Search and add courses to this semester.</p></TooltipContent>
-                    </Tooltip>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          onClick={() => handleOpenSchedulePage(semester.id)}
-                          variant="default" // Changed to default for primary action
-                          size="sm"
-                          className="w-full"
-                        >
-                          View Schedule <ArrowRight size={14} className="ml-1.5" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent><p>Open the detailed scheduling tool for this semester.</p></TooltipContent>
-                    </Tooltip>
+                    {/* Redundant buttons removed as per task. Functionality is in header icons. */}
                   </CardFooter>
                 </Card>
               ))}

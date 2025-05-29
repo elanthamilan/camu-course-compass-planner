@@ -25,10 +25,11 @@ interface CourseSearchProps {
 }
 
 const CourseSearch: React.FC<CourseSearchProps> = ({ open, onOpenChange, termId, onCourseSelected }) => {
-  const { courses: contextCourses } = useSchedule(); // Get existing courses for planning list
+  const { courses: contextCourses, studentInfo } = useSchedule(); // Get existing courses for planning list and studentInfo
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTab, setSelectedTab] = useState("required");
   const [selectedAttributes, setSelectedAttributes] = useState<string[]>([]);
+  const [filterPrerequisitesCleared, setFilterPrerequisitesCleared] = useState<boolean>(false);
   const [selectedCourseForPrereqView, setSelectedCourseForPrereqView] = useState<string | null>(null);
   const [isPrereqModalOpen, setIsPrereqModalOpen] = useState(false);
 
@@ -46,13 +47,20 @@ const CourseSearch: React.FC<CourseSearchProps> = ({ open, onOpenChange, termId,
     );
   };
   
+  const completedCourseCodes = studentInfo?.completedCourses || [];
+  
   // Filter courses based on search term and attributes
   const filteredCourses = mockCourses.filter(course => {
     const searchMatch = course.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
                         course.name.toLowerCase().includes(searchTerm.toLowerCase());
     const attributeMatch = selectedAttributes.length === 0 || 
                            selectedAttributes.every(attr => course.attributes?.includes(attr));
-    return searchMatch && attributeMatch;
+    
+    const prerequisitesClearedMatch = !filterPrerequisitesCleared || 
+      (course.prerequisites ?? []).length === 0 ||
+      (course.prerequisites ?? []).every(prereqCode => completedCourseCodes.includes(prereqCode));
+      
+    return searchMatch && attributeMatch && prerequisitesClearedMatch;
   }).map(course => ({ ...course, description: course.description || "No description available." }));
 
 
@@ -260,6 +268,26 @@ const CourseSearch: React.FC<CourseSearchProps> = ({ open, onOpenChange, termId,
                 </Tooltip>
               ))}
             </div>
+          </div>
+          
+          {/* Prerequisites Cleared Filter Section */}
+          <div className="flex items-center space-x-2 mt-4 p-3 border rounded-md bg-gray-50/50">
+            <Checkbox
+              id="prerequisites-cleared-filter"
+              checked={filterPrerequisitesCleared}
+              onCheckedChange={(checked) => setFilterPrerequisitesCleared(checked as boolean)}
+            />
+            <Label htmlFor="prerequisites-cleared-filter" className="text-sm font-normal text-gray-600 cursor-pointer">
+              Show only courses with cleared prerequisites
+            </Label>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Info className="h-4 w-4 text-gray-400 cursor-help ml-1" />
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Filters courses based on whether you have completed their prerequisites, according to your academic record.</p>
+              </TooltipContent>
+            </Tooltip>
           </div>
 
           <Tabs value={selectedTab} onValueChange={setSelectedTab}>
