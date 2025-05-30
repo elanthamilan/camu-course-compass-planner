@@ -10,7 +10,7 @@ import ScheduleListView from "./ScheduleListView";
 import BusyTimeItem from "./BusyTimeItem";
 import AddBusyTimeDialog from "./AddBusyTimeDialog";
 import EditBusyTimeDialog from "./EditBusyTimeDialog";
-// import AIAdvisorDialog from "./AIAdvisor"; // REMOVED
+import AIAdvisor from "./AIAdvisor"; // Re-added AIAdvisor import
 import TunePreferencesDialog from "./TunePreferencesDialog";
 import CompareSchedulesDialog from "./CompareSchedulesDialog";
 import { PlusCircle, Sliders, ArrowLeftRight, ChevronDown, ChevronUp, CalendarPlus, Sparkles, Trash2, Download, Upload, Settings, ListChecks, CalendarDays, Edit3, Copy as CopyIcon, Share2, Lock, Unlock, AlertTriangle, ShoppingCart } from "lucide-react"; // Added ShoppingCart
@@ -62,7 +62,7 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
   const [isAddBusyTimeOpen, setIsAddBusyTimeOpen] = useState(false);
   const [isEditBusyTimeOpen, setIsEditBusyTimeOpen] = useState(false);
   const [selectedBusyTime, setSelectedBusyTime] = useState(null);
-  // const [isAIAdvisorOpen, setIsAIAdvisorOpen] = useState(false); // REMOVED
+  const [isAIAdvisorOpen, setIsAIAdvisorOpen] = useState(false); // Re-added AIAdvisor state
   const [isCompareOpen, setIsCompareOpen] = useState(false);
   const [isPreferencesOpen, setIsPreferencesOpen] = useState(false);
   const [selectedCourses, setSelectedCourses] = useState<string[]>([]); 
@@ -219,19 +219,22 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
     <div className="animate-fade-in">
       <input type="file" accept=".json" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none' }} />
       <TermHeader view={view} setView={setView} />
-      <div className="mt-4 flex flex-wrap gap-2">
-        <Button variant="outline" onClick={() => setIsCompareOpen(true)} size="sm"><ArrowLeftRight className="h-4 w-4 mr-2" /> Compare Schedules</Button>
-        <Button variant="outline" onClick={() => setIsPreferencesOpen(true)} size="sm"><SlidersHorizontal className="h-4 w-4 mr-2" /> Tune Preferences</Button>
-      </div>
+      {/* This div is now empty or can be removed as "Compare Schedules" is moved */}
+      {/* <div className="mt-4 flex flex-wrap gap-2"></div> */}
       <div className="grid grid-cols-1 lg:grid-cols-6 gap-8 mt-4">
         <motion.div className="lg:col-span-2 space-y-4 md:overflow-visible overflow-x-hidden" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.4, delay: 0.2 }}>
           <Accordion type="multiple" defaultValue={["busy-times", "courses"]} className="w-full space-y-4">
             <AccordionItem value="busy-times" className="border-b-0">
-              <AccordionTrigger className="flex justify-between items-center p-4 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors [&[data-state=open]>svg]:rotate-180">
-                <h3 className="font-semibold flex items-center text-base"><Badge variant="outline" className="mr-2 text-xs">Busy time ({busyTimes.length})</Badge></h3>
+              <AccordionTrigger className="flex items-center p-4 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors [&[data-state=open]>svg]:rotate-180">
+                <div className="flex justify-between items-center w-full">
+                  <h3 className="font-semibold flex items-center text-base"><Badge variant="outline" className="mr-2 text-xs">Busy time ({busyTimes.length})</Badge></h3>
+                  <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); setIsAddBusyTimeOpen(true); }} className="h-8 py-1 px-2"> {/* Adjusted padding/height */}
+                      <PlusCircle className="h-3.5 w-3.5 sm:mr-1" /> {/* Slightly smaller icon, conditional margin */}
+                      <span className="hidden sm:inline text-xs">Add</span>
+                  </Button>
+                </div>
               </AccordionTrigger>
               <AccordionContent className="pt-3 space-y-2">
-                 <Button variant="outline" size="sm" className="w-full h-9 mb-2" onClick={() => setIsAddBusyTimeOpen(true)}><PlusCircle className="h-4 w-4 mr-1.5" />Add busy time</Button>
                 <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1">
                   <AnimatePresence>
                     {busyTimes.map((busyTime, index) => (
@@ -245,11 +248,17 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="courses" className="border-b-0">
-               <AccordionTrigger className="flex justify-between items-center p-4 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors [&[data-state=open]>svg]:rotate-180">
-                <h3 className="font-semibold flex items-center text-base"><Badge variant="outline" className="mr-2 text-xs">Courses ({courses.length})</Badge></h3>
+               <AccordionTrigger className="flex items-center p-4 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors [&[data-state=open]>svg]:rotate-180">
+                <div className="flex justify-between items-center w-full">
+                  <h3 className="font-semibold flex items-center text-base"><Badge variant="outline" className="mr-2 text-xs">Courses ({courses.length})</Badge></h3>
+                  <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); setIsCourseSearchDrawerOpen(true); }} className="h-8 py-1 px-2"> {/* Adjusted padding/height */}
+                      <PlusCircle className="h-3.5 w-3.5 sm:mr-1" /> {/* Slightly smaller icon, conditional margin */}
+                      <span className="hidden sm:inline text-xs">Add New</span> 
+                      <span className="sm:hidden text-xs">Add</span>
+                  </Button>
+                </div>
               </AccordionTrigger>
               <AccordionContent className="pt-3 space-y-3">
-                <Button variant="outline" size="sm" className="w-full mb-3" onClick={() => setIsCourseSearchDrawerOpen(true)}><PlusCircle className="h-4 w-4 mr-2" />Add/Manage Courses for Planning</Button>
                 <div className="space-y-2 max-h-[350px] overflow-y-auto pr-1">
                   <AnimatePresence>
                     {courses.map((course: Course, index: number) => (
@@ -325,9 +334,12 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
                   </AnimatePresence>
                   {courses.length === 0 && (<div className="text-xs text-gray-500 bg-gray-50 p-3 rounded-md text-center">No courses added.</div>)}
                 </div>
-                <Button onClick={handleGenerateSchedule} variant="default" className="w-full transition-colors mt-2" disabled={selectedCourses.length === 0 || isGenerating}>
-                  {isGenerating ? (<span className="flex items-center justify-center"><svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Generating...</span>) : (<span className="flex items-center justify-center"><CalendarPlus className="h-4 w-4 mr-2" />Generate schedule</span>)}
-                </Button>
+                <div className="mt-3 flex flex-col sm:flex-row gap-2">
+                  <Button onClick={handleGenerateSchedule} variant="default" className="flex-1 transition-colors" disabled={selectedCourses.length === 0 || isGenerating}>
+                    {isGenerating ? (<span className="flex items-center justify-center"><svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Generating...</span>) : (<span className="flex items-center justify-center"><CalendarPlus className="h-4 w-4 mr-2" />Generate Schedule</span>)}
+                  </Button>
+                  <Button variant="outline" onClick={() => setIsPreferencesOpen(true)} className="flex-1"><SlidersHorizontal className="h-4 w-4 mr-2" /> Tune Preferences</Button>
+                </div>
               </AccordionContent>
             </AccordionItem>
           </Accordion>
@@ -343,8 +355,18 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
             </div> )}
           <div className="space-y-2 mb-4">
             <div className="flex items-center justify-between">
-                <h3 className="font-medium text-lg truncate max-w-[calc(100%-180px)] sm:max-w-[calc(100%-220px)]" title={selectedSchedule?.name || "No Schedule Selected"}>{selectedSchedule?.name || "No Schedule Selected"}</h3>
+                <h3 className="font-medium text-lg truncate max-w-[calc(100%-350px)] sm:max-w-[calc(100%-400px)]" title={selectedSchedule?.name || "No Schedule Selected"}>{selectedSchedule?.name || "No Schedule Selected"}</h3> {/* Adjusted max-width for new button */}
                 <div className="flex items-center space-x-1">
+                  <Button variant="outline" onClick={() => setIsAIAdvisorOpen(true)} size="sm" className="whitespace-nowrap">
+                    <Sparkles className="h-4 w-4 mr-1.5 sm:mr-2" />
+                    <span className="hidden sm:inline">AI Advisor</span>
+                    <span className="sm:hidden">AI</span>
+                  </Button>
+                  <Button variant="outline" onClick={() => setIsCompareOpen(true)} size="sm" className="whitespace-nowrap">
+                    <ArrowLeftRight className="h-4 w-4 mr-1.5 sm:mr-2" />
+                    <span className="hidden sm:inline">Compare</span>
+                    <span className="sm:hidden">Compare</span> 
+                  </Button>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild><Button variant="outline" size="sm" disabled={!selectedSchedule}>Actions <ChevronDown className="h-4 w-4 ml-1.5" /></Button></DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-56">
@@ -383,7 +405,7 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
       </div>
       <AddBusyTimeDialog open={isAddBusyTimeOpen} onOpenChange={setIsAddBusyTimeOpen} />
       <EditBusyTimeDialog open={isEditBusyTimeOpen} onOpenChange={setIsEditBusyTimeOpen} busyTime={selectedBusyTime} />
-      {/* <AIAdvisorDialog open={isAIAdvisorOpen} onOpenChange={setIsAIAdvisorOpen} /> REMOVED */}
+      <AIAdvisor open={isAIAdvisorOpen} onOpenChange={setIsAIAdvisorOpen} /> {/* Re-added AIAdvisor instance */}
       <TunePreferencesDialog open={isPreferencesOpen} onOpenChange={setIsPreferencesOpen} />
       <CompareSchedulesDialog open={isCompareOpen} onOpenChange={setIsCompareOpen} />
       <CourseSearch open={isCourseSearchDrawerOpen} onOpenChange={setIsCourseSearchDrawerOpen} onCourseSelected={(course) => { addCourse(course); }} />
