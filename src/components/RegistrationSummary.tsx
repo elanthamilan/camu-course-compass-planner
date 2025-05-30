@@ -21,7 +21,7 @@ const RegistrationSummary: React.FC = () => {
           <p className="text-gray-600 mb-6">
             Add a schedule from the Schedule Planner to get started.
           </p>
-          <Button onClick={() => navigate("/schedule")} size="lg" className="text-base px-8">
+          <Button onClick={() => navigate("/schedule")} size="sm" className="text-base"> {/* size="sm", removed px-8 */}
             <ArrowLeft className="h-5 w-5 mr-2" />
             Go to Schedule Planner
           </Button>
@@ -42,7 +42,7 @@ const RegistrationSummary: React.FC = () => {
         variant="outline"
         className="mb-6"
         onClick={() => navigate("/schedule")}
-        size="lg"
+        size="sm" // Changed size
       >
         <ArrowLeft className="h-5 w-5 mr-2" />
         Back to Schedule Playground
@@ -161,11 +161,11 @@ const RegistrationSummary: React.FC = () => {
           <div className="w-full">
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row justify-between space-y-3 sm:space-y-0 sm:space-x-3">
-              <Button variant="outline" onClick={clearCart} size="lg" className="flex-1">
+              <Button variant="outline" onClick={clearCart} size="sm" className="flex-1"> {/* size="sm" */}
                 <Trash2 className="h-5 w-5 mr-2" />
                 Clear Cart
               </Button>
-              <Button disabled size="lg" className="flex-1 bg-green-600 hover:bg-green-700"> {/* Placeholder for SIS integration */}
+              <Button variant="default" disabled size="sm" className="flex-1"> {/* variant="default", size="sm", removed bg classes */}
                 <Send className="h-5 w-5 mr-2" />
                 Register for Classes
               </Button>

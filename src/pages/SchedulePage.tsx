@@ -28,8 +28,10 @@ const SchedulePage = () => {
           <h2 className="text-xl font-semibold mb-2">No term selected</h2>
           <p className="text-gray-600 mb-4">Please go back and select a term</p>
           <Button 
+            variant="default" // Added
+            size="sm"         // Added
             onClick={() => navigate('/')}
-            className="bg-blue-500 hover:bg-blue-600"
+            // className removed
           >
             Go to Home
           </Button>

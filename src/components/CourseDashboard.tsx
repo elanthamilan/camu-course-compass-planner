@@ -607,7 +607,7 @@ const CourseDashboard: React.FC = () => {
                             {/* Course Planning Hints */}
                             {semester.courses.length === 0 && (
                               <div className="text-xs text-gray-500 mt-2 p-2 bg-blue-50 rounded border-dashed border border-blue-200">
-                                💡 <strong>Tip:</strong> Drag courses from your degree audit or search for specific requirements
+                                💡 <strong>Tip:</strong> Use the 'Add Courses' button above, or find courses in the 'Course Catalog' or your 'Degree Audit' sections to plan your semester.
                               </div>
                             )}
                             <Button
@@ -814,8 +814,9 @@ const CourseDashboard: React.FC = () => {
                   }
                 }}
                 disabled={!selectedWhatIfMajorId}
-                className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700"
-                size="lg"
+                variant="default" // Added
+                size="sm"         // Changed
+                className="flex items-center space-x-2" // Removed explicit bg colors
               >
                 <TrendingUp className="h-4 w-4" />
                 <span>Analyze This Path</span>

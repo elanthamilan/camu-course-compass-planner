@@ -116,7 +116,7 @@ const DegreeAuditPage: React.FC = () => {
                   {degreeAuditData.totalCreditsEarned} / {degreeAuditData.totalCreditsRequired} Credits
                 </span>
               </div>
-              <Progress value={degreeAuditData.overallProgress * 100} className="w-full h-3" />
+              <Progress value={degreeAuditData.overallProgress * 100} className="w-full h-2" />
               <p className="text-xs text-gray-500 mt-1 text-right">
                 {Math.round(degreeAuditData.overallProgress * 100)}% Complete
               </p>
@@ -158,12 +158,12 @@ const DegreeAuditPage: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 text-xs mb-3">
                       <div>
                         <strong>Credits:</strong> {req.progressCredits ?? 0} / {req.requiredCredits}
-                        <Progress value={req.requiredCredits > 0 ? ((req.progressCredits ?? 0) / req.requiredCredits) * 100 : 0} className="h-1.5 mt-1" />
+                        <Progress value={req.requiredCredits > 0 ? ((req.progressCredits ?? 0) / req.requiredCredits) * 100 : 0} className="h-2 mt-1" />
                       </div>
                       {req.choiceRequired && (
                         <div>
                           <strong>Courses Chosen:</strong> {req.progressCourses ?? 0} / {req.choiceRequired}
-                          <Progress value={req.choiceRequired > 0 ? ((req.progressCourses ?? 0) / req.choiceRequired) * 100 : 0} className="h-1.5 mt-1" />
+                          <Progress value={req.choiceRequired > 0 ? ((req.progressCourses ?? 0) / req.choiceRequired) * 100 : 0} className="h-2 mt-1" />
                         </div>
                       )}
                     </div>

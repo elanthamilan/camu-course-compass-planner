@@ -282,6 +282,7 @@ describe('CourseDashboard', () => {
   test('credit calculations are accurate for overall program progress', () => {
     renderWithProviders(<CourseDashboard />);
 
+    // The studentInfo from the context will be from the @/lib/mock-data mock.
     const { mockStudent: contextStudent, mockPrograms: contextPrograms } = require('@/lib/mock-data');
     const currentMajorProgram = contextPrograms.find((p:any) => p.id === contextStudent.majorId);
 
@@ -301,7 +302,7 @@ describe('CourseDashboard', () => {
 });
 
 describe('Explore Other Majors Tab', () => {
-  test.skip('allows exploring a different major and displays what-if audit', async () => { // Skipping this test
+  test('allows exploring a different major and displays what-if audit', async () => {
     renderWithProviders(<CourseDashboard />);
 
     const exploreTab = screen.getByRole('tab', { name: /explore other majors/i });
