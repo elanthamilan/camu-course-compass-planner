@@ -1,16 +1,17 @@
 
 import { useSchedule } from "@/contexts/ScheduleContext";
 import { Button } from "@/components/ui/button";
-import { CalendarIcon, ListIcon, ShoppingCartIcon } from "lucide-react";
+import { CalendarIcon, ListIcon, ShoppingCartIcon, ArrowLeftRight, Sparkles } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate } from "react-router-dom";
 
 interface TermHeaderProps {
   view: string;
   setView: (view: string) => void;
+  onCompareClick?: () => void;
 }
 
-const TermHeader = ({ view, setView }: TermHeaderProps) => {
+const TermHeader = ({ view, setView, onCompareClick }: TermHeaderProps) => {
   const { currentTerm } = useSchedule();
   const navigate = useNavigate();
 
@@ -18,34 +19,39 @@ const TermHeader = ({ view, setView }: TermHeaderProps) => {
 
   return (
     // Responsive flex layout: stacks on small screens, row on sm and up
-    <div className="flex flex-col space-y-4 sm:flex-row sm:space-y-0 items-center justify-between mb-6 animate-fade-in">
+    <div className="flex flex-col space-y-4 sm:flex-row sm:space-y-0 items-center justify-between py-6 animate-fade-in">
       <div>
         <h2 className="text-2xl font-semibold text-center sm:text-left">{currentTerm.name}</h2> {/* Centered on small, left on sm+ */}
       </div>
 
-      {/* Group Tabs and Button for better responsive layout if needed */}
+      {/* Group Tabs and Buttons for better responsive layout */}
       <div className="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:items-center sm:space-x-4 w-full sm:w-auto">
-        <Tabs value={view} onValueChange={setView} className="animate-scale-in w-full sm:w-auto">
-          <TabsList className="grid grid-cols-2 w-full sm:w-auto"> {/* Ensure tabs fill width on small screens */}
-            <TabsTrigger value="calendar" className="flex items-center">
-              <CalendarIcon className="mr-1 h-4 w-4" />
-              Calendar
-            </TabsTrigger>
-            <TabsTrigger value="list" className="flex items-center">
-              <ListIcon className="mr-1 h-4 w-4" />
-              List
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
+        <div className="flex items-center space-x-3">
+          <Tabs value={view} onValueChange={setView} className="animate-scale-in">
+            <TabsList className="grid grid-cols-2">
+              <TabsTrigger value="calendar" className="flex items-center">
+                <CalendarIcon className="mr-1 h-4 w-4" />
+                Calendar
+              </TabsTrigger>
+              <TabsTrigger value="list" className="flex items-center">
+                <ListIcon className="mr-1 h-4 w-4" />
+                List
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
 
-        <Button 
-          variant="outline" // Make it less prominent than primary schedule actions
-          className="transition-all duration-200 animate-scale-in w-full sm:w-auto" // Full width on small, auto on sm+
-          onClick={() => navigate("/cart")}
-        >
-          <ShoppingCartIcon className="mr-2 h-4 w-4" />
-          View Cart
-        </Button>
+          {/* Compare and AI Advisor buttons near the tabs */}
+          {onCompareClick && (
+            <Button variant="outline" onClick={onCompareClick} size="sm" className="whitespace-nowrap">
+              <ArrowLeftRight className="h-4 w-4 mr-1.5" />
+              <span className="hidden sm:inline">Compare</span>
+            </Button>
+          )}
+
+
+        </div>
+
+
       </div>
     </div>
   );

@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from "react"; 
+import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import TermHeader from "./TermHeader";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,48 +17,49 @@ import CompareSchedulesDialog from "./CompareSchedulesDialog";
 import { PlusCircle, Sliders, ArrowLeftRight, ChevronDown, ChevronUp, CalendarPlus, Sparkles, Trash2, Download, Upload, Settings, ListChecks, CalendarDays, Edit3, Copy as CopyIcon, Share2, Lock, Unlock, AlertTriangle, ShoppingCart } from "lucide-react"; // Added ShoppingCart
 import { motion, AnimatePresence } from "framer-motion";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { downloadJson } from "@/lib/utils"; 
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"; 
-import { ExportedSchedule, Schedule as ScheduleType, CourseSection as CourseSectionType, BusyTime as BusyTimeType, ScheduleConflict as ScheduleConflictType } from "@/lib/types"; 
-import { v4 as uuidv4 } from 'uuid'; 
-import { toast } from "sonner"; 
+import { downloadJson } from "@/lib/utils";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { ExportedSchedule, Schedule as ScheduleType, CourseSection as CourseSectionType, BusyTime as BusyTimeType, ScheduleConflict as ScheduleConflictType } from "@/lib/types";
+import { v4 as uuidv4 } from 'uuid';
+import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"; 
-import { SlidersHorizontal } from "lucide-react"; 
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuLabel } from "@/components/ui/dropdown-menu"; 
-import { mockCourses } from "@/lib/mock-data"; 
-import CourseSearch from "./CourseSearch"; 
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { SlidersHorizontal } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
+import { mockCourses } from "@/lib/mock-data";
+import CourseSearch from "./CourseSearch";
 
 interface ScheduleToolProps {
-  semesterId?: string | null; 
+  semesterId?: string | null;
 }
 
 const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) => {
-  const { 
-    courses, 
-    busyTimes, 
-    selectedSchedule, 
+  const navigate = useNavigate();
+  const {
+    courses,
+    busyTimes,
+    selectedSchedule,
     generateSchedules,
     removeCourse,
-    schedules, 
+    schedules,
     selectSchedule,
-    addSchedule, 
+    addSchedule,
     currentTerm,
     allCourses = mockCourses,
     selectedSectionMap,
     updateSelectedSectionMap,
     excludeHonorsMap,
     updateExcludeHonorsMap,
-    removeSchedule, 
-    setSchedules, 
-    studentInfo, 
+    removeSchedule,
+    setSchedules,
+    studentInfo,
     addCourse, // addCourse is from useSchedule context
-    moveToCart, 
+    moveToCart,
   } = useSchedule();
 
   const completedCourseCodes = studentInfo?.completedCourses || [];
   const fileInputRef = React.useRef<HTMLInputElement>(null);
-  const [isCourseSearchDrawerOpen, setIsCourseSearchDrawerOpen] = useState(false); 
+  const [isCourseSearchDrawerOpen, setIsCourseSearchDrawerOpen] = useState(false);
   const [view, setView] = useState("calendar");
   const [isAddBusyTimeOpen, setIsAddBusyTimeOpen] = useState(false);
   const [isEditBusyTimeOpen, setIsEditBusyTimeOpen] = useState(false);
@@ -65,15 +67,15 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
   const [isAIAdvisorOpen, setIsAIAdvisorOpen] = useState(false); // Re-added AIAdvisor state
   const [isCompareOpen, setIsCompareOpen] = useState(false);
   const [isPreferencesOpen, setIsPreferencesOpen] = useState(false);
-  const [selectedCourses, setSelectedCourses] = useState<string[]>([]); 
+  const [selectedCourses, setSelectedCourses] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [expandedCourses, setExpandedCourses] = useState<Record<string, boolean>>({});
-  const [lockedCourses, setLockedCourses] = useState<string[]>([]); 
+  const [lockedCourses, setLockedCourses] = useState<string[]>([]);
 
   useEffect(() => {
     setSelectedCourses(courses.map(course => course.id));
   }, [courses]);
-  
+
   const handleCourseToggle = (courseId: string) => {
     setSelectedCourses(prev => {
       if (prev.includes(courseId)) {
@@ -104,10 +106,10 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
         toast.warn("Some locked courses were part of the selection for generation but not found in the current base schedule. They will be scheduled dynamically if possible.");
       }
     }
-    generateSchedules(selectedCourses, fixedSectionsForGeneration); 
+    generateSchedules(selectedCourses, fixedSectionsForGeneration);
     setTimeout(() => {
       setIsGenerating(false);
-    }, 800); 
+    }, 800);
   };
 
   const toggleCourseExpanded = (courseId: string) => {
@@ -122,7 +124,7 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
     if (!selectedSchedule) { toast.error("No schedule selected to export."); return; }
     if (!currentTerm) { toast.error("Current term context is not available. Cannot export."); return; }
     const exportedScheduleData: ExportedSchedule = {
-      version: "1.0", name: selectedSchedule.name, termId: selectedSchedule.termId || currentTerm.id, 
+      version: "1.0", name: selectedSchedule.name, termId: selectedSchedule.termId || currentTerm.id,
       exportedSections: selectedSchedule.sections.map(section => ({ courseId: section.id.split("-")[0], sectionId: section.id, })),
       totalCredits: selectedSchedule.totalCredits,
     };
@@ -134,6 +136,16 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
     fileInputRef.current?.click();
   };
 
+  const handleAddToCart = () => {
+    if (!selectedSchedule) {
+      toast.error("No schedule selected to add to cart.");
+      return;
+    }
+    moveToCart();
+    // Navigate to cart page after adding to cart
+    navigate("/cart");
+  };
+
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) { toast.error("No file selected."); return; }
@@ -142,17 +154,17 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
       const importedData = JSON.parse(fileContent) as ExportedSchedule;
       if (importedData.version !== "1.0" || !importedData.name || !importedData.termId || !Array.isArray(importedData.exportedSections) || typeof importedData.totalCredits !== 'number') {
         toast.error("Invalid schedule file format.");
-        if (fileInputRef.current) fileInputRef.current.value = ""; 
+        if (fileInputRef.current) fileInputRef.current.value = "";
         return;
       }
-      const courseCatalog = allCourses; 
+      const courseCatalog = allCourses;
       const newSections: CourseSectionType[] = [];
       let sectionsFound = true;
       for (const expSection of importedData.exportedSections) {
         const parentCourse = courseCatalog.find(c => c.id === expSection.courseId || c.code === expSection.courseId);
         if (parentCourse) {
           const sectionDetail = parentCourse.sections.find(s => s.id === expSection.sectionId);
-          if (sectionDetail) { newSections.push(sectionDetail); } 
+          if (sectionDetail) { newSections.push(sectionDetail); }
           else { sectionsFound = false; toast.error(`Section ${expSection.sectionId} for course ${expSection.courseId} not found in catalog.`); break; }
         } else { sectionsFound = false; toast.error(`Course ${expSection.courseId} not found in catalog.`); break; }
       }
@@ -166,39 +178,39 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
       }
       const newSchedule: ScheduleType = {
         id: uuidv4(), name: `${importedData.name} (Imported)`, termId: importedData.termId, sections: newSections,
-        totalCredits: recalculatedTotalCredits, busyTimes: [], conflicts: [], 
+        totalCredits: recalculatedTotalCredits, busyTimes: [], conflicts: [],
       };
       addSchedule(newSchedule);
-      selectSchedule(newSchedule.id); 
+      selectSchedule(newSchedule.id);
       toast.success(`Schedule "${newSchedule.name}" imported successfully!`);
-    } catch (error) { console.error("Error importing schedule:", error); toast.error("Failed to import schedule. Ensure the file is a valid JSON."); } 
+    } catch (error) { console.error("Error importing schedule:", error); toast.error("Failed to import schedule. Ensure the file is a valid JSON."); }
     finally { if (fileInputRef.current) { fileInputRef.current.value = ""; } }
   };
 
   const handleDuplicateSchedule = () => {
-    if (!selectedSchedule) { toast.error("No schedule selected to duplicate."); return; }
+    if (!selectedSchedule) { toast.error("No schedule option selected to copy."); return; }
     const newSchedule: ScheduleType = { ...JSON.parse(JSON.stringify(selectedSchedule)), id: uuidv4(), name: `${selectedSchedule.name} (Copy)`, };
     addSchedule(newSchedule);
-    selectSchedule(newSchedule.id); 
-    toast.success(`Schedule "${newSchedule.name}" duplicated successfully!`);
+    selectSchedule(newSchedule.id);
+    toast.success(`Schedule option saved as "${newSchedule.name}" for your reference!`);
   };
 
   const handleRenameSchedule = () => {
-    if (!selectedSchedule) { toast.error("No schedule selected to rename."); return; }
-    const newName = prompt("Enter new name for the schedule:", selectedSchedule.name);
+    if (!selectedSchedule) { toast.error("No schedule option selected to rename."); return; }
+    const newName = prompt("Enter new name for this schedule option:", selectedSchedule.name);
     if (newName && newName.trim() !== "") {
       const updatedSchedules = schedules.map(s => s.id === selectedSchedule.id ? { ...s, name: newName.trim() } : s );
-      setSchedules(updatedSchedules); 
-      toast.success(`Schedule renamed to "${newName.trim()}"!`);
+      setSchedules(updatedSchedules);
+      toast.success(`Schedule option renamed to "${newName.trim()}"!`);
     } else if (newName !== null) { toast.error("Schedule name cannot be empty."); }
   };
 
   const handleDeleteSelectedSchedule = () => {
-    if (!selectedSchedule) { toast.error("No schedule selected to delete."); return; }
-    if (schedules.length <= 1) { toast.error("Cannot delete the last remaining schedule."); return; }
+    if (!selectedSchedule) { toast.error("No schedule option selected to remove."); return; }
+    if (schedules.length <= 1) { toast.error("Cannot remove the last remaining schedule option."); return; }
     const scheduleNameToDelete = selectedSchedule.name;
     removeSchedule(selectedSchedule.id);
-    toast.success(`Schedule "${scheduleNameToDelete}" deleted.`);
+    toast.success(`Schedule option "${scheduleNameToDelete}" removed from view.`);
   };
 
   const handleToggleCourseLock = (courseId: string) => {
@@ -216,21 +228,34 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
   };
 
   return (
-    <div className="animate-fade-in">
+    <div className="h-screen flex flex-col animate-fade-in">
       <input type="file" accept=".json" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none' }} />
-      <TermHeader view={view} setView={setView} />
-      {/* This div is now empty or can be removed as "Compare Schedules" is moved */}
-      {/* <div className="mt-4 flex flex-wrap gap-2"></div> */}
-      <div className="grid grid-cols-1 lg:grid-cols-6 gap-8 mt-4">
-        <motion.div className="lg:col-span-2 space-y-4 md:overflow-visible overflow-x-hidden" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.4, delay: 0.2 }}>
-          <Accordion type="multiple" defaultValue={["busy-times", "courses"]} className="w-full space-y-4">
+
+      {/* Header */}
+      <div className="flex-shrink-0 border-b bg-white">
+        <div className="container mx-auto px-4 max-w-7xl">
+          <TermHeader
+            view={view}
+            setView={setView}
+            onCompareClick={() => setIsCompareOpen(true)}
+          />
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Left Sidebar */}
+        <div className="w-80 flex-shrink-0 border-r bg-white overflow-y-auto">
+          <div className="p-4 space-y-4">
+
+            <Accordion type="multiple" defaultValue={["busy-times", "courses"]} className="w-full space-y-4">
             <AccordionItem value="busy-times" className="border-b-0">
-              <AccordionTrigger className="flex items-center p-4 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors [&[data-state=open]>svg]:rotate-180">
+              <AccordionTrigger className="flex items-center p-3 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors [&[data-state=open]>svg]:rotate-180">
                 <div className="flex justify-between items-center w-full">
-                  <h3 className="font-semibold flex items-center text-base"><Badge variant="outline" className="mr-2 text-xs">Busy time ({busyTimes.length})</Badge></h3>
-                  <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); setIsAddBusyTimeOpen(true); }} className="h-8 py-1 px-2"> {/* Adjusted padding/height */}
-                      <PlusCircle className="h-3.5 w-3.5 sm:mr-1" /> {/* Slightly smaller icon, conditional margin */}
-                      <span className="hidden sm:inline text-xs">Add</span>
+                  <h3 className="font-medium text-sm">Busy Times ({busyTimes.length})</h3>
+                  <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); setIsAddBusyTimeOpen(true); }} className="h-8 px-3">
+                      <PlusCircle className="h-4 w-4 mr-1" />
+                      Add Busy Time
                   </Button>
                 </div>
               </AccordionTrigger>
@@ -248,18 +273,17 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="courses" className="border-b-0">
-               <AccordionTrigger className="flex items-center p-4 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors [&[data-state=open]>svg]:rotate-180">
+               <AccordionTrigger className="flex items-center p-3 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors [&[data-state=open]>svg]:rotate-180">
                 <div className="flex justify-between items-center w-full">
-                  <h3 className="font-semibold flex items-center text-base"><Badge variant="outline" className="mr-2 text-xs">Courses ({courses.length})</Badge></h3>
-                  <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); setIsCourseSearchDrawerOpen(true); }} className="h-8 py-1 px-2"> {/* Adjusted padding/height */}
-                      <PlusCircle className="h-3.5 w-3.5 sm:mr-1" /> {/* Slightly smaller icon, conditional margin */}
-                      <span className="hidden sm:inline text-xs">Add New</span> 
-                      <span className="sm:hidden text-xs">Add</span>
+                  <h3 className="font-medium text-sm">Courses ({courses.length})</h3>
+                  <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); setIsCourseSearchDrawerOpen(true); }} className="h-8 px-3">
+                      <PlusCircle className="h-4 w-4 mr-1" />
+                      Add Course
                   </Button>
                 </div>
               </AccordionTrigger>
               <AccordionContent className="pt-3 space-y-3">
-                <div className="space-y-2 max-h-[350px] overflow-y-auto pr-1">
+                <div className="space-y-2">
                   <AnimatePresence>
                     {courses.map((course: Course, index: number) => (
                       <motion.div key={course.id} className="bg-white border rounded-lg p-4 flex flex-col justify-between items-start group hover:shadow-sm transition-all w-full" initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ duration: 0.2, delay: index * 0.05 }}>
@@ -294,12 +318,12 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
                                     <div className="mb-2">
                                       <div className="text-xs font-semibold text-gray-600 mb-0.5">Prerequisites:</div>
                                       <div className="bg-amber-50 p-1.5 rounded text-xs text-amber-900">{course.prerequisites.join(", ")}</div>
-                                      {(() => { 
+                                      {(() => {
                                           const coursePrerequisites = course.prerequisites ?? [];
                                           const metPrerequisites = coursePrerequisites.length > 0 && coursePrerequisites.every(prereqCode => completedCourseCodes.includes(prereqCode));
                                           if (coursePrerequisites.length > 0 && !metPrerequisites) {
                                             return (<div className="mt-1.5 flex items-center text-xs text-amber-700 bg-amber-50 p-1.5 rounded border border-amber-200"><AlertTriangle className="h-4 w-4 mr-1.5 flex-shrink-0" /><span>Some prerequisites may not be met.</span></div>);
-                                          } return null; 
+                                          } return null;
                                         })()}
                                     </div>
                                   )}
@@ -334,74 +358,103 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
                   </AnimatePresence>
                   {courses.length === 0 && (<div className="text-xs text-gray-500 bg-gray-50 p-3 rounded-md text-center">No courses added.</div>)}
                 </div>
-                <div className="mt-3 flex flex-col sm:flex-row gap-2">
-                  <Button onClick={handleGenerateSchedule} variant="default" className="flex-1 transition-colors" disabled={selectedCourses.length === 0 || isGenerating}>
-                    {isGenerating ? (<span className="flex items-center justify-center"><svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Generating...</span>) : (<span className="flex items-center justify-center"><CalendarPlus className="h-4 w-4 mr-2" />Generate Schedule</span>)}
+                <div className="mt-3 flex gap-2">
+                  <Button variant="outline" onClick={() => setIsPreferencesOpen(true)} className="flex-shrink-0 h-10">
+                    <SlidersHorizontal className="h-4 w-4 mr-2" />
+                    Preferences
                   </Button>
-                  <Button variant="outline" onClick={() => setIsPreferencesOpen(true)} className="flex-1"><SlidersHorizontal className="h-4 w-4 mr-2" /> Tune Preferences</Button>
+                  <Button onClick={handleGenerateSchedule} variant="default" className="flex-1 h-10 transition-colors" disabled={selectedCourses.length === 0 || isGenerating}>
+                    {isGenerating ? (<span className="flex items-center justify-center"><svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Generating...</span>) : (<span className="flex items-center justify-center"><CalendarPlus className="h-4 w-4 mr-2" />Generate</span>)}
+                  </Button>
                 </div>
               </AccordionContent>
             </AccordionItem>
           </Accordion>
-        </motion.div>
-        <motion.div className="lg:col-span-4" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.4, delay: 0.3 }}>
+          </div>
+        </div>
+
+        {/* Right Side - Calendar/List View */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Schedule Options Above Calendar */}
           {schedules && schedules.length > 0 && (
-            <div className="mb-4 p-1">
-              <Label htmlFor="schedule-select-dropdown" className="text-sm font-medium text-gray-700 block mb-1">View Generated Schedules:</Label>
-              <Select value={selectedSchedule?.id || ""} onValueChange={(value) => selectSchedule(value === "null" ? null : value)}>
-                <SelectTrigger id="schedule-select-dropdown" className="w-full sm:w-[320px] border-gray-300 focus:border-blue-500 focus:ring-blue-500"><SelectValue placeholder="Select a schedule to view details" /></SelectTrigger>
-                <SelectContent>{schedules.map((schedule) => (<SelectItem key={schedule.id} value={schedule.id}>{schedule.name} ({schedule.totalCredits} cr)</SelectItem>))}</SelectContent>
-              </Select>
-            </div> )}
-          <div className="space-y-2 mb-4">
-            <div className="flex items-center justify-between">
-                <h3 className="font-medium text-lg truncate max-w-[calc(100%-350px)] sm:max-w-[calc(100%-400px)]" title={selectedSchedule?.name || "No Schedule Selected"}>{selectedSchedule?.name || "No Schedule Selected"}</h3> {/* Adjusted max-width for new button */}
-                <div className="flex items-center space-x-1">
-                  <Button variant="outline" onClick={() => setIsAIAdvisorOpen(true)} size="sm" className="whitespace-nowrap">
-                    <Sparkles className="h-4 w-4 mr-1.5 sm:mr-2" />
-                    <span className="hidden sm:inline">AI Advisor</span>
-                    <span className="sm:hidden">AI</span>
+            <div className="flex-shrink-0 p-4 border-b bg-white">
+              <div className="flex gap-3 items-start">
+                <div className="flex-1">
+                  <Select value={selectedSchedule?.id || ""} onValueChange={(value) => selectSchedule(value === "null" ? null : value)}>
+                    <SelectTrigger id="schedule-select-dropdown" className="w-full h-auto min-h-[60px]">
+                      <SelectValue placeholder="Select a schedule option to view">
+                        {selectedSchedule && (
+                          <div className="text-left py-1">
+                            <div className="font-medium text-base">{selectedSchedule.name}</div>
+                            <div className="text-sm text-gray-600 mt-1">
+                              {selectedSchedule.sections.length} courses • {selectedSchedule.totalCredits} credits
+                              {selectedSchedule.conflicts && selectedSchedule.conflicts.length > 0 && (
+                                <span className="text-amber-600 ml-2">⚠️ {selectedSchedule.conflicts.length} conflict{selectedSchedule.conflicts.length > 1 ? 's' : ''}</span>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {schedules.map((schedule) => (
+                        <SelectItem key={schedule.id} value={schedule.id} className="py-3">
+                          <div className="w-full">
+                            <div className="font-medium text-base">{schedule.name}</div>
+                            <div className="text-sm text-gray-600 mt-1">
+                              {schedule.sections.length} courses • {schedule.totalCredits} credits
+                              {schedule.conflicts && schedule.conflicts.length > 0 && (
+                                <span className="text-amber-600 ml-2">⚠️ {schedule.conflicts.length} conflict{schedule.conflicts.length > 1 ? 's' : ''}</span>
+                              )}
+                            </div>
+                            <div className="text-xs text-gray-500 mt-1">
+                              {schedule.sections.map(section => section.course?.code || section.courseCode || 'Course').join(', ')}
+                            </div>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {selectedSchedule && (
+                  <Button
+                    onClick={handleAddToCart}
+                    className="bg-green-600 hover:bg-green-700 text-white h-[60px] px-6 flex-shrink-0"
+                  >
+                    <ShoppingCart className="h-4 w-4 mr-2" />
+                    Save Schedule
                   </Button>
-                  <Button variant="outline" onClick={() => setIsCompareOpen(true)} size="sm" className="whitespace-nowrap">
-                    <ArrowLeftRight className="h-4 w-4 mr-1.5 sm:mr-2" />
-                    <span className="hidden sm:inline">Compare</span>
-                    <span className="sm:hidden">Compare</span> 
-                  </Button>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild><Button variant="outline" size="sm" disabled={!selectedSchedule}>Actions <ChevronDown className="h-4 w-4 ml-1.5" /></Button></DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56">
-                      <DropdownMenuItem onClick={handleExportSchedule} disabled={!selectedSchedule}><Download className="mr-2 h-4 w-4" /> Export Schedule</DropdownMenuItem>
-                      <DropdownMenuItem onClick={handleImportButtonClick}><Upload className="mr-2 h-4 w-4" /> Import Schedule</DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem 
-                        onClick={() => {
-                          if (selectedSchedule) {
-                            moveToCart();
-                            // Optional: navigate("/cart"); // If immediate navigation is desired
-                          }
-                        }} 
-                        disabled={!selectedSchedule}
-                      >
-                        <ShoppingCart className="mr-2 h-4 w-4" />
-                        Move to Cart
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={handleDuplicateSchedule} disabled={!selectedSchedule}><CopyIcon className="mr-2 h-4 w-4" /> Duplicate Schedule</DropdownMenuItem>
-                      <DropdownMenuItem onClick={handleRenameSchedule} disabled={!selectedSchedule}><Edit3 className="mr-2 h-4 w-4" /> Rename Schedule</DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={handleDeleteSelectedSchedule} disabled={!selectedSchedule} className="text-destructive hover:!bg-destructive hover:!text-destructive-foreground focus:!bg-destructive focus:!text-destructive-foreground"><Trash2 className="mr-2 h-4 w-4" /> Delete Schedule</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                  {/* REMOVED Ask AI Advisor Button from here */}
+                )}
               </div>
             </div>
-            {selectedSchedule && (<div className="text-sm text-gray-500">{selectedSchedule.totalCredits} credits {selectedSchedule.conflicts && selectedSchedule.conflicts.length > 0 && (<span className="text-amber-500">• {selectedSchedule.conflicts.length} conflict{selectedSchedule.conflicts.length > 1 ? 's' : ''}</span>)}</div>)}
-          </div>
+          )}
+
           <AnimatePresence mode="wait">
-            {view === "calendar" ? (<motion.div key="calendar" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}><ScheduleCalendarView lockedCourses={lockedCourses} /></motion.div>) 
-                               : (<motion.div key="list" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}><ScheduleListView /></motion.div>)}
+            {view === "calendar" ? (
+              <motion.div
+                key="calendar"
+                className="flex-1 overflow-hidden"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
+              >
+                <ScheduleCalendarView lockedCourses={lockedCourses} />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="list"
+                className="flex-1 overflow-auto p-4"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
+              >
+                <ScheduleListView />
+              </motion.div>
+            )}
           </AnimatePresence>
-        </motion.div>
+        </div>
       </div>
       <AddBusyTimeDialog open={isAddBusyTimeOpen} onOpenChange={setIsAddBusyTimeOpen} />
       <EditBusyTimeDialog open={isEditBusyTimeOpen} onOpenChange={setIsEditBusyTimeOpen} busyTime={selectedBusyTime} />

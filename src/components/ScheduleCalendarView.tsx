@@ -8,39 +8,51 @@ import { Lock } from "lucide-react"; // Import Lock icon
 import { BusyTimeType } from "@/lib/types"; // Import BusyTimeType
 
 interface ScheduleCalendarViewProps {
-  lockedCourses?: string[]; 
+  lockedCourses?: string[];
 }
 
 const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({ lockedCourses = [] }) => {
   const { selectedSchedule, busyTimes } = useSchedule();
 
-  if (!selectedSchedule) return null;
+  if (!selectedSchedule) {
+    return (
+      <div className="text-center py-12">
+        <div className="max-w-md mx-auto">
+          <span className="text-6xl mb-4 block">📅</span>
+          <h3 className="text-lg font-medium text-gray-700 mb-2">No schedule selected</h3>
+          <p className="text-gray-500">
+            Generate a schedule to see your weekly calendar view.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   // Process sections to map them to the calendar
   const scheduledSections = selectedSchedule.sections;
-  
+
   // Create a map of day-time slots to course sections
   const calendarMap: Record<string, any> = {};
-  
+
   scheduledSections.forEach(section => {
     section.schedule.forEach(schedule => {
       const days = schedule.days.split(",");
       days.forEach(day => {
         const startHour = parseInt(schedule.startTime.split(":")[0]);
         const endHour = parseInt(schedule.endTime.split(":")[0]);
-        
+
         for (let hour = startHour; hour < endHour; hour++) {
           const timeKey = `${hour}`;
           const dayKey = day.trim();
           const key = `${dayKey}-${timeKey}`;
-          
+
           if (!calendarMap[key]) {
             calendarMap[key] = [];
           }
-          
+
           // Find the course this section belongs to
           const courseCode = section.id.split("-")[0].toUpperCase();
-          
+
           calendarMap[key].push({
             type: 'course',
             courseCode,
@@ -55,21 +67,21 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({ lockedCours
       });
     });
   });
-  
+
   // Add busy times to the calendar map
   busyTimes.forEach(busyTime => {
     busyTime.days.forEach(day => {
       const startHour = parseInt(busyTime.startTime.split(":")[0]);
       const endHour = parseInt(busyTime.endTime.split(":")[0]);
-      
+
       for (let hour = startHour; hour < endHour; hour++) {
         const timeKey = `${hour}`;
         const key = `${day}-${timeKey}`;
-        
+
         if (!calendarMap[key]) {
           calendarMap[key] = [];
         }
-        
+
         calendarMap[key].push({
           type: 'busy',
           title: busyTime.title,
@@ -90,119 +102,122 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({ lockedCours
     else if (courseCode.startsWith("PHIL")) baseColor = "phil";
     else if (courseCode.startsWith("UNIV")) baseColor = "univ";
     else if (courseCode.startsWith("ECON")) baseColor = "econ";
-    
+
     return {
       baseColor,
       backgroundClass: `bg-course-${baseColor}`,
       foregroundClass: `text-course-${baseColor}-foreground`,
     };
   }
-  
+
   const shortWeekDays = ["M", "T", "W", "Th", "F", "Sa", "Su"];
 
 
   return (
-    <motion.div 
-      className="animate-fade-in"
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-    >
-      <Card className="p-4 mb-4 overflow-auto border border-gray-200 rounded-xl shadow-sm">
-        <div className="min-w-[900px]">
+    <div className="h-full flex flex-col bg-white">
+      <div className="flex-1 overflow-auto">
+        <div className="min-w-[1200px] p-4">
           {/* Calendar Header with Weekdays */}
-          <div className="grid grid-cols-[theme(spacing.16)_repeat(7,1fr)] sm:grid-cols-[theme(spacing.20)_repeat(7,1fr)] gap-1 mb-2"> {/* Responsive time column */}
-            <div className="text-center font-medium p-1 sm:p-2 text-gray-500 text-xs sm:text-sm">Time</div> {/* Responsive padding and text size */}
+          <div className="grid grid-cols-[100px_repeat(7,1fr)] gap-2 mb-4">
+            <div className="text-center font-medium p-3 text-gray-500 text-sm flex items-center justify-center">
+              Time
+            </div>
             {weekDays.map((day, index) => (
-              <motion.div 
-                key={day} 
-                className="text-center font-medium p-1 sm:p-2 bg-gray-100 rounded-md text-xs sm:text-sm" // Responsive padding and text size
+              <motion.div
+                key={day}
+                className="text-center font-medium p-3 bg-gray-50 rounded-lg text-sm text-gray-800 border"
                 initial={{ opacity: 0, y: -5 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: index * 0.05 }}
               >
-                <span className="hidden sm:inline">{day}</span>
-                <span className="sm:hidden">{shortWeekDays[index]}</span> {/* Show short day names on small screens */}
+                {day}
               </motion.div>
             ))}
           </div>
-          
+
           {/* Calendar Body with Time Slots */}
           {timeSlots.map((timeSlot, index) => (
-            <motion.div 
+            <motion.div
               key={timeSlot}
-              className="grid grid-cols-[theme(spacing.16)_repeat(7,1fr)] sm:grid-cols-[theme(spacing.20)_repeat(7,1fr)] gap-1 mb-1" // Responsive time column
+              className="grid grid-cols-[100px_repeat(7,1fr)] gap-2 mb-2"
               initial={{ opacity: 0, y: 5 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: index * 0.03 }}
             >
               {/* Time slot label */}
-              <div className="text-center text-xs sm:text-sm font-medium flex items-center justify-center bg-gray-50 rounded-md text-gray-600"> {/* Responsive text size */}
+              <div className="text-center text-sm font-medium flex items-center justify-center bg-gray-50 rounded-lg text-gray-600 border min-h-[80px]">
                 {timeSlot}
               </div>
-              
+
               {/* Days of the week */}
               {weekDays.map((day, dayIndex) => {
                 const hour = index + 7; // 7 AM is the first slot
                 // Use the shortWeekDays for consistent key generation for map lookup
                 const mapKey = `${shortWeekDays[dayIndex]}-${hour}`;
                 const items = calendarMap[mapKey] || [];
-                
+
                 return (
-                  <div 
+                  <div
                     key={`${shortWeekDays[dayIndex]}-${timeSlot}`}
                     className={cn(
-                      "p-0.5 rounded-lg border min-h-[60px] sm:min-h-[70px] transition-all", // Responsive min-height
-                      items.length > 0 ? "border-gray-300 shadow-sm" : "border-gray-100"
+                      "p-2 rounded-lg border min-h-[80px] transition-all relative overflow-hidden",
+                      items.length > 0 ? "border-gray-300 bg-gray-50" : "border-gray-200 hover:bg-gray-50"
                     )}
                   >
                     {items.map((item: any, i: number) => {
                       if (item.type === 'course') {
                         const colorInfo = getCourseColorInfo(item.courseCode);
                         return (
-                          <motion.div 
+                          <motion.div
                             key={`${item.courseCode}-${i}`}
                             className={cn(
-                              "p-0.5 sm:p-1 text-xs rounded-md bg-opacity-90 h-full relative", // Responsive padding
+                              "absolute inset-1 p-2 text-xs rounded-md shadow-sm border overflow-hidden",
                               colorInfo.backgroundClass,
                               colorInfo.foregroundClass
                             )}
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ duration: 0.3 }}
+                            title={`${item.courseCode} with ${item.instructor} in ${item.location}`}
                           >
                             {item.isCourseLocked && (
-                              <Lock 
-                                className="absolute top-0.5 right-0.5 h-3 w-3 sm:h-3.5 sm:w-3.5 text-white" 
-                                style={{ filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.7))' }} 
-                              />
+                              <div className="absolute top-1 right-1 bg-white/20 rounded-full p-0.5">
+                                <Lock
+                                  className="h-3 w-3 text-white"
+                                  style={{ filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.7))' }}
+                                />
+                              </div>
                             )}
-                            <div className="font-semibold text-[11px] sm:text-xs">{item.courseCode}</div> {/* Responsive text */}
-                            <div className="text-[9px] sm:text-[10px] truncate">{item.instructor}</div> {/* Responsive text */}
-                            <div className="text-[9px] sm:text-[10px] truncate">{item.location}</div> {/* Responsive text */}
+                            <div className="space-y-0.5">
+                              <div className="font-semibold text-sm truncate">{item.courseCode}</div>
+                              <div className="text-xs opacity-90 truncate">{item.instructor}</div>
+                              <div className="text-xs opacity-80 truncate">{item.location}</div>
+                            </div>
                           </motion.div>
                         );
                       } else if (item.type === 'busy') {
-                        const busyType = item.busyTimeType as BusyTimeType; // Cast to BusyTimeType
+                        const busyType = item.busyTimeType as BusyTimeType;
                         const busyTypeStyle = busyTimeColors[busyType] || busyTimeColors.other;
-                        
+
                         return (
-                          <motion.div 
+                          <motion.div
                             key={`busy-${i}`}
                             className={cn(
-                              "p-1 text-xs rounded-md h-full flex items-center space-x-1",
+                              "absolute inset-1 p-2 text-xs rounded-md border shadow-sm overflow-hidden flex items-center space-x-1",
                               busyTypeStyle.bg,
                               busyTypeStyle.text
                             )}
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ duration: 0.3 }}
+                            title={`Busy time: ${item.title}`}
                           >
-                            <span className="truncate flex-1">{item.title}</span>
+                            <span className="text-sm">🚫</span>
+                            <span className="truncate flex-1 font-medium">{item.title}</span>
                           </motion.div>
                         );
                       }
-                      
+
                       return null;
                     })}
                   </div>
@@ -211,8 +226,8 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({ lockedCours
             </motion.div>
           ))}
         </div>
-      </Card>
-    </motion.div>
+      </div>
+    </div>
   );
 };
 

@@ -12,6 +12,10 @@ export interface Course {
   color?: string;
   attributes?: string[]; // Added for course attributes
   keywords?: string[]; // For courseMatcher type "keyword"
+  // New fields for enhanced filtering
+  campus?: string;
+  college?: string;
+  courseCareer?: 'Undergraduate' | 'Graduate' | 'Professional';
 }
 
 export interface CourseSection {
@@ -26,6 +30,20 @@ export interface CourseSection {
   sectionNumber: string;
   locked?: boolean; // Added for lock status
   sectionType?: 'Honors' | 'Lab' | 'Standard'; // Added for special section types
+  // New fields for enhanced filtering
+  term?: string;
+  campus?: string;
+  courseCareer?: 'Undergraduate' | 'Graduate' | 'Professional';
+  classStatus?: 'Open' | 'Closed' | 'Waitlist' | 'Cancelled';
+  instructionMode?: 'In-Person' | 'Online' | 'Hybrid' | 'Synchronous Online' | 'Asynchronous Online';
+  academicSession?: 'Full Term' | 'First Half' | 'Second Half' | 'Summer Session I' | 'Summer Session II' | 'Regular Academic Session';
+  classStartDate?: string;
+  classEndDate?: string;
+  component?: 'LEC' | 'LAB' | 'SEM' | 'REC' | 'STU' | 'IND';
+  courseControls?: string;
+  enrollmentRequirements?: string;
+  additionalInformation?: string;
+  notes?: string;
 }
 
 export interface SectionSchedule {
@@ -45,14 +63,14 @@ export interface BusyTime {
   color?: string;
 }
 
-export type BusyTimeType = 
-  | 'work' 
-  | 'study' 
-  | 'personal' 
-  | 'event' 
-  | 'meeting' 
-  | 'class' 
-  | 'reminder' 
+export type BusyTimeType =
+  | 'work'
+  | 'study'
+  | 'personal'
+  | 'event'
+  | 'meeting'
+  | 'class'
+  | 'reminder'
   | 'other';
 
 export interface StudentInfo {
@@ -121,8 +139,8 @@ export interface DegreeRequirement {
   choiceRequired?: number;
   choiceCourses?: string[]; // Specific list of course codes if it's a "choose X from list Y" type
   courseMatcher?: { // Used for broader category requirements, e.g. "3 credits from ARTS"
-    type: "department" | "courseCodePrefix" | "keyword" | "specificCourses"; 
-    values: string[]; 
+    type: "department" | "courseCodePrefix" | "keyword" | "specificCourses";
+    values: string[];
   };
   progressCourses?: number; // How many courses have been completed towards choiceRequired
 }

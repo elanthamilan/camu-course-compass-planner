@@ -28,10 +28,10 @@ const AIAdvisor: React.FC<AIAdvisorProps> = ({ open, onOpenChange }) => {
   const [messages, setMessages] = useState(initialMessages);
   const [inputMessage, setInputMessage] = useState("");
   const [isThinking, setIsThinking] = useState(false);
-  
+
   const handleSendMessage = () => {
     if (!inputMessage.trim()) return;
-    
+
     // Add user message
     const userMessage = {
       id: Date.now().toString(),
@@ -39,13 +39,13 @@ const AIAdvisor: React.FC<AIAdvisorProps> = ({ open, onOpenChange }) => {
       content: inputMessage,
       timestamp: new Date().toISOString()
     };
-    
+
     setMessages(prev => [...prev, userMessage]);
     setInputMessage("");
-    
+
     // Simulate AI thinking
     setIsThinking(true);
-    
+
     // Simulate AI response after a delay
     setTimeout(() => {
       const aiResponse = generateAIResponse(inputMessage);
@@ -55,36 +55,36 @@ const AIAdvisor: React.FC<AIAdvisorProps> = ({ open, onOpenChange }) => {
         content: aiResponse,
         timestamp: new Date().toISOString()
       };
-      
+
       setMessages(prev => [...prev, aiMessage]);
       setIsThinking(false);
     }, 1500);
   };
-  
+
   // Simple response generation based on keywords in the user's input
   const generateAIResponse = (userInput: string) => {
     const input = userInput.toLowerCase();
-    
+
     if (input.includes("prerequisite") || input.includes("prereq")) {
       return `Based on your current progress, you need to complete CS101 before taking CS202. You've already completed CS101 so you're eligible to take CS202 next semester.`;
     }
-    
+
     if (input.includes("credit") || input.includes("how many")) {
       return `You currently have ${studentInfo.totalCredits} credits completed out of the ${studentInfo.requiredCredits} required for your ${studentInfo.major} degree. You need ${studentInfo.requiredCredits - studentInfo.totalCredits} more credits to graduate.`;
     }
-    
+
     if (input.includes("schedule") || input.includes("recommendation")) {
       return `Based on your academic history and major requirements, I recommend taking:\n\n1. CS202: Database Systems (3 credits)\n2. MATH202: Calculus II (4 credits)\n3. ENG205: Technical Writing (3 credits)\n\nThis schedule balances technical and general education requirements while maintaining a manageable 10 credit workload.`;
     }
-    
+
     if (input.includes("course load") || input.includes("too many")) {
       return `For your major in ${studentInfo.major}, I recommend taking 12-15 credits per semester for a balanced course load. Given your current commitments, 12 credits (typically 4 courses) would be optimal.`;
     }
-    
+
     if (input.includes("requirement") || input.includes("need to take")) {
       return `For your ${studentInfo.major} major, you still need to complete:\n\n- Advanced programming courses (CS202, CS301)\n- Mathematics requirements (MATH202, MATH301)\n- General education electives (6 credits remaining)\n\nYou've already fulfilled your introductory programming and basic math requirements.`;
     }
-    
+
     // Default response
     return `I'd be happy to help with that. As your AI advisor, I can provide personalized recommendations based on your academic history, major requirements, and preferences. Could you tell me more specifically what you're looking for help with?`;
   };
@@ -114,7 +114,7 @@ const AIAdvisor: React.FC<AIAdvisorProps> = ({ open, onOpenChange }) => {
               </svg>
             </Avatar>
           )}
-          
+
           <div
             className={cn(
               "rounded-lg px-4 py-2 text-sm",
@@ -124,13 +124,13 @@ const AIAdvisor: React.FC<AIAdvisorProps> = ({ open, onOpenChange }) => {
             )}
           >
             {message.content.split("\n").map((line, i) => (
-              <React.Fragment key={i}>
+              <span key={i}>
                 {line}
                 {i < message.content.split("\n").length - 1 && <br />}
-              </React.Fragment>
+              </span>
             ))}
           </div>
-          
+
           {message.sender === "user" && (
             <Avatar className="h-8 w-8 bg-blue-500 text-white flex items-center justify-center">
               <span className="text-xs font-medium">
@@ -152,10 +152,10 @@ const AIAdvisor: React.FC<AIAdvisorProps> = ({ open, onOpenChange }) => {
             Chat with the AI Course Advisor to get personalized recommendations and answers to your course planning questions.
           </DrawerDescription>
         </DrawerHeader>
-        
+
         <div className="flex-1 overflow-y-auto p-4 bg-gray-50 rounded-md mb-4">
           {renderMessages()}
-          
+
           {isThinking && (
             <div className="flex items-center space-x-2 text-sm text-gray-500 animate-pulse">
               <div className="h-2 w-2 rounded-full bg-gray-400"></div>
@@ -164,7 +164,7 @@ const AIAdvisor: React.FC<AIAdvisorProps> = ({ open, onOpenChange }) => {
             </div>
           )}
         </div>
-        
+
         <div className="flex space-x-2">
           <Textarea
             placeholder="Ask a question about your courses, requirements, or schedule..."
@@ -178,8 +178,8 @@ const AIAdvisor: React.FC<AIAdvisorProps> = ({ open, onOpenChange }) => {
               }
             }}
           />
-          
-          <Button 
+
+          <Button
             className="self-end bg-gradient-to-r from-purple-600 to-violet-500 hover:from-purple-700 hover:to-violet-600 transition-all duration-300"
             onClick={handleSendMessage}
             disabled={!inputMessage.trim() || isThinking}
@@ -187,7 +187,7 @@ const AIAdvisor: React.FC<AIAdvisorProps> = ({ open, onOpenChange }) => {
             <Send className="h-4 w-4" />
           </Button>
         </div>
-        
+
         <DrawerFooter className="sm:justify-between border-t pt-4">
           <div className="text-xs text-gray-500">
             Your AI advisor has access to your academic record and program requirements.

@@ -51,7 +51,7 @@ const buildCourseSequenceTree = (
   const corequisites: CourseNode[] = (course.corequisites || [])
     .map(coreqId => buildCourseSequenceTree(coreqId, allCourses, new Set(visited), 'corequisite'))
     .filter(node => node !== null) as CourseNode[];
-  
+
   return { course, prerequisites, corequisites, nodeType: currentNodeType };
 };
 
@@ -77,8 +77,8 @@ const EmbeddedCourseSequenceView: React.FC<EmbeddedCourseSequenceViewProps> = ({
     <li key={`${node.course.id}-${node.nodeType}-${level}`} className={`ml-${level * 2} mt-1 list-none`}> {/* Base margin, ensure list-none if default styles interfere */}
       <div className="flex items-center group mb-0.5">
         <Badge
-          variant={node.isCircular ? "destructive" : (node.isMissing ? "destructive_outline" : 
-                    node.nodeType === 'corequisite' ? 'info_outline' : 'secondary')}
+          variant={node.isCircular ? "destructive" : (node.isMissing ? "outline" :
+                    node.nodeType === 'corequisite' ? 'secondary' : 'secondary')}
           className="text-xs cursor-pointer hover:opacity-80 py-0.5 px-1.5 whitespace-nowrap"
           onClick={(e) => {
             e.stopPropagation();
@@ -89,7 +89,7 @@ const EmbeddedCourseSequenceView: React.FC<EmbeddedCourseSequenceViewProps> = ({
           {node.course.code || node.course.id}
            {node.nodeType === 'corequisite' && <span className="ml-1 font-normal">(Coreq)</span>}
         </Badge>
-        <span 
+        <span
             className={`ml-1.5 text-xs ${node.isMissing ? 'text-gray-400 italic' : 'text-gray-700'} ${!node.isMissing ? 'cursor-pointer hover:underline' : ''}`}
             onClick={(e) => {
                 e.stopPropagation();
@@ -122,11 +122,11 @@ const EmbeddedCourseSequenceView: React.FC<EmbeddedCourseSequenceViewProps> = ({
       )}
     </li>
   );
-  
+
   if (!targetCourse) {
     return <p className="text-xs text-gray-500">No course selected for sequence view.</p>;
   }
-  
+
   const hasPrerequisites = sequenceTreeData && sequenceTreeData.prerequisites && sequenceTreeData.prerequisites.length > 0;
   const hasCorequisites = sequenceTreeData && sequenceTreeData.corequisites && sequenceTreeData.corequisites.length > 0;
 

@@ -1,16 +1,19 @@
 import React, { useState } from 'react'; // Added useState
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button'; // Shadcn Button
-import { ArrowLeft, Sparkles, Menu } from 'lucide-react'; // Icons
+import { Badge } from '@/components/ui/badge'; // Added Badge for cart indicator
+import { ArrowLeft, Sparkles, Menu, ShoppingCart } from 'lucide-react'; // Icons
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"; // For mobile menu
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"; // Added Tooltip
 import AIAdvisor from '@/components/AIAdvisor'; // Import AIAdvisor
+import { useSchedule } from '@/contexts/ScheduleContext'; // Added to access cart state
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const isRoot = location.pathname === '/';
   const [isAiAdvisorOpen, setIsAiAdvisorOpen] = useState(false); // State for AI Advisor
+  const { shoppingCart } = useSchedule(); // Access cart state
 
   // Navigation items - Ask AI Advisor will be handled separately
   const navItems = [
@@ -43,8 +46,8 @@ const Header: React.FC = () => {
           ) : null}
           <Tooltip>
             <TooltipTrigger asChild>
-              <Link 
-                to="/" 
+              <Link
+                to="/"
                 className={`text-xl font-bold text-foreground hover:text-primary transition-colors ${isRoot ? 'ml-10' : ''}`} // ml-10 roughly equivalent to icon button width + margin
               >
                 Course Planner
@@ -60,8 +63,8 @@ const Header: React.FC = () => {
         <nav className="hidden md:flex items-center space-x-2">
           {/* Render other nav items if any */}
           {navItems.map((item) => (
-            <Button 
-              key={item.to} 
+            <Button
+              key={item.to}
               variant="outline"
               asChild
             >
@@ -71,11 +74,37 @@ const Header: React.FC = () => {
               </Link>
             </Button>
           ))}
+          {/* Cart Button for Desktop */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                asChild
+                className="relative"
+              >
+                <Link to="/cart">
+                  <ShoppingCart className="h-4 w-4 mr-2" />
+                  Cart
+                  {shoppingCart && (
+                    <Badge
+                      variant="destructive"
+                      className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
+                    >
+                      {shoppingCart.sections.length}
+                    </Badge>
+                  )}
+                </Link>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>View your course registration cart{shoppingCart ? ` (${shoppingCart.sections.length} courses)` : ''}.</p>
+            </TooltipContent>
+          </Tooltip>
           {/* AI Advisor Button for Desktop */}
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => setIsAiAdvisorOpen(true)}
               >
                 <Sparkles className="h-4 w-4 mr-2" />
@@ -108,7 +137,7 @@ const Header: React.FC = () => {
               <nav className="flex flex-col space-y-4 mt-8">
                 {/* Render other nav items if any */}
                 {navItems.map((item) => (
-                  <Button 
+                  <Button
                     key={`mobile-${item.to}`}
                     variant="ghost"
                     className="justify-start text-base"
@@ -123,12 +152,12 @@ const Header: React.FC = () => {
                 {/* AI Advisor Button for Mobile */}
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button 
-                      variant="ghost" 
+                    <Button
+                      variant="ghost"
                       className="justify-start text-base"
                       onClick={() => {
                         // This should ideally close the sheet first if onOpenChange for Sheet is managed
-                        setIsAiAdvisorOpen(true); 
+                        setIsAiAdvisorOpen(true);
                       }}
                     >
                       <Sparkles className="h-4 w-4 mr-2" />
@@ -158,11 +187,22 @@ const Header: React.FC = () => {
                 </Tooltip>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="ghost" className="justify-start text-base" asChild>
-                      <Link to="/cart">Cart</Link>
+                    <Button variant="ghost" className="justify-start text-base relative" asChild>
+                      <Link to="/cart">
+                        <ShoppingCart className="h-4 w-4 mr-2" />
+                        Cart
+                        {shoppingCart && (
+                          <Badge
+                            variant="destructive"
+                            className="absolute -top-1 -right-1 h-4 w-4 rounded-full p-0 flex items-center justify-center text-xs"
+                          >
+                            {shoppingCart.sections.length}
+                          </Badge>
+                        )}
+                      </Link>
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent side="right" align="center"><p>View your course registration cart.</p></TooltipContent>
+                  <TooltipContent side="right" align="center"><p>View your course registration cart{shoppingCart ? ` (${shoppingCart.sections.length} courses)` : ''}.</p></TooltipContent>
                 </Tooltip>
                  {/* Assuming Degree Audit link might be added later */}
                  {/* <Tooltip>

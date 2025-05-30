@@ -21,9 +21,16 @@ interface AddSemesterDialogProps {
 
 const AddSemesterDialog: React.FC<AddSemesterDialogProps> = ({ open, onOpenChange, onAddSemester }) => {
   const currentModelYear = new Date().getFullYear();
-  const yearOptions = Array.from({ length: 4 }, (_, i) => String(currentModelYear + i));
-  
-  const [year, setYear] = useState<string>(yearOptions[0]); // Initialize with the first option
+  const yearOptions = Array.from({ length: 4 }, (_, i) => {
+    const startYear = currentModelYear + i;
+    return {
+      value: String(startYear),
+      label: `${startYear} - ${startYear + 1}`, // Show academic year format
+      startYear: startYear
+    };
+  });
+
+  const [year, setYear] = useState<string>(yearOptions[0].value); // Initialize with the first option
   const [semesterType, setSemesterType] = useState<string>('Fall'); // Default semester type
 
   const handleSubmit = () => {
@@ -52,12 +59,14 @@ const AddSemesterDialog: React.FC<AddSemesterDialogProps> = ({ open, onOpenChang
             </Label>
             <Select value={year} onValueChange={setYear}>
               <SelectTrigger id="academicYearSelect" className="col-span-3">
-                <SelectValue placeholder="Select year" />
+                <SelectValue placeholder="Select academic year">
+                  {year ? yearOptions.find(opt => opt.value === year)?.label : "Select academic year"}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {yearOptions.map(option => (
-                  <SelectItem key={option} value={option}>
-                    {option} 
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
                   </SelectItem>
                 ))}
               </SelectContent>

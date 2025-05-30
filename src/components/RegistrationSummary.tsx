@@ -15,13 +15,17 @@ const RegistrationSummary: React.FC = () => {
   if (!shoppingCart) {
     return (
       <div className="container mx-auto p-4 py-8 text-center animate-fade-in">
-        <ShoppingCart className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-        <h1 className="text-2xl font-bold mb-4">Your Registration Cart is Empty</h1>
-        <p className="text-muted-foreground mb-6">Add a schedule to your cart from the schedule planning page.</p>
-        <Button onClick={() => navigate("/schedule")}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Scheduler
-        </Button>
+        <div className="max-w-lg mx-auto">
+          <span className="text-8xl mb-6 block">🛒</span>
+          <h1 className="text-3xl font-bold mb-4 text-gray-800">Registration Cart is Empty</h1>
+          <p className="text-gray-600 mb-6">
+            Add a schedule from the Schedule Planner to get started.
+          </p>
+          <Button onClick={() => navigate("/schedule")} size="lg" className="text-base px-8">
+            <ArrowLeft className="h-5 w-5 mr-2" />
+            Go to Schedule Planner
+          </Button>
+        </div>
       </div>
     );
   }
@@ -34,73 +38,141 @@ const RegistrationSummary: React.FC = () => {
 
   return (
     <div className="container mx-auto p-4 py-8">
-      <Button 
-        variant="ghost" 
-        className="mb-6 flex items-center text-muted-foreground hover:text-foreground"
+      <Button
+        variant="outline"
+        className="mb-6"
         onClick={() => navigate("/schedule")}
+        size="lg"
       >
-        <ArrowLeft className="h-4 w-4 mr-2" />
-        Back to Scheduler
+        <ArrowLeft className="h-5 w-5 mr-2" />
+        Back to Schedule Playground
       </Button>
+
+      {/* Simple Header */}
+      <div className="mb-6 max-w-4xl mx-auto">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-3">
+            <span className="text-3xl">🛒</span>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">
+                Registration Cart
+              </h1>
+              <p className="text-gray-600">
+                Review your schedule and register for classes
+              </p>
+            </div>
+          </div>
+          <div className="text-right">
+            <p className="text-sm text-gray-500">{shoppingCart.termId}</p>
+            <p className="font-semibold text-lg">{shoppingCart.totalCredits} credits</p>
+          </div>
+        </div>
+      </div>
 
       <Card className="max-w-4xl mx-auto shadow-lg animate-fade-in">
         <CardHeader>
-          <CardTitle className="text-2xl flex items-center">
-            <ShoppingCart className="h-6 w-6 mr-3 text-primary" />
-            Registration Cart for {studentInfo?.name || 'Student'}
+          <CardTitle className="text-xl">
+            Classes for {shoppingCart.termId}
           </CardTitle>
-          <CardDescription>
-            Term: {shoppingCart.termId} | Schedule: {shoppingCart.name} | Total Credits: {shoppingCart.totalCredits}
-          </CardDescription>
         </CardHeader>
         <CardContent>
-          <h3 className="text-lg font-semibold mb-3">Selected Courses & Sections:</h3>
+
           {shoppingCart.sections.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Course</TableHead>
-                  <TableHead>Section</TableHead>
-                  <TableHead>Instructor</TableHead>
-                  <TableHead>Schedule</TableHead>
-                  <TableHead>Location</TableHead>
-                  <TableHead>Credits</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {shoppingCart.sections.map(section => {
-                  const parentCourse = getParentCourse(section.id);
-                  return (
-                    <TableRow key={section.id}>
-                      <TableCell>
-                        <div className="font-medium">{parentCourse?.code || section.id.split('-')[0]}</div>
-                        <div className="text-xs text-muted-foreground">{parentCourse?.name}</div>
-                      </TableCell>
-                      <TableCell>{section.sectionNumber} {section.sectionType && section.sectionType !== "Standard" && <Badge variant="outline" className="ml-1">{section.sectionType}</Badge>}</TableCell>
-                      <TableCell>{section.instructor}</TableCell>
-                      <TableCell>
-                        {section.schedule.map((s, idx) => (
-                          <div key={idx} className="text-xs">{s.days}: {s.startTime}-{s.endTime}</div>
-                        ))}
-                      </TableCell>
-                      <TableCell className="text-xs">{section.location}</TableCell>
-                      <TableCell>{parentCourse?.credits || 'N/A'}</TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+            <div className="space-y-4">
+              {shoppingCart.sections.map((section, index) => {
+                const parentCourse = getParentCourse(section.id);
+                return (
+                  <div key={section.id} className="border rounded-lg p-4 bg-gray-50">
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <h4 className="text-lg font-bold text-gray-800">
+                          {parentCourse?.code || section.id.split('-')[0]}
+                        </h4>
+                        <p className="text-gray-600">{parentCourse?.name}</p>
+                      </div>
+                      <Badge variant="secondary" className="text-sm">
+                        {parentCourse?.credits || 'N/A'} credits
+                      </Badge>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-lg">👨‍🏫</span>
+                          <div>
+                            <p className="font-medium text-gray-700">Instructor</p>
+                            <p className="text-gray-600">{section.instructor}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-lg">📍</span>
+                          <div>
+                            <p className="font-medium text-gray-700">Location</p>
+                            <p className="text-gray-600">{section.location}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-lg">📝</span>
+                          <div>
+                            <p className="font-medium text-gray-700">Section</p>
+                            <p className="text-gray-600">
+                              {section.sectionNumber}
+                              {section.sectionType && section.sectionType !== "Standard" && (
+                                <Badge variant="outline" className="ml-1 text-xs">
+                                  {section.sectionType}
+                                </Badge>
+                              )}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-lg">⏰</span>
+                          <div>
+                            <p className="font-medium text-gray-700">When it meets</p>
+                            <div className="text-gray-600">
+                              {section.schedule.map((s, idx) => (
+                                <div key={idx} className="text-sm">
+                                  {s.days}: {s.startTime}-{s.endTime}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           ) : (
-            <p className="text-sm text-muted-foreground">No sections in this schedule.</p>
+            <div className="text-center py-8">
+              <span className="text-4xl mb-4 block">📚</span>
+              <p className="text-gray-500">No classes in this schedule yet.</p>
+            </div>
           )}
         </CardContent>
-        <CardFooter className="flex justify-end space-x-3 border-t pt-6">
-          <Button variant="outline" onClick={clearCart}>
-            <Trash2 className="h-4 w-4 mr-2" /> Clear Cart
-          </Button>
-          <Button disabled> {/* Placeholder for SIS integration */}
-            <Send className="h-4 w-4 mr-2" /> Proceed to Registration (SIS)
-          </Button>
+        <CardFooter className="border-t pt-6">
+          <div className="w-full">
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row justify-between space-y-3 sm:space-y-0 sm:space-x-3">
+              <Button variant="outline" onClick={clearCart} size="lg" className="flex-1">
+                <Trash2 className="h-5 w-5 mr-2" />
+                Clear Cart
+              </Button>
+              <Button disabled size="lg" className="flex-1 bg-green-600 hover:bg-green-700"> {/* Placeholder for SIS integration */}
+                <Send className="h-5 w-5 mr-2" />
+                Register for Classes
+              </Button>
+            </div>
+
+
+          </div>
         </CardFooter>
       </Card>
     </div>

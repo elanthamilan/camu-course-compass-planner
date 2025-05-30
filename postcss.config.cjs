@@ -2,18 +2,7 @@ module.exports = {
   plugins: {
     'postcss-import': {},
     'postcss-nested': {},
-    'postcss-custom-media': {
-      importFrom: [
-        {
-          customMedia: {
-            '--mobile': '(max-width: 767px)',
-            '--tablet': '(min-width: 768px) and (max-width: 1023px)',
-            '--desktop': '(min-width: 1024px)',
-            '--wide': '(min-width: 1400px)',
-          }
-        }
-      ]
-    },
+    'postcss-custom-media': {},
     tailwindcss: {},
     autoprefixer: {},
     ...(process.env.NODE_ENV === 'production' ? {

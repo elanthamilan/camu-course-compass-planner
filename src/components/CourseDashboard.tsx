@@ -10,8 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
-import { mockPrograms, mockCourses, mockMandatoryCourses } from "@/lib/mock-data"; 
-import { PlusCircle, Trash2, ArrowRight, ChevronDown, Eye, CheckCircle2, CircleDot, Circle, PlusSquare } from "lucide-react"; 
+import { mockPrograms, mockCourses, mockMandatoryCourses } from "@/lib/mock-data";
+import { PlusCircle, Trash2, ArrowRight, ChevronDown, Eye, CheckCircle2, CircleDot, Circle, PlusSquare, Lightbulb, CheckCircle, Clock, Target, Search, Info, Home, RotateCcw, TrendingUp, AlertCircle, GraduationCap, BookOpen, Zap } from "lucide-react";
 import { useSchedule } from '@/contexts/ScheduleContext';
 import { Label } from "@/components/ui/label";
 import { calculateWhatIfAudit } from '../lib/degree-audit-utils';
@@ -20,18 +20,19 @@ import { Course, AcademicProgram, DegreeRequirement } from "../lib/types";
 import CourseSearch from './CourseSearch';
 import ViewScheduleDialog from './ViewScheduleDialog';
 import AddSemesterDialog from './AddSemesterDialog';
+import CourseCatalogView from './CourseCatalogView';
 
 interface SemesterData {
   id: string;
   name: string;
   creditsSelected: number;
-  courses: Course[]; 
+  courses: Course[];
 }
 
 interface YearData {
   year: string;
-  credits: number; 
-  schedules: number; 
+  credits: number;
+  schedules: number;
   semesters: SemesterData[];
 }
 
@@ -67,7 +68,7 @@ const initialYearsData: YearData[] = [
 ];
 
 const CourseDashboard: React.FC = () => {
-  const { studentInfo } = useSchedule(); 
+  const { studentInfo, addCourse } = useSchedule();
 
   const [selectedWhatIfMajorId, setSelectedWhatIfMajorId] = useState<string | null>(null);
   const [selectedWhatIfMinorId, setSelectedWhatIfMinorId] = useState<string | null>(null);
@@ -77,33 +78,39 @@ const CourseDashboard: React.FC = () => {
   const [actualProgram, setActualProgram] = useState<AcademicProgram | null>(null);
   const [actualProgramAudit, setActualProgramAudit] = useState<DegreeRequirement[] | null>(null);
 
-  const [courseSearchInitialFilters, setCourseSearchInitialFilters] = useState<
-    { type: 'matcher', matcher: DegreeRequirement['courseMatcher'] } | 
-    { type: 'choice', courses: string[] } | 
-    null
-  >(null);
-  const [courseSearchContextualTitle, setCourseSearchContextualTitle] = useState<string | null>(null);
+
 
   const [isCourseSearchOpen, setIsCourseSearchOpen] = useState(false);
-  const [selectedSemesterId, setSelectedSemesterId] = useState(""); 
+  const [selectedSemesterId, setSelectedSemesterId] = useState("");
   const [isViewScheduleOpen, setIsViewScheduleOpen] = useState(false);
   const [viewingSemester] = useState<SemesterData | null>(null);
   const [yearsData, setYearsData] = useState<YearData[]>(initialYearsData);
   const [isAddSemesterDialogOpen, setIsAddSemesterDialogOpen] = useState(false);
-  const [isMandatoryCoursesDialogOpen, setIsMandatoryCoursesDialogOpen] = useState(false); 
-  const [isProgramCreditsDialogOpen, setIsProgramCreditsDialogOpen] = useState(false); 
-  
+  const [isMandatoryCoursesDialogOpen, setIsMandatoryCoursesDialogOpen] = useState(false);
+  const [isProgramCreditsDialogOpen, setIsProgramCreditsDialogOpen] = useState(false);
+
   const navigate = useNavigate();
 
   const handleOpenCourseSearch = (semesterId: string) => {
     setSelectedSemesterId(semesterId);
-    setCourseSearchInitialFilters(null);
-    setCourseSearchContextualTitle(null);
     setIsCourseSearchOpen(true);
   };
-  
+
   const handleOpenSchedulePage = (semesterId: string) => {
-    navigate(`/schedule?termId=${semesterId}`);
+    // Find the semester and its courses
+    const semester = yearsData
+      .flatMap(year => year.semesters)
+      .find(sem => sem.id === semesterId);
+
+    if (semester && semester.courses.length > 0) {
+      // Sync courses to ScheduleContext before navigating
+      semester.courses.forEach(course => {
+        addCourse(course);
+      });
+      navigate(`/schedule?semester=${semesterId}`);
+    } else {
+      toast.error("Please add courses to this semester before building a schedule.");
+    }
   };
 
   const handleDeleteCourse = (semesterId: string, courseId: string) => {
@@ -146,7 +153,7 @@ const CourseDashboard: React.FC = () => {
   const handleAddSemesterSubmit = (data: { year: string; semesterType: string }) => {
     const { year: dialogYearStr, semesterType } = data;
     const academicYearStr = `${dialogYearStr} - ${parseInt(dialogYearStr) + 1}`;
-    const semesterId = `${semesterType.replace(/\s+/g, '')}${dialogYearStr}`; 
+    const semesterId = `${semesterType.replace(/\s+/g, '')}${dialogYearStr}`;
     const semesterName = `${semesterType} ${dialogYearStr}`;
     const newSemester: SemesterData = { id: semesterId, name: semesterName, creditsSelected: 0, courses: [] };
 
@@ -156,7 +163,8 @@ const CourseDashboard: React.FC = () => {
       if (yearIndex > -1) {
         if (!updatedYearsData[yearIndex].semesters.some(s => s.id === semesterId)) {
           updatedYearsData[yearIndex].semesters.push(newSemester);
-          const order = ["Spring", "Summer", "Fall"];
+          // Sort semesters chronologically: Fall (start of academic year), Spring, Summer
+          const order = ["Fall", "Spring", "Summer"];
           updatedYearsData[yearIndex].semesters.sort((a,b) => order.indexOf(a.name.split(" ")[0]) - order.indexOf(b.name.split(" ")[0]));
         } else console.warn(`Semester ${semesterId} already exists.`);
       } else {
@@ -169,14 +177,14 @@ const CourseDashboard: React.FC = () => {
   };
 
   const handleAddCourseToPlan = (courseToAdd: Course, semesterId: string) => {
-    setYearsData(prevYearsData => 
+    setYearsData(prevYearsData =>
       prevYearsData.map(year => ({
         ...year,
         semesters: year.semesters.map(semester => {
           if (semester.id === semesterId) {
             if (semester.courses.some(c => c.id === courseToAdd.id)) {
               toast.warn(`${courseToAdd.code} is already in ${semester.name}.`);
-              return semester; 
+              return semester;
             }
             const updatedCourses = [...semester.courses, courseToAdd];
             toast.success(`${courseToAdd.code} added to ${semester.name}.`);
@@ -189,11 +197,11 @@ const CourseDashboard: React.FC = () => {
   };
 
   const getStatusBadgeVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
-    if (status === "Completed") return "default"; 
-    if (status === "In Progress") return "secondary"; 
-    return "outline"; 
+    if (status === "Completed") return "default";
+    if (status === "In Progress") return "secondary";
+    return "outline";
   };
-  
+
   const studentTotalCredits = studentInfo?.totalCredits || 0;
   const programRequiredCredits = actualProgram?.totalCreditsRequired || studentInfo?.requiredCredits || 0;
   const creditsLeft = programRequiredCredits - studentTotalCredits;
@@ -222,23 +230,7 @@ const CourseDashboard: React.FC = () => {
     return suggested.filter(course => !completedCourses.includes(course.code)).slice(0, 3);
   };
 
-  const handleFindCoursesForRequirement = (requirement: DegreeRequirement) => {
-    let filters: { type: 'matcher', matcher: DegreeRequirement['courseMatcher'] } | { type: 'choice', courses: string[] } | null = null;
-    if (requirement.courseMatcher) {
-      filters = { type: 'matcher', matcher: requirement.courseMatcher };
-    } else if (requirement.choiceCourses && requirement.choiceCourses.length > 0) {
-      filters = { type: 'choice', courses: requirement.choiceCourses };
-    }
 
-    if (filters) {
-      setCourseSearchInitialFilters(filters);
-      setCourseSearchContextualTitle(`Courses for: ${requirement.name}`);
-      setSelectedSemesterId(""); 
-      setIsCourseSearchOpen(true);
-    } else {
-      toast.warn(`No specific course criteria found to search for requirement: ${requirement.name}`);
-    }
-  };
 
   React.useEffect(() => {
     if (studentInfo?.majorId && mockPrograms.length > 0 && mockCourses.length > 0) {
@@ -272,294 +264,591 @@ const CourseDashboard: React.FC = () => {
   };
 
   return (
-    <div className="py-3 space-y-6">
-      <Card className="w-full mb-4">
-        <CardHeader><CardTitle>My Academic Snapshot</CardTitle><CardDescription>Summary of your academic standing and interests.</CardDescription></CardHeader>
-        {studentInfo && (
-          <CardContent className="space-y-2 text-sm">
-            <p className="text-lg font-semibold">{studentInfo.name}</p>
-            <p><span className="font-semibold">Major:</span> {studentInfo.major}</p>
-            {studentInfo.minor && <p><span className="font-semibold">Minor:</span> {studentInfo.minor}</p>}
-            <p><span className="font-semibold">GPA:</span> {studentInfo.gpa ? studentInfo.gpa.toFixed(2) : "N/A"}</p>
-            <p><span className="font-semibold">Expected Graduation:</span> {studentInfo.expectedGraduationDate || "N/A"}</p>
-            {studentInfo.interests && studentInfo.interests.length > 0 && (<p><span className="font-semibold">Interests:</span> {studentInfo.interests.join(', ')}</p>)}
-          </CardContent>
-        )}
-        {!studentInfo && (<CardContent><p className="text-sm text-muted-foreground">Student information is not available.</p></CardContent>)}
-      </Card>
+    <div className="py-6 space-y-6">
+      {/* Minimal Header - Full Width */}
+      <div className="flex flex-col space-y-4 sm:flex-row sm:space-y-0 items-center justify-between py-6 animate-fade-in w-full mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Academic Planning</h1>
+          <p className="text-gray-600">Plan your courses and track your progress</p>
+        </div>
+      </div>
 
-      <Card className="w-full mb-4">
-        <CardHeader><CardTitle>Explore Programs (What-If Analysis)</CardTitle><CardDescription>See how your completed courses apply to a different major or minor.</CardDescription></CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label htmlFor="whatif-major-select">Select a "What-If" Major:</Label>
-            <Select value={selectedWhatIfMajorId || ""} onValueChange={(value) => setSelectedWhatIfMajorId(value === "none" ? null : value)}>
-              <SelectTrigger id="whatif-major-select" className="mt-1"><SelectValue placeholder="Choose a major to explore..." /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">None (Show my actual major)</SelectItem>
-                {mockPrograms.filter(p => p.type === 'Major').map(program => (<SelectItem key={program.id} value={program.id}>{program.name}</SelectItem>))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label htmlFor="whatif-minor-select">Add a "What-If" Minor (Optional):</Label>
-            <Select value={selectedWhatIfMinorId || ""} onValueChange={(value) => setSelectedWhatIfMinorId(value === "none" ? null : value)} disabled={!selectedWhatIfMajorId}>
-              <SelectTrigger id="whatif-minor-select" className="mt-1"><SelectValue placeholder="Choose a minor to add..." /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">None</SelectItem>
-                {mockPrograms.filter(p => p.type === 'Minor').map(program => (<SelectItem key={program.id} value={program.id}>{program.name}</SelectItem>))}
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-        <CardFooter className="flex justify-end space-x-2">
-          <Button variant="outline" onClick={() => { setSelectedWhatIfMajorId(null); setSelectedWhatIfMinorId(null); setWhatIfAuditResults(null); setCurrentWhatIfProgram(null); toast.info("What-If analysis cleared. Showing your actual program progress."); }}>Clear What-If</Button>
-          <Button onClick={() => {
-            if (!selectedWhatIfMajorId) { setWhatIfAuditResults(null); setCurrentWhatIfProgram(null); toast.info("Please select a 'What-If' Major to analyze."); return; }
-            const targetMajorProgram = mockPrograms.find(p => p.id === selectedWhatIfMajorId);
-            if (targetMajorProgram) {
-              const currentCompletedCourseCodes = studentInfo?.completedCourses || [];
-              const auditResults = calculateWhatIfAudit(currentCompletedCourseCodes, targetMajorProgram, mockCourses);
-              setWhatIfAuditResults(auditResults); setCurrentWhatIfProgram(targetMajorProgram); toast.success(`What-If analysis complete for ${targetMajorProgram.name}.`);
-            } else { toast.error("Could not find the selected What-If program details."); setWhatIfAuditResults(null); setCurrentWhatIfProgram(null); }
-          }} disabled={!selectedWhatIfMajorId}>Analyze Selected Program(s)</Button>
-        </CardFooter>
-      </Card>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+        {/* Progress Toward Graduation Card */}
         <Card>
-          <CardHeader className="pb-2 flex flex-row items-center justify-between">
-            <div>
-              <CardTitle className="text-4xl font-bold">{actualProgram ? (creditsLeft >= 0 ? creditsLeft : 0) : <span className="text-gray-400">N/A</span>}</CardTitle>
-              <CardDescription>
-                {actualProgram 
-                  ? `${studentTotalCredits} of ${programRequiredCredits} Credits Completed` 
-                  : "Program details not loaded"}
-              </CardDescription>
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <span className="text-lg">🎯</span>
+                </div>
+                <div>
+                  <CardTitle className="text-lg font-semibold">Graduation Progress</CardTitle>
+                  <CardDescription className="text-sm">
+                    {creditsLeft >= 0 ? creditsLeft : 0} credits remaining
+                  </CardDescription>
+                </div>
+              </div>
+              <Badge variant="outline">{Math.round(programProgressValue)}%</Badge>
             </div>
-            <Accordion type="single" collapsible className="w-auto">
-              <AccordionItem value="item-1" className="border-none">
-                <Tooltip><TooltipTrigger asChild><AccordionTrigger className="p-2 hover:no-underline [&[data-state=open]>svg]:rotate-180" disabled={!actualProgram}><Button variant="outline" size="sm" disabled={!actualProgram}>View details <ChevronDown className="h-4 w-4 ml-1 transition-transform duration-200" /></Button></AccordionTrigger></TooltipTrigger><TooltipContent><p>Show/hide a detailed breakdown of your program credit requirements.</p></TooltipContent></Tooltip>
-                <AccordionContent className="pt-2 text-sm">
-                  <h4 className="mb-2 font-semibold text-sm">Program Credits Breakdown</h4>
-                  {actualProgramAudit && actualProgramAudit.length > 0 ? (
-                    <ul className="space-y-1 text-xs">
+            <div className="mt-4">
+              <Progress value={programProgressValue} className="h-2" />
+              <div className="flex justify-between text-xs text-gray-500 mt-1">
+                <span>{studentTotalCredits} completed</span>
+                <span>{programRequiredCredits} total</span>
+              </div>
+            </div>
+          </CardHeader>
+
+          {actualProgram && actualProgramAudit && actualProgramAudit.length > 0 && (
+            <CardContent className="pt-0">
+              <Accordion type="single" collapsible>
+                <AccordionItem value="credits-details" className="border-none">
+                  <AccordionTrigger className="py-2 hover:no-underline">
+                    <span className="text-sm font-medium">📋 Show me what I still need to do</span>
+                  </AccordionTrigger>
+                  <AccordionContent className="pt-2">
+
+                    <div className="space-y-3">
                       {actualProgramAudit.map(req => {
-                        const quickAddTargetCourses = getCoursesForQuickAdd(req);
+                        const isCompleted = req.progress === 1;
+                        const isInProgress = req.progress > 0 && req.progress < 1;
+
                         return (
-                          <li key={req.id} className="p-3 border-b last:border-b-0">
-                            <div className="flex justify-between items-center">
-                              <div className="flex items-center">
-                                {req.progress === 1 && <CheckCircle2 className="h-4 w-4 text-green-600 mr-2 flex-shrink-0" />}
-                                {req.progress > 0 && req.progress < 1 && <CircleDot className="h-4 w-4 text-yellow-500 mr-2 flex-shrink-0" />}
-                                {(req.progress === 0 || req.progress === undefined || isNaN(req.progress)) && <Circle className="h-4 w-4 text-gray-400 mr-2 flex-shrink-0" />}
-                                <span className="text-xs font-medium">{req.name}</span>
+                          <div key={req.id} className={`p-3 rounded border ${
+                            isCompleted ? 'bg-green-50 border-green-200' :
+                            isInProgress ? 'bg-yellow-50 border-yellow-200' :
+                            'bg-gray-50 border-gray-200'
+                          }`}>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-2">
+                                {isCompleted && <span className="text-lg">✅</span>}
+                                {isInProgress && <span className="text-lg">🔄</span>}
+                                {!isCompleted && !isInProgress && <span className="text-lg">📝</span>}
+                                <div>
+                                  <span className="text-sm font-medium">{req.name}</span>
+                                  {req.description && (
+                                    <p className="text-xs text-gray-600 mt-1">{req.description}</p>
+                                  )}
+                                </div>
                               </div>
-                              <span className="text-xs text-muted-foreground ml-2 whitespace-nowrap">
-                                {req.choiceRequired ? `${req.progressCourses ?? 0}/${req.choiceRequired} courses` : `${Math.round((req.progress ?? 0) * req.requiredCredits)}/${req.requiredCredits} credits`}
-                              </span>
+                              <Badge variant={isCompleted ? "default" : isInProgress ? "secondary" : "outline"} className="text-xs">
+                                {req.choiceRequired ? `${req.progressCourses ?? 0}/${req.choiceRequired} classes` : `${Math.round((req.progress ?? 0) * req.requiredCredits)}/${req.requiredCredits} credits`}
+                              </Badge>
                             </div>
-                            {(req.progress ?? 0) < 1 && (
-                              <Button variant="link" size="sm" className="mt-1 text-xs px-0 h-auto text-blue-600 hover:text-blue-800" onClick={() => handleFindCoursesForRequirement(req)}>Find Courses for this Requirement</Button>
-                            )}
-                            {quickAddTargetCourses.length > 0 && (
-                              <div className="mt-2 pl-6">
-                                <p className="text-xs font-semibold text-muted-foreground mb-1">Quick Add Suggestions:</p>
-                                <ul className="space-y-1">
-                                  {quickAddTargetCourses.map(courseCode => {
-                                    const courseObj = mockCourses.find(c => c.code === courseCode);
-                                    if (!courseObj) return null;
-                                    const isCompleted = studentInfo?.completedCourses?.includes(courseCode);
-                                    if (isCompleted) return null;
-                                    return (
-                                      <li key={courseCode} className="flex justify-between items-center text-xs">
-                                        <span>{courseObj.code} - {courseObj.name} ({courseObj.credits} cr)</span>
-                                        <Tooltip>
-                                          <TooltipTrigger asChild>
-                                            <Button variant="ghost" size="icon_sm" className="h-6 w-6" onClick={() => {
-                                              const targetSemester = yearsData[0]?.semesters[0];
-                                              if (targetSemester && courseObj) { handleAddCourseToPlan(courseObj, targetSemester.id); } 
-                                              else { toast.error("No suitable semester found for Quick Add or course not found."); }
-                                            }}>
-                                              <PlusSquare size={14} />
-                                            </Button>
-                                          </TooltipTrigger>
-                                          <TooltipContent><p>Quick add to {yearsData[0]?.semesters[0]?.name || "first semester"}</p></TooltipContent>
-                                        </Tooltip>
-                                      </li>
-                                    );
-                                  })}
-                                </ul>
-                              </div>
-                            )}
-                          </li>
+
+                          </div>
                         );
                       })}
-                    </ul>
-                  ) : (<p className="text-xs text-muted-foreground">No program selected or requirements not available.</p>)}
-                  <Tooltip><TooltipTrigger asChild><Button variant="link" size="sm" onClick={() => setIsProgramCreditsDialogOpen(true)} className="mt-2 text-xs px-0 h-auto">View Course Options for Requirements</Button></TooltipTrigger><TooltipContent><p>See course suggestions for fulfilling unmet degree requirements.</p></TooltipContent></Tooltip>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          </CardHeader>
-          <CardContent className="pt-0"> <Progress value={programProgressValue} className="h-2" /></CardContent>
+                      {/* Smart Alerts */}
+                      {creditsLeft > 0 && creditsLeft <= 30 && (
+                        <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                          <p className="text-sm text-blue-800">
+                            <span className="font-semibold">🎯 Almost there!</span> You're only {creditsLeft} credits away from graduation.
+                          </p>
+                        </div>
+                      )}
+
+                      <Button variant="outline" size="sm" onClick={() => setIsProgramCreditsDialogOpen(true)} className="w-full mt-2">
+                        <Search className="h-4 w-4 mr-2" />
+                        Browse All Available Classes
+                      </Button>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </CardContent>
+          )}
         </Card>
 
+        {/* Required Classes Card */}
         <Card>
-          <CardHeader className="pb-2 flex flex-row items-center justify-between">
-            <div><CardTitle className="text-4xl font-bold">{mandatoryCoursesLeft}</CardTitle><CardDescription>{completedMandatoryCourses} of {totalMandatoryCourses} Mandatory Courses Completed</CardDescription></div>
-            <Accordion type="single" collapsible className="w-auto">
-              <AccordionItem value="item-1" className="border-none">
-                <Tooltip><TooltipTrigger asChild><AccordionTrigger className="p-2 hover:no-underline [&[data-state=open]>svg]:rotate-180"><Button variant="outline" size="sm">View details <ChevronDown className="h-4 w-4 ml-1 transition-transform duration-200" /></Button></AccordionTrigger></TooltipTrigger><TooltipContent><p>Show/hide the list of mandatory courses and their current status.</p></TooltipContent></Tooltip>
-                <AccordionContent className="pt-2 text-sm">
-                  <h4 className="mb-2 font-semibold text-sm">Mandatory Courses</h4>
-                  <ul className="space-y-1 text-xs">
-                    {mockMandatoryCourses.map(course => (
-                      <li key={course.code} className="flex justify-between items-center">
-                        <div className="flex items-center">
-                          {course.status === "Completed" && <CheckCircle2 className="h-4 w-4 text-green-600 mr-2 flex-shrink-0" />}
-                          {course.status === "In Progress" && <CircleDot className="h-4 w-4 text-yellow-500 mr-2 flex-shrink-0" />}
-                          {course.status !== "Completed" && course.status !== "In Progress" && <Circle className="h-4 w-4 text-gray-400 mr-2 flex-shrink-0" />}
-                          <div><span className="font-medium">{course.code}: </span><span>{course.name}</span></div>
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                  <span className="text-lg">📚</span>
+                </div>
+                <div>
+                  <CardTitle className="text-lg font-semibold">Required Courses</CardTitle>
+                  <CardDescription className="text-sm">
+                    {mandatoryCoursesLeft} courses remaining
+                  </CardDescription>
+                </div>
+              </div>
+              <Badge variant="outline">{Math.round(mandatoryProgressValue)}%</Badge>
+            </div>
+            <div className="mt-4">
+              <Progress value={mandatoryProgressValue} className="h-2" />
+              <div className="flex justify-between text-xs text-gray-500 mt-1">
+                <span>{completedMandatoryCourses} completed</span>
+                <span>{totalMandatoryCourses} total</span>
+              </div>
+            </div>
+          </CardHeader>
+
+          <CardContent className="pt-0">
+            <Accordion type="single" collapsible>
+              <AccordionItem value="courses-details" className="border-none">
+                <AccordionTrigger className="py-2 hover:no-underline">
+                  <span className="text-sm font-medium">📖 Show me my required classes</span>
+                </AccordionTrigger>
+                <AccordionContent className="pt-2">
+
+                  <div className="space-y-2">
+                    {mockMandatoryCourses.map(course => {
+                      const isCompleted = course.status === "Completed";
+                      const isInProgress = course.status === "In Progress";
+
+                      return (
+                        <div key={course.code} className={`p-3 rounded border ${
+                          isCompleted ? 'bg-green-50 border-green-200' :
+                          isInProgress ? 'bg-yellow-50 border-yellow-200' :
+                          'bg-gray-50 border-gray-200'
+                        }`}>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                              {isCompleted && <span className="text-lg">✅</span>}
+                              {isInProgress && <span className="text-lg">🔄</span>}
+                              {!isCompleted && !isInProgress && <span className="text-lg">📝</span>}
+                              <div>
+                                <span className="font-medium text-sm">{course.code}</span>
+                                <p className="text-xs text-muted-foreground">{course.name}</p>
+                                {course.prerequisites && course.prerequisites.length > 0 && (
+                                  <p className="text-xs text-amber-600 mt-1">
+                                    📋 Need to take first: {course.prerequisites.join(', ')}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            <Badge variant={getStatusBadgeVariant(course.status)} className="text-xs">
+                              {course.status === "Completed" ? "✅ Done" :
+                               course.status === "In Progress" ? "🔄 Taking Now" :
+                               "📝 Need to Take"}
+                            </Badge>
+                          </div>
                         </div>
-                        <Badge variant={getStatusBadgeVariant(course.status)}>{course.status}</Badge>
-                      </li>))}
-                  </ul>
-                  <Tooltip><TooltipTrigger asChild><Button variant="link" size="sm" onClick={() => setIsMandatoryCoursesDialogOpen(true)} className="mt-2 text-xs px-0 h-auto">View Remaining Mandatory Courses</Button></TooltipTrigger><TooltipContent><p>See a filtered list of mandatory courses you still need to complete.</p></TooltipContent></Tooltip>
+                      );
+                    })}
+                    {/* Prerequisite Alerts */}
+                    {remainingMandatoryCourses.some(c => c.prerequisites && c.prerequisites.length > 0) && (
+                      <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                        <p className="text-sm text-amber-800">
+                          <span className="font-semibold">⚠️ Prerequisites needed:</span> Some courses require completing other classes first.
+                        </p>
+                      </div>
+                    )}
+
+                    <Button variant="outline" size="sm" onClick={() => setIsMandatoryCoursesDialogOpen(true)} className="w-full mt-2">
+                      <Eye className="h-4 w-4 mr-2" />
+                      See All Required Classes
+                    </Button>
+                  </div>
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
-          </CardHeader>
+          </CardContent>
         </Card>
       </div>
 
       <Tabs defaultValue="academic-plan" className="w-full mt-6">
-        <TabsList className="grid w-full grid-cols-2 mb-6">
-          <TabsTrigger value="academic-plan">My Academic Plan</TabsTrigger>
-          <TabsTrigger value="explore-programs">Explore Programs & What-If</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3 mb-6">
+          <TabsTrigger value="academic-plan" className="flex items-center">
+            <span className="mr-2">📅</span>
+            Plan My Classes
+          </TabsTrigger>
+          <TabsTrigger value="explore-programs" className="flex items-center">
+            <span className="mr-2">🔍</span>
+            Explore Other Majors
+          </TabsTrigger>
+          <TabsTrigger value="course-catalog" className="flex items-center">
+            <span className="mr-2">📚</span>
+            Browse All Classes
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="academic-plan">
-          <div className="space-y-6">
-            {yearsData.map((year) => (
-              <div key={year.year}>
-                <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-3"><h3 className="text-xl font-semibold">{year.year}</h3><p className="text-sm text-muted-foreground">{year.semesters.reduce((acc, sem) => acc + sem.creditsSelected, 0)} credits · {year.schedules} Schedules</p></div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {year.semesters.map((semester) => (
-                    <Card key={semester.id} className="flex flex-col">
-                      <CardHeader>
-                        <div className="flex justify-between items-center">
-                          <CardTitle className="text-lg">{semester.name.replace(/\s\d{4}$/, "")}</CardTitle>
-                          <div className="flex space-x-1">
-                            <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive/80" onClick={() => handleRemoveSemester(semester.id)} aria-label="Remove semester"><Trash2 size={16} /></Button></TooltipTrigger><TooltipContent><p>Remove this semester (only if empty).</p></TooltipContent></Tooltip>
-                          </div>
+          <div className="relative">
+            {/* Timeline Line */}
+            <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-200 via-purple-200 to-green-200"></div>
+
+            <div className="space-y-8">
+              {yearsData.map((year, yearIndex) => (
+                <div key={year.year} className="relative">
+                  {/* Timeline Node */}
+                  <div className={`absolute left-6 w-4 h-4 rounded-full border-4 border-white shadow-lg z-10 ${
+                    year.semesters.some(s => s.courses.length > 0)
+                      ? 'bg-blue-500'
+                      : 'bg-gray-300'
+                  }`}></div>
+
+                  {/* Year Content */}
+                  <div className="ml-16">
+                    <div className="mb-6">
+                      <div className="flex items-center space-x-3 mb-2">
+                        <h3 className="text-2xl font-bold text-gray-900">{year.year}</h3>
+                        <Badge variant="outline" className="text-sm">
+                          {year.semesters.reduce((acc, sem) => acc + sem.creditsSelected, 0)} credits planned
+                        </Badge>
+                        {year.semesters.some(s => s.courses.length > 0) && (
+                          <Badge variant="default" className="text-xs bg-green-100 text-green-800">
+                            ✓ In Progress
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="flex items-center space-x-4">
+                        <p className="text-gray-600">Academic Year {yearIndex + 1}</p>
+                        <div className="flex items-center space-x-2 text-sm text-gray-500">
+                          <span>📚 {year.semesters.reduce((acc, sem) => acc + sem.courses.length, 0)} courses</span>
+                          <span>•</span>
+                          <span>📅 {year.semesters.length} semesters</span>
                         </div>
-                        <CardDescription>{semester.creditsSelected}/18 credits selected</CardDescription>
-                      </CardHeader>
-                      <CardContent className="flex-grow">
-                        <Select defaultValue="case-western"><SelectTrigger className="mb-3 text-xs h-8"><SelectValue placeholder="Select University" /></SelectTrigger><SelectContent><SelectItem value="case-western">Case Western Reserve University</SelectItem><SelectItem value="cleveland-state">Cleveland State University</SelectItem></SelectContent></Select>
-                        {semester.courses.length > 0 ? (
-                          <ul className="space-y-3">
-                            {semester.courses.map(course => (
-                              <li key={course.id} className="text-xs border-b pb-2 last:border-0 last:pb-0">
-                                <div className="flex justify-between items-start">
-                                  <div>
-                                    <div className="flex items-center mb-0.5"><span className="font-semibold mr-1.5">{course.code}</span><Badge variant="secondary" className="mr-1.5">{course.credits} cr</Badge></div>
-                                    <p className="text-muted-foreground leading-tight">{course.name}</p>
-                                    {course.prerequisites && course.prerequisites.length > 0 && (<p className="mt-1 text-amber-600 text-[11px] leading-tight">Prereqs: {course.prerequisites.join(', ')}</p>)}
+                      </div>
+                    </div>
+
+                    {/* Semesters Grid */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+                      {year.semesters.map((semester) => (
+                        <Card key={semester.id} className={`flex flex-col hover:shadow-md transition-all duration-200 ${
+                          semester.courses.length > 0
+                            ? 'border-blue-200 bg-blue-50/30'
+                            : 'border-gray-200'
+                        }`}>
+                          <CardHeader className="pb-3">
+                            <div className="flex justify-between items-center">
+                              <div className="flex items-center space-x-2">
+                                <div className={`w-3 h-3 rounded-full ${
+                                  semester.courses.length > 0 ? 'bg-blue-500' : 'bg-gray-300'
+                                }`}></div>
+                                <CardTitle className="text-lg font-semibold text-gray-800">
+                                  {semester.name.replace(/\s\d{4}$/, "")}
+                                </CardTitle>
+                              </div>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 text-gray-400 hover:text-red-500"
+                                    onClick={() => handleRemoveSemester(semester.id)}
+                                  >
+                                    <Trash2 size={14} />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Remove semester</TooltipContent>
+                              </Tooltip>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Badge variant={semester.courses.length > 0 ? "default" : "secondary"} className="text-xs">
+                                {semester.creditsSelected} credits
+                              </Badge>
+                              <span className="text-xs text-gray-500">
+                                {semester.courses.length} courses
+                              </span>
+                              {semester.creditsSelected >= 12 && (
+                                <Badge variant="outline" className="text-xs text-green-600 border-green-300">
+                                  Full-time
+                                </Badge>
+                              )}
+                            </div>
+                          </CardHeader>
+
+                          <CardContent className="flex-grow">
+                            {semester.courses.length > 0 ? (
+                              <div className="space-y-2">
+                                {semester.courses.map(course => (
+                                  <div key={course.id} className="p-2 bg-gray-50 rounded-lg border">
+                                    <div className="flex justify-between items-start">
+                                      <div className="flex-1">
+                                        <div className="flex items-center space-x-2 mb-1">
+                                          <span className="font-semibold text-sm">{course.code}</span>
+                                          <Badge variant="outline" className="text-xs px-1 py-0">
+                                            {course.credits}cr
+                                          </Badge>
+                                        </div>
+                                        <p className="text-xs text-gray-600 leading-tight">{course.name}</p>
+                                        {course.prerequisites && course.prerequisites.length > 0 && (
+                                          <p className="text-xs text-amber-600 mt-1">
+                                            Prereqs: {course.prerequisites.join(', ')}
+                                          </p>
+                                        )}
+                                      </div>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-6 w-6 text-gray-400 hover:text-red-500"
+                                        onClick={() => handleDeleteCourse(semester.id, course.id)}
+                                      >
+                                        <Trash2 size={12} />
+                                      </Button>
+                                    </div>
                                   </div>
-                                  <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive/80" onClick={() => handleDeleteCourse(semester.id, course.id)} aria-label="Delete course"><Trash2 size={14} /></Button></TooltipTrigger><TooltipContent><p>Remove this course from the semester.</p></TooltipContent></Tooltip>
-                                </div>
-                              </li>))}
-                          </ul>) : (<p className="text-xs text-muted-foreground text-center mt-4">No courses added yet.</p>)}
-                      </CardContent>
-                      <CardFooter className="flex flex-col sm:flex-row gap-2 pt-4"> 
-                        <Tooltip><TooltipTrigger asChild><Button onClick={() => handleOpenCourseSearch(semester.id)} variant="outline" size="sm" className="w-full"><PlusCircle size={14} className="mr-1.5" /> Add Courses</Button></TooltipTrigger><TooltipContent><p>Search and add courses to this semester.</p></TooltipContent></Tooltip>
-                        <Tooltip><TooltipTrigger asChild><Button onClick={() => handleOpenSchedulePage(semester.id)} variant="default" size="sm" className="w-full">View Schedule <ArrowRight size={14} className="ml-1.5" /></Button></TooltipTrigger><TooltipContent><p>Open the detailed scheduling tool for this semester.</p></TooltipContent></Tooltip>
-                      </CardFooter>
-                    </Card>))}
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="text-center py-6">
+                                <div className="text-gray-400 mb-2">📚</div>
+                                <p className="text-sm text-gray-500">No courses planned</p>
+                              </div>
+                            )}
+                          </CardContent>
+
+                          <CardFooter className="pt-3 space-y-2">
+                            <Button
+                              onClick={() => handleOpenCourseSearch(semester.id)}
+                              variant="outline"
+                              size="sm"
+                              className="w-full"
+                            >
+                              <PlusCircle size={14} className="mr-2" />
+                              Add Courses
+                            </Button>
+
+                            {/* Course Planning Hints */}
+                            {semester.courses.length === 0 && (
+                              <div className="text-xs text-gray-500 mt-2 p-2 bg-blue-50 rounded border-dashed border border-blue-200">
+                                💡 <strong>Tip:</strong> Drag courses from your degree audit or search for specific requirements
+                              </div>
+                            )}
+                            <Button
+                              onClick={() => handleOpenSchedulePage(semester.id)}
+                              variant="default"
+                              size="sm"
+                              className="w-full"
+                              disabled={semester.courses.length === 0}
+                            >
+                              <Zap size={14} className="mr-2" />
+                              {semester.courses.length > 0 ? "Build Conflict-Free Schedule" : "Add Courses First"}
+                            </Button>
+
+                            {/* Schedule Planning Info */}
+                            {semester.courses.length > 0 && (
+                              <div className="text-xs text-green-600 mt-1 text-center">
+                                ✅ Ready to create schedule with {semester.courses.length} courses
+                              </div>
+                            )}
+                          </CardFooter>
+                        </Card>
+                      ))}
+
+                      {/* Add Semester Card */}
+                      <Card className="flex flex-col justify-center items-center border-dashed border-2 hover:border-solid hover:bg-gray-50 transition-all cursor-pointer" onClick={handleOpenAddSemesterDialog}>
+                        <CardContent className="text-center py-8">
+                          <PlusCircle className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                          <p className="text-sm text-gray-600 font-medium">Add Semester</p>
+                          <p className="text-xs text-gray-500 mt-1">Summer, Fall, Spring</p>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex justify-center mt-4"><Tooltip><TooltipTrigger asChild><Button variant="outline" onClick={handleOpenAddSemesterDialog} className="w-full max-w-md border-dashed hover:border-solid"><PlusCircle size={16} className="mr-2" /> Add Semester</Button></TooltipTrigger><TooltipContent><p>Add a new academic semester to your plan.</p></TooltipContent></Tooltip></div>
-              </div>))}
+              ))}
+
+              {/* Add Year Section */}
+              <div className="relative">
+                <div className="absolute left-6 w-4 h-4 bg-gray-300 rounded-full border-4 border-white shadow-lg z-10"></div>
+                <div className="ml-16">
+                  <Card className="border-dashed border-2 hover:border-solid hover:bg-gray-50 transition-all cursor-pointer" onClick={handleOpenAddSemesterDialog}>
+                    <CardContent className="text-center py-6">
+                      <PlusCircle className="h-6 w-6 text-gray-400 mx-auto mb-2" />
+                      <p className="text-sm text-gray-600 font-medium">Add New Academic Year</p>
+                      <p className="text-xs text-gray-500 mt-1">Plan ahead for future years</p>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            </div>
           </div>
         </TabsContent>
 
         <TabsContent value="explore-programs">
-          <Card className="w-full mb-4">
-            <CardHeader><CardTitle>Explore Programs (What-If Analysis)</CardTitle><CardDescription>See how your completed courses apply to a different major or minor.</CardDescription></CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="whatif-major-select">Select a "What-If" Major:</Label>
-                <Select value={selectedWhatIfMajorId || ""} onValueChange={(value) => setSelectedWhatIfMajorId(value === "none" ? null : value)}>
-                  <SelectTrigger id="whatif-major-select" className="mt-1"><SelectValue placeholder="Choose a major to explore..." /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">None (Show my actual major)</SelectItem>
-                    {mockPrograms.filter(p => p.type === 'Major').map(program => (<SelectItem key={program.id} value={program.id}>{program.name}</SelectItem>))}
-                  </SelectContent>
-                </Select>
+          {/* Hero Section */}
+          <div className="mb-6 p-6 bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg">
+            <div className="flex items-start space-x-4">
+              <div className="p-3 bg-purple-100 rounded-full">
+                <span className="text-3xl">🤔</span>
               </div>
-              <div>
-                <Label htmlFor="whatif-minor-select">Add a "What-If" Minor (Optional):</Label>
-                <Select value={selectedWhatIfMinorId || ""} onValueChange={(value) => setSelectedWhatIfMinorId(value === "none" ? null : value)} disabled={!selectedWhatIfMajorId}>
-                  <SelectTrigger id="whatif-minor-select" className="mt-1"><SelectValue placeholder="Choose a minor to add..." /></SelectTrigger>
+              <div className="flex-1">
+                <h2 className="text-2xl font-bold text-purple-900 mb-2">Thinking About Changing Your Major?</h2>
+                <p className="text-purple-700 mb-4 text-lg">
+                  <strong>It's totally normal to wonder "what if"!</strong> Maybe you're curious about other careers,
+                  thinking about switching majors, or want to add a minor. This tool lets you safely explore
+                  without changing anything in your actual records.
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm bg-white rounded-lg p-4 border border-purple-200">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xl">✅</span>
+                    <span className="text-purple-800"><strong>See what you've already done</strong> - classes that would count toward the new major</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xl">📝</span>
+                    <span className="text-purple-800"><strong>Find out what's left</strong> - additional classes you'd need to take</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xl">🎯</span>
+                    <span className="text-purple-800"><strong>Make an informed decision</strong> - see if it's realistic for you</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Program Explorer */}
+          <Card className="w-full mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <span className="text-2xl">🎓</span>
+                <span>Try Out a Different Major</span>
+              </CardTitle>
+              <CardDescription className="text-base">
+                <strong>Don't worry - this is just pretend!</strong> Pick any major below and we'll show you exactly what it would take.
+                This won't change your actual enrollment or records - think of it like a "what if" calculator for your college career.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Major Selection with Enhanced UI */}
+              <div className="space-y-3">
+                <Label htmlFor="whatif-major-select" className="text-base font-medium">
+                  What major interests you?
+                </Label>
+                <Select value={selectedWhatIfMajorId || ""} onValueChange={(value) => setSelectedWhatIfMajorId(value === "none" ? null : value)}>
+                  <SelectTrigger id="whatif-major-select" className="h-12 text-base">
+                    <SelectValue placeholder="🎓 Choose a major to explore..." />
+                  </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">None</SelectItem>
-                    {mockPrograms.filter(p => p.type === 'Minor').map(program => (<SelectItem key={program.id} value={program.id}>{program.name}</SelectItem>))}
+                    <SelectItem value="none">
+                      <div className="flex items-center space-x-2">
+                        <Home className="h-4 w-4" />
+                        <span>Back to my current major ({studentInfo?.major})</span>
+                      </div>
+                    </SelectItem>
+                    {mockPrograms.filter(p => p.type === 'Major').map(program => (
+                      <SelectItem key={program.id} value={program.id}>
+                        <div className="flex flex-col items-start">
+                          <span className="font-medium">{program.name}</span>
+                          {program.description && (
+                            <span className="text-xs text-gray-500 mt-1">{program.description.substring(0, 80)}...</span>
+                          )}
+                        </div>
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
+                {selectedWhatIfMajorId && (
+                  <div className="p-3 bg-green-50 border border-green-200 rounded-md">
+                    <p className="text-sm text-green-800">
+                      <Info className="inline h-4 w-4 mr-1" />
+                      Great choice! Click "Analyze This Path" below to see your progress toward this major.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Minor Selection */}
+              <div className="space-y-3">
+                <Label htmlFor="whatif-minor-select" className="text-base font-medium">
+                  Want to add a minor? (Optional)
+                </Label>
+                <Select
+                  value={selectedWhatIfMinorId || ""}
+                  onValueChange={(value) => setSelectedWhatIfMinorId(value === "none" ? null : value)}
+                  disabled={!selectedWhatIfMajorId}
+                >
+                  <SelectTrigger id="whatif-minor-select" className="h-12 text-base">
+                    <SelectValue placeholder="📚 Choose a minor to add..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No minor</SelectItem>
+                    {mockPrograms.filter(p => p.type === 'Minor').map(program => (
+                      <SelectItem key={program.id} value={program.id}>
+                        <div className="flex flex-col items-start">
+                          <span className="font-medium">{program.name}</span>
+                          {program.description && (
+                            <span className="text-xs text-gray-500 mt-1">{program.description.substring(0, 80)}...</span>
+                          )}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {!selectedWhatIfMajorId && (
+                  <p className="text-sm text-gray-500">
+                    <AlertCircle className="inline h-4 w-4 mr-1" />
+                    Choose a major first to explore minor options
+                  </p>
+                )}
               </div>
             </CardContent>
-            <CardFooter className="flex justify-end space-x-2">
-              <Button variant="outline" onClick={() => { setSelectedWhatIfMajorId(null); setSelectedWhatIfMinorId(null); setWhatIfAuditResults(null); setCurrentWhatIfProgram(null); toast.info("What-If analysis cleared. Showing your actual program progress."); }}>Clear What-If</Button>
-              <Button onClick={() => {
-                if (!selectedWhatIfMajorId) { setWhatIfAuditResults(null); setCurrentWhatIfProgram(null); toast.info("Please select a 'What-If' Major to analyze."); return; }
-                const targetMajorProgram = mockPrograms.find(p => p.id === selectedWhatIfMajorId);
-                if (targetMajorProgram) {
-                  const currentCompletedCourseCodes = studentInfo?.completedCourses || [];
-                  const auditResults = calculateWhatIfAudit(currentCompletedCourseCodes, targetMajorProgram, mockCourses);
-                  setWhatIfAuditResults(auditResults); setCurrentWhatIfProgram(targetMajorProgram); toast.success(`What-If analysis complete for ${targetMajorProgram.name}.`);
-                } else { toast.error("Could not find the selected What-If program details."); setWhatIfAuditResults(null); setCurrentWhatIfProgram(null); }
-              }} disabled={!selectedWhatIfMajorId}>Analyze Selected Program(s)</Button>
+            <CardFooter className="flex justify-between">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setSelectedWhatIfMajorId(null);
+                  setSelectedWhatIfMinorId(null);
+                  setWhatIfAuditResults(null);
+                  setCurrentWhatIfProgram(null);
+                  toast.info("Cleared exploration. Back to your current major.");
+                }}
+                className="flex items-center space-x-2"
+              >
+                <RotateCcw className="h-4 w-4" />
+                <span>Clear & Start Over</span>
+              </Button>
+              <Button
+                onClick={() => {
+                  if (!selectedWhatIfMajorId) {
+                    toast.info("Please choose a major to explore first!");
+                    return;
+                  }
+                  const targetMajorProgram = mockPrograms.find(p => p.id === selectedWhatIfMajorId);
+                  if (targetMajorProgram) {
+                    const currentCompletedCourseCodes = studentInfo?.completedCourses || [];
+                    const auditResults = calculateWhatIfAudit(currentCompletedCourseCodes, targetMajorProgram, mockCourses);
+                    setWhatIfAuditResults(auditResults);
+                    setCurrentWhatIfProgram(targetMajorProgram);
+                    toast.success(`Analysis complete! See your progress toward ${targetMajorProgram.name} below.`);
+                  } else {
+                    toast.error("Oops! Couldn't find that program. Please try again.");
+                    setWhatIfAuditResults(null);
+                    setCurrentWhatIfProgram(null);
+                  }
+                }}
+                disabled={!selectedWhatIfMajorId}
+                className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700"
+                size="lg"
+              >
+                <TrendingUp className="h-4 w-4" />
+                <span>Analyze This Path</span>
+              </Button>
             </CardFooter>
           </Card>
 
           {currentWhatIfProgram && whatIfAuditResults && (
-            <WhatIfDegreeAuditView whatIfProgram={currentWhatIfProgram} whatIfRequirements={whatIfAuditResults} onFindCoursesForRequirement={handleFindCoursesForRequirement} />
+            <WhatIfDegreeAuditView whatIfProgram={currentWhatIfProgram} whatIfRequirements={whatIfAuditResults} />
           )}
+        </TabsContent>
 
-          <div className="mt-6 pt-6 border-t">
-            <h3 className="text-lg font-semibold text-muted-foreground">Course Catalogue</h3>
-            <p className="text-sm text-muted-foreground mt-2">
-              (Future area for browsing all available courses)
-            </p>
-          </div>
+        <TabsContent value="course-catalog">
+          <CourseCatalogView />
         </TabsContent>
       </Tabs>
 
-      <CourseSearch 
-        open={isCourseSearchOpen} 
+      <CourseSearch
+        open={isCourseSearchOpen}
         onOpenChange={setIsCourseSearchOpen}
-        termId={selectedSemesterId} 
-        onCourseSelected={(course, termIdFromSearch) => { 
-          if (courseSearchInitialFilters) {
-            toast.success(`${course.code} selected. Add it to a semester in your plan, or it will be added to your general planning list.`);
-            if (selectedSemesterId) { 
-              handleAddCourseToPlan(course, selectedSemesterId);
-            } else {
-               console.log("Course selected for requirement without a pre-selected target semester:", course);
-            }
-            setCourseSearchInitialFilters(null); 
-            setCourseSearchContextualTitle(null);
-          } else if (selectedSemesterId) {
+        termId={selectedSemesterId}
+        onCourseSelected={(course, termIdFromSearch) => {
+          if (selectedSemesterId) {
             handleAddCourseToPlan(course, selectedSemesterId);
           } else {
-            toast.error("Please select a semester to add this course.");
+            // When browsing courses without a specific semester, add to ScheduleContext
+            addCourse(course);
+            toast.success(`${course.code} added to your course list! You can assign it to a semester later.`);
           }
         }}
-        initialFilterCriteria={courseSearchInitialFilters}
-        contextualDrawerTitle={courseSearchContextualTitle}
+
       />
-      
+
       {viewingSemester && (<ViewScheduleDialog open={isViewScheduleOpen} onOpenChange={setIsViewScheduleOpen} semesterName={viewingSemester.name} courses={viewingSemester.courses} />)}
       <AddSemesterDialog open={isAddSemesterDialogOpen} onOpenChange={setIsAddSemesterDialogOpen} onAddSemester={handleAddSemesterSubmit} />
       <Dialog open={isMandatoryCoursesDialogOpen} onOpenChange={setIsMandatoryCoursesDialogOpen}><DialogContent className="sm:max-w-lg"><DialogHeader><DialogTitle>Remaining Mandatory Courses</DialogTitle><DialogDescription>These are the mandatory courses you still need to complete for your degree.</DialogDescription></DialogHeader><div className="py-4 space-y-3 max-h-[60vh] overflow-y-auto">{remainingMandatoryCourses.length > 0 ? (remainingMandatoryCourses.map(course => (<div key={course.code} className="border-b pb-2 last:border-0 last:pb-0"><h4 className="font-semibold">{course.code} - {course.name}</h4><p className="text-sm text-muted-foreground">Credits: {course.credits !== undefined ? course.credits : "N/A"}</p>{course.prerequisites && course.prerequisites.length > 0 && (<p className="text-sm text-muted-foreground">Prerequisites: {course.prerequisites.join(', ')}</p>)}</div>))) : (<p className="text-sm text-muted-foreground">All mandatory courses have been completed or are in progress.</p>)}</div><DialogFooter><Button variant="outline" onClick={() => setIsMandatoryCoursesDialogOpen(false)}>Close</Button></DialogFooter></DialogContent></Dialog>

@@ -8,13 +8,13 @@ import {
   Course,
 } from '../lib/types';
 import { calculateDegreeAudit } from '../lib/degree-audit-utils';
-import { mockStudent, mockDegree, mockCourses } from '../lib/mock-data';
+import { mockStudent, mockPrograms, mockCourses } from '../lib/mock-data';
 import Header from '../components/Header';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import CourseCatalogView from '../components/CourseCatalogView'; 
+import CourseCatalogView from '../components/CourseCatalogView';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { CheckCircle, XCircle, Clock, ListChecks, Info } from 'lucide-react';
@@ -27,7 +27,7 @@ const DegreeAuditPage: React.FC = () => {
 
   useEffect(() => {
     // In a real app, studentInfo, degree, and allCourses might come from context, props, or API calls.
-    const auditData = calculateDegreeAudit(mockStudent, mockDegree, mockCourses);
+    const auditData = calculateDegreeAudit(mockStudent, mockPrograms[0], mockCourses);
     setDegreeAuditData(auditData);
     setLoading(false);
   }, []);
@@ -58,7 +58,7 @@ const DegreeAuditPage: React.FC = () => {
         return 'outline';
     }
   };
-  
+
   const getStatusIcon = (status: DegreeAuditRuleStatus) => {
     switch (status) {
       case 'fulfilled':
@@ -105,7 +105,7 @@ const DegreeAuditPage: React.FC = () => {
               <CardHeader>
                 <CardTitle className="text-2xl font-bold text-gray-800">Degree Audit Summary</CardTitle>
             <CardDescription>
-              Student: {mockStudent.name} ({mockStudent.id}) | Degree: {mockDegree.name}
+              Student: {mockStudent.name} ({mockStudent.id}) | Degree: {mockPrograms[0].name}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -125,7 +125,7 @@ const DegreeAuditPage: React.FC = () => {
               <div className="p-3 bg-blue-50 border border-blue-200 rounded-md text-sm text-blue-700 space-y-1">
                 {degreeAuditData.summaryNotes.map((note, index) => (
                   <p key={index} className="flex items-start">
-                    <Info className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" /> 
+                    <Info className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
                     {note}
                   </p>
                 ))}
@@ -135,7 +135,7 @@ const DegreeAuditPage: React.FC = () => {
         </Card>
 
         <h2 className="text-xl font-semibold mb-4 text-gray-700">Requirement Breakdown</h2>
-        
+
         {Object.entries(groupedRequirements).map(([category, requirements]) => (
           <div key={category} className="mb-8 animate-slide-up" style={{animationDelay: `${Object.keys(groupedRequirements).indexOf(category) * 100}ms`}}>
             <h3 className="text-lg font-semibold capitalize text-gray-600 mb-3 border-b pb-2">{category.replace(/_/g, ' ')}</h3>
@@ -190,7 +190,7 @@ const DegreeAuditPage: React.FC = () => {
                               const courseDetail = mockCourses.find(c => c.id === courseIdOrCode || c.code === courseIdOrCode);
                               return (
                                 <li key={courseIdOrCode}>
-                                  <span 
+                                  <span
                                     onClick={() => handleViewCourseInCatalog(courseDetail ? courseDetail.code : courseIdOrCode)}
                                     className="cursor-pointer text-blue-600 hover:underline font-medium"
                                   >
@@ -211,9 +211,9 @@ const DegreeAuditPage: React.FC = () => {
         ))}
           </TabsContent>
           <TabsContent value="catalog">
-            <CourseCatalogView 
-              targetCourseCode={targetCourseInCatalog} 
-              onTargetCourseViewed={() => setTargetCourseInCatalog(null)} 
+            <CourseCatalogView
+              targetCourseCode={targetCourseInCatalog}
+              onTargetCourseViewed={() => setTargetCourseInCatalog(null)}
             />
           </TabsContent>
         </Tabs>
