@@ -181,10 +181,10 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({ lockedCours
                             title={`${item.courseCode} with ${item.instructor} in ${item.location}`}
                           >
                             {item.isCourseLocked && (
-                              <div className="absolute top-1 right-1 bg-white/20 rounded-full p-0.5">
+                              <div className="absolute top-1 right-1 bg-blue-600 rounded-full p-1 shadow-lg">
                                 <Lock
-                                  className="h-3 w-3 text-white"
-                                  style={{ filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.7))' }}
+                                  className="h-4 w-4 text-white fill-current"
+                                  style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))' }}
                                 />
                               </div>
                             )}

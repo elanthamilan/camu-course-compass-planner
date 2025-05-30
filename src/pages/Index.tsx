@@ -8,17 +8,17 @@ import { Sparkles } from 'lucide-react'; // Import Sparkles
 
 const Index = () => {
   const [isAIAdvisorOpen, setIsAIAdvisorOpen] = useState(false);
-  
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      
+
       <main className="px-4 pb-20">
         <CourseDashboard />
       </main>
-      
+
       <AIAdvisor open={isAIAdvisorOpen} onOpenChange={setIsAIAdvisorOpen} />
-      
+
       {/* Mobile Floating Action Button for AI Advisor on mobile */}
       <div className="fixed right-6 bottom-6 lg:hidden">
         <Button

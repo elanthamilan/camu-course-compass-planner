@@ -85,19 +85,19 @@ const Header: React.FC = () => {
                 <Link to="/cart">
                   <ShoppingCart className="h-4 w-4 mr-2" />
                   Cart
-                  {shoppingCart && (
+                  {shoppingCart && shoppingCart.length > 0 && (
                     <Badge
                       variant="destructive"
                       className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
                     >
-                      {shoppingCart.sections.length}
+                      {shoppingCart.length}
                     </Badge>
                   )}
                 </Link>
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>View your course registration cart{shoppingCart ? ` (${shoppingCart.sections.length} courses)` : ''}.</p>
+              <p>View your course registration cart{shoppingCart && shoppingCart.length > 0 ? ` (${shoppingCart.length} schedules)` : ''}.</p>
             </TooltipContent>
           </Tooltip>
           {/* AI Advisor Button for Desktop */}
@@ -191,18 +191,18 @@ const Header: React.FC = () => {
                       <Link to="/cart">
                         <ShoppingCart className="h-4 w-4 mr-2" />
                         Cart
-                        {shoppingCart && (
+                        {shoppingCart && shoppingCart.length > 0 && (
                           <Badge
                             variant="destructive"
                             className="absolute -top-1 -right-1 h-4 w-4 rounded-full p-0 flex items-center justify-center text-xs"
                           >
-                            {shoppingCart.sections.length}
+                            {shoppingCart.length}
                           </Badge>
                         )}
                       </Link>
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent side="right" align="center"><p>View your course registration cart{shoppingCart ? ` (${shoppingCart.sections.length} courses)` : ''}.</p></TooltipContent>
+                  <TooltipContent side="right" align="center"><p>View your course registration cart{shoppingCart && shoppingCart.length > 0 ? ` (${shoppingCart.length} schedules)` : ''}.</p></TooltipContent>
                 </Tooltip>
                  {/* Assuming Degree Audit link might be added later */}
                  {/* <Tooltip>

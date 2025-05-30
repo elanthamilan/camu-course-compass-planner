@@ -20,6 +20,7 @@ interface PrerequisiteGraphProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   allCourses: Course[]; // Pass all courses to avoid relying on global mockCourses directly in helper
+  embedded?: boolean; // New prop for embedded mode
 }
 
 // Helper function to find a course by its ID or code
@@ -35,10 +36,10 @@ const buildPrerequisiteTree = (
 ): CourseNode | null => {
   if (visited.has(courseId)) {
     const course = getCourseByIdOrCode(courseId, allCourses);
-    // If course is found but already visited, mark as circular. 
+    // If course is found but already visited, mark as circular.
     // If not found, it will be handled by the block below.
-    return course 
-      ? { course: { ...course, id: courseId, code: course.code || courseId }, prerequisites: [], isCircular: true } 
+    return course
+      ? { course: { ...course, id: courseId, code: course.code || courseId }, prerequisites: [], isCircular: true }
       : { course: { id: courseId, code: courseId }, prerequisites: [], isMissing: true, isCircular: true }; // Circular and missing
   }
 
@@ -53,7 +54,7 @@ const buildPrerequisiteTree = (
   const prerequisites: CourseNode[] = (course.prerequisites || [])
     .map(prereqId => buildPrerequisiteTree(prereqId, allCourses, new Set(visited))) // Pass a new Set for each branch
     .filter(node => node !== null) as CourseNode[];
-  
+
   // visited.delete(courseId); // Remove from visited when backtracking (not strictly necessary with new Set per branch)
 
   return { course, prerequisites };
@@ -64,6 +65,7 @@ const PrerequisiteGraph: React.FC<PrerequisiteGraphProps> = ({
   isOpen,
   onOpenChange,
   allCourses,
+  embedded = false,
 }) => {
   const [prerequisiteTreeData, setPrerequisiteTreeData] = useState<CourseNode | null>(null);
   const [targetCourse, setTargetCourse] = useState<Course | null>(null);
@@ -82,7 +84,7 @@ const PrerequisiteGraph: React.FC<PrerequisiteGraphProps> = ({
   const renderTreeNode = (node: CourseNode, level = 0): JSX.Element => (
     <li key={node.course.id + (node.isCircular ? '-circ' : '') + (node.isMissing ? '-miss' : '')} style={{ marginLeft: `${level * 20}px` }} className="mt-1">
       <div className="flex items-center">
-        <Badge 
+        <Badge
           variant={node.isCircular ? "destructive" : (node.isMissing ? "outline" : "secondary")}
           className="whitespace-nowrap"
         >
@@ -99,9 +101,27 @@ const PrerequisiteGraph: React.FC<PrerequisiteGraphProps> = ({
       )}
     </li>
   );
-  
-  if (!isOpen) { // Only render dialog if isOpen is true
+
+  if (!isOpen && !embedded) { // Only render dialog if isOpen is true, unless embedded
     return null;
+  }
+
+  const content = (
+    <div className="overflow-y-auto pr-2 py-4">
+      {prerequisiteTreeData ? (
+        <ul className="space-y-1">
+          {renderTreeNode(prerequisiteTreeData, 0)}
+        </ul>
+      ) : (
+        <p className="text-sm text-gray-500 text-center py-4">
+          {targetCourse ? `No prerequisite information found for ${targetCourse.code}, or it has no prerequisites.` : (courseId ? `Loading or course data not found for ${courseId}.` : 'No course selected.')}
+        </p>
+      )}
+    </div>
+  );
+
+  if (embedded) {
+    return content;
   }
 
   return (
@@ -116,17 +136,7 @@ const PrerequisiteGraph: React.FC<PrerequisiteGraphProps> = ({
             This tree shows the prerequisites for the selected course. Circular dependencies and missing course data are highlighted.
           </DialogDescription>
         </DialogHeader>
-        <div className="overflow-y-auto pr-2 flex-grow py-4">
-          {prerequisiteTreeData ? (
-            <ul className="space-y-1">
-              {renderTreeNode(prerequisiteTreeData, 0)}
-            </ul>
-          ) : (
-            <p className="text-sm text-gray-500 text-center py-4">
-              {targetCourse ? `No prerequisite information found for ${targetCourse.code}, or it has no prerequisites.` : (courseId ? `Loading or course data not found for ${courseId}.` : 'No course selected.')}
-            </p>
-          )}
-        </div>
+        {content}
         <DialogFooter className="mt-4">
           <Button variant="outline" onClick={() => onOpenChange(false)}>Close</Button>
         </DialogFooter>

@@ -124,6 +124,8 @@ const CourseCatalogView: React.FC<CourseCatalogViewProps> = ({ targetCourseCode,
     });
   };
 
+  // Removed handleAddCourse - Browse All Classes is a pure catalog view
+
   const filteredCourses = mockCourses.filter(course => {
     const term = searchTerm.toLowerCase();
     const matchesSearchTerm = term === "" ||
@@ -526,15 +528,17 @@ const CourseCatalogView: React.FC<CourseCatalogViewProps> = ({ targetCourseCode,
                     </div>
                   </div>
 
-                  <Button
-                     size="sm"
-                     variant={isComparing ? "destructive" : "outline"}
-                     className="mt-3 text-xs absolute top-2 right-2"
-                     onClick={(e) => { e.stopPropagation(); handleToggleCompare(course); }}
-                   >
-                    {isComparing ? <Minus className="h-3 w-3 mr-1"/> : <Plus className="h-3 w-3 mr-1"/>}
-                    <span className="hidden sm:inline">{isComparing ? 'Remove' : 'Compare'}</span>
-                  </Button>
+                  <div className="absolute top-2 right-2 flex flex-col gap-1">
+                    <Button
+                      size="sm"
+                      variant={isComparing ? "destructive" : "outline"}
+                      className="text-xs h-7 px-2"
+                      onClick={(e) => { e.stopPropagation(); handleToggleCompare(course); }}
+                    >
+                      {isComparing ? <Minus className="h-3 w-3 mr-1"/> : <Plus className="h-3 w-3 mr-1"/>}
+                      <span className="hidden sm:inline">{isComparing ? 'Remove' : 'Compare'}</span>
+                    </Button>
+                  </div>
                 </div>
               );
             })}
@@ -560,11 +564,17 @@ const CourseCatalogView: React.FC<CourseCatalogViewProps> = ({ targetCourseCode,
 
         {selectedCourse && (
           <div id="course-detail-view" className="w-full md:w-1/3 p-4 border rounded-lg bg-white shadow-xl sticky top-24 max-h-[calc(100vh-120px)] overflow-y-auto transition-all duration-300 ease-in-out animate-slide-in-right">
-            <Button onClick={() => setSelectedCourse(null)} variant="ghost" size="icon" className="mb-2 float-right h-7 w-7">
-              <XIcon className="h-4 w-4" />
-            </Button>
-            <h3 className="text-xl font-bold text-primary mb-1">{selectedCourse.code}</h3>
-            <h4 className="text-lg font-semibold text-gray-700 mb-2">{selectedCourse.name}</h4>
+            <div className="flex justify-between items-start mb-3">
+              <div className="flex-1">
+                <h3 className="text-xl font-bold text-primary mb-1">{selectedCourse.code}</h3>
+                <h4 className="text-lg font-semibold text-gray-700">{selectedCourse.name}</h4>
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={() => setSelectedCourse(null)} variant="ghost" size="icon" className="h-7 w-7">
+                  <XIcon className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
             <div className="space-y-1 text-sm mb-3">
               <p><strong>Credits:</strong> {selectedCourse.credits}</p>
               <p><strong>Subject:</strong> {selectedCourse.department || 'N/A'}</p>

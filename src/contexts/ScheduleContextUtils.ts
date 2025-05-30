@@ -36,36 +36,50 @@ export const isSectionMeetingConflict = (meetingA: SectionSchedule, meetingB: Se
 };
 
 export const isSectionConflictWithBusyTimes = (section: CourseSection, busyTimes: BusyTime[]): boolean => {
-  // A single CourseSection is assumed to have one meeting time/days directly on it.
-  // If a CourseSection could have multiple schedules (e.g. MWF and TTh lab),
-  // then section.schedule would need to be an array, and the logic would iterate it.
-  // Based on current CourseSection type, schedule details are direct properties.
-  if (!section || !section.days || !section.startTime || !section.endTime || !busyTimes) return false;
+  // CourseSection has a schedule array of SectionSchedule objects
+  if (!section || !section.schedule || section.schedule.length === 0 || !busyTimes) return false;
 
-  for (const busyTime of busyTimes) {
-    if (!busyTime.days || !busyTime.startTime || !busyTime.endTime) continue; // Skip invalid busy time entry
+  for (const sectionSchedule of section.schedule) {
+    if (!sectionSchedule.days || !sectionSchedule.startTime || !sectionSchedule.endTime) continue;
 
-    // section.days is already string[] based on CourseSection type from lib/types.ts
-    // and mock data. No need for split(',').
-    if (doDaysOverlap(section.days, busyTime.days) &&
-        doTimesOverlap(section.startTime, section.endTime, busyTime.startTime, busyTime.endTime)) {
-      return true;
+    // Convert comma-separated days string to array
+    const sectionDays = sectionSchedule.days.split(',').map(d => d.trim());
+
+    for (const busyTime of busyTimes) {
+      if (!busyTime.days || !busyTime.startTime || !busyTime.endTime) continue; // Skip invalid busy time entry
+
+      if (doDaysOverlap(sectionDays, busyTime.days) &&
+          doTimesOverlap(sectionSchedule.startTime, sectionSchedule.endTime, busyTime.startTime, busyTime.endTime)) {
+        return true;
+      }
     }
   }
-  return false; 
+  return false;
 };
 
 export const isSectionConflictWithOtherSections = (sectionA: CourseSection, otherSections: CourseSection[]): boolean => {
-  // Assuming sectionA and sections in otherSections have schedule details directly on them.
-  if (!sectionA || !sectionA.days || !sectionA.startTime || !sectionA.endTime || !otherSections) return false;
+  // CourseSection has a schedule array of SectionSchedule objects
+  if (!sectionA || !sectionA.schedule || sectionA.schedule.length === 0 || !otherSections) return false;
 
   for (const sectionB of otherSections) {
-    if (!sectionB || !sectionB.days || !sectionB.startTime || !sectionB.endTime || sectionA.id === sectionB.id) continue;
+    if (!sectionB || !sectionB.schedule || sectionB.schedule.length === 0 || sectionA.id === sectionB.id) continue;
 
-    // section.days is already string[]
-    if (doDaysOverlap(sectionA.days, sectionB.days) &&
-        doTimesOverlap(sectionA.startTime, sectionA.endTime, sectionB.startTime, sectionB.endTime)) {
-      return true;
+    // Check all schedule combinations between sectionA and sectionB
+    for (const scheduleA of sectionA.schedule) {
+      if (!scheduleA.days || !scheduleA.startTime || !scheduleA.endTime) continue;
+
+      const daysA = scheduleA.days.split(',').map(d => d.trim());
+
+      for (const scheduleB of sectionB.schedule) {
+        if (!scheduleB.days || !scheduleB.startTime || !scheduleB.endTime) continue;
+
+        const daysB = scheduleB.days.split(',').map(d => d.trim());
+
+        if (doDaysOverlap(daysA, daysB) &&
+            doTimesOverlap(scheduleA.startTime, scheduleA.endTime, scheduleB.startTime, scheduleB.endTime)) {
+          return true;
+        }
+      }
     }
   }
   return false;

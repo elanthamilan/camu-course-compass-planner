@@ -440,6 +440,162 @@ export const mockCourses: Course[] = [
         notes: "Studio fee required"
       }
     ]
+  },
+  // Additional courses for 8 courses per semester
+  {
+    id: "hist101",
+    code: "HIST101",
+    name: "World History I",
+    credits: 3,
+    department: "History",
+    college: "College of Liberal Arts",
+    campus: "Main Campus",
+    courseCareer: "Undergraduate",
+    attributes: ["Humanities", "Cultural Diversity"],
+    keywords: ["history", "world", "culture"],
+    sections: [
+      {
+        id: "hist101-001",
+        crn: "10101",
+        instructor: "Dr. Time Keeper",
+        sectionNumber: "001",
+        schedule: [{ days: "T,Th", startTime: "09:00", endTime: "10:30", location: "Humanities 201" }],
+        location: "Main Campus",
+        maxSeats: 35,
+        availableSeats: 12,
+        term: "Fall 2024",
+        campus: "Main Campus",
+        courseCareer: "Undergraduate",
+        classStatus: "Open",
+        instructionMode: "In-Person",
+        academicSession: "Full Term",
+        classStartDate: "2024-08-26"
+      }
+    ]
+  },
+  {
+    id: "psyc101",
+    code: "PSYC101",
+    name: "Introduction to Psychology",
+    credits: 3,
+    department: "Psychology",
+    college: "College of Social Sciences",
+    campus: "Main Campus",
+    courseCareer: "Undergraduate",
+    attributes: ["Social Science", "Behavioral Science"],
+    keywords: ["psychology", "behavior", "mind"],
+    sections: [
+      {
+        id: "psyc101-001",
+        crn: "10201",
+        instructor: "Dr. Mind Reader",
+        sectionNumber: "001",
+        schedule: [{ days: "M,W,F", startTime: "11:00", endTime: "12:00", location: "Social Sciences 101" }],
+        location: "Main Campus",
+        maxSeats: 40,
+        availableSeats: 8,
+        term: "Fall 2024",
+        campus: "Main Campus",
+        courseCareer: "Undergraduate",
+        classStatus: "Open",
+        instructionMode: "In-Person",
+        academicSession: "Full Term",
+        classStartDate: "2024-08-26"
+      }
+    ]
+  },
+  {
+    id: "soc101",
+    code: "SOC101",
+    name: "Introduction to Sociology",
+    credits: 3,
+    department: "Sociology",
+    college: "College of Social Sciences",
+    campus: "Main Campus",
+    courseCareer: "Undergraduate",
+    attributes: ["Social Science", "Cultural Studies"],
+    keywords: ["sociology", "society", "culture"],
+    sections: [
+      {
+        id: "soc101-001",
+        crn: "10301",
+        instructor: "Dr. Social Network",
+        sectionNumber: "001",
+        schedule: [{ days: "T,Th", startTime: "14:00", endTime: "15:30", location: "Social Sciences 201" }],
+        location: "Main Campus",
+        maxSeats: 35,
+        availableSeats: 15,
+        term: "Fall 2024",
+        campus: "Main Campus",
+        courseCareer: "Undergraduate",
+        classStatus: "Open",
+        instructionMode: "In-Person",
+        academicSession: "Full Term",
+        classStartDate: "2024-08-26"
+      }
+    ]
+  },
+  {
+    id: "span101",
+    code: "SPAN101",
+    name: "Elementary Spanish I",
+    credits: 4,
+    department: "World Languages",
+    college: "College of Liberal Arts",
+    campus: "Main Campus",
+    courseCareer: "Undergraduate",
+    attributes: ["Foreign Language", "Cultural Studies"],
+    keywords: ["spanish", "language", "culture"],
+    sections: [
+      {
+        id: "span101-001",
+        crn: "10401",
+        instructor: "Prof. Hola Mundo",
+        sectionNumber: "001",
+        schedule: [{ days: "M,W,F", startTime: "08:00", endTime: "09:00", location: "Language Center 101" }],
+        location: "Main Campus",
+        maxSeats: 25,
+        availableSeats: 3,
+        term: "Fall 2024",
+        campus: "Main Campus",
+        courseCareer: "Undergraduate",
+        classStatus: "Open",
+        instructionMode: "In-Person",
+        academicSession: "Full Term",
+        classStartDate: "2024-08-26"
+      }
+    ]
+  },
+  {
+    id: "pe101",
+    code: "PE101",
+    name: "Physical Education - Fitness",
+    credits: 1,
+    department: "Physical Education",
+    college: "College of Health Sciences",
+    campus: "Main Campus",
+    courseCareer: "Undergraduate",
+    attributes: ["Physical Education", "Health"],
+    keywords: ["fitness", "health", "exercise"],
+    sections: [
+      {
+        id: "pe101-001",
+        crn: "10501",
+        instructor: "Coach Fit",
+        sectionNumber: "001",
+        schedule: [{ days: "T,Th", startTime: "07:00", endTime: "08:00", location: "Recreation Center" }],
+        location: "Main Campus",
+        maxSeats: 30,
+        availableSeats: 20,
+        term: "Fall 2024",
+        campus: "Main Campus",
+        courseCareer: "Undergraduate",
+        classStatus: "Open",
+        instructionMode: "In-Person",
+        academicSession: "Full Term",
+        classStartDate: "2024-08-26"
+      }
+    ]
   }
 ];
 

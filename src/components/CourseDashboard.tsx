@@ -17,7 +17,7 @@ import { Label } from "@/components/ui/label";
 import { calculateWhatIfAudit } from '../lib/degree-audit-utils';
 import WhatIfDegreeAuditView from './WhatIfDegreeAuditView';
 import { Course, AcademicProgram, DegreeRequirement } from "../lib/types";
-import CourseSearch from './CourseSearch';
+import CourseSearchModal from './CourseSearchModal';
 import ViewScheduleDialog from './ViewScheduleDialog';
 import AddSemesterDialog from './AddSemesterDialog';
 import CourseCatalogView from './CourseCatalogView';
@@ -43,24 +43,39 @@ const initialYearsData: YearData[] = [
     schedules: 13,
     semesters: [
       {
-        id: "Summer2024", name: "Summer 2024", creditsSelected: 9, courses: [
+        id: "Summer2024", name: "Summer 2024", creditsSelected: 24, courses: [
           { id: "cs101", code: "CS101", name: "Introduction to Computer Science", credits: 3, days: "MWF", time: "09:00", prerequisites: [] },
           { id: "math105", code: "MATH105", name: "Pre-Calculus", credits: 3, days: "MWF", time: "08:00", prerequisites: [] },
-          { id: "eng234", code: "ENG234", name: "Composition II", credits: 3, days: "MW", time: "10:00", prerequisites: ["ENG100"] }
+          { id: "eng234", code: "ENG234", name: "Composition II", credits: 3, days: "MW", time: "10:00", prerequisites: ["ENG100"] },
+          { id: "hist101", code: "HIST101", name: "World History I", credits: 3, days: "TTh", time: "09:00", prerequisites: [] },
+          { id: "psyc101", code: "PSYC101", name: "Introduction to Psychology", credits: 3, days: "MWF", time: "11:00", prerequisites: [] },
+          { id: "soc101", code: "SOC101", name: "Introduction to Sociology", credits: 3, days: "TTh", time: "14:00", prerequisites: [] },
+          { id: "span101", code: "SPAN101", name: "Elementary Spanish I", credits: 4, days: "MWF", time: "08:00", prerequisites: [] },
+          { id: "pe101", code: "PE101", name: "Physical Education - Fitness", credits: 1, days: "TTh", time: "07:00", prerequisites: [] }
         ]
       },
       {
-        id: "Fall2024", name: "Fall 2024", creditsSelected: 8, courses: [ // Corrected creditsSelected from 11 to 8 (4+3+1)
+        id: "Fall2024", name: "Fall 2024", creditsSelected: 25, courses: [
           { id: "phys210", code: "PHYS210", name: "Physics I: Mechanics", credits: 4, days: "MWF", time: "13:00", prerequisites: [] },
           { id: "phil101", code: "PHIL101", name: "Introduction to Logic", credits: 3, days: "MWF", time: "11:00", prerequisites: [] },
-          { id: "univ100", code: "UNIV100", name: "University Seminar", credits: 1, days: "W", time: "14:00", prerequisites: [] }
+          { id: "univ100", code: "UNIV100", name: "University Seminar", credits: 1, days: "W", time: "14:00", prerequisites: [] },
+          { id: "cs350", code: "CS350", name: "Database Systems", credits: 3, days: "MWF", time: "14:00", prerequisites: [] },
+          { id: "art200", code: "ART200", name: "Digital Art Studio", credits: 3, days: "MW", time: "10:00", prerequisites: [] },
+          { id: "eng101", code: "ENG101", name: "Composition I", credits: 3, days: "MWF", time: "09:00", prerequisites: [] },
+          { id: "math201", code: "MATH201", name: "Calculus I", credits: 4, days: "MWF", time: "08:00", prerequisites: [] },
+          { id: "bio101", code: "BIO101", name: "Introduction to Biology", credits: 4, days: "MWF", time: "09:00", prerequisites: [] }
         ]
       },
       {
-        id: "Spring2025", name: "Spring 2025", creditsSelected: 11, courses: [ // Corrected creditsSelected from 10 to 11 (3+4+4)
+        id: "Spring2025", name: "Spring 2025", creditsSelected: 26, courses: [
           { id: "econ101", code: "ECON101", name: "Principles of Microeconomics", credits: 3, days: "MWF", time: "10:00", prerequisites: [] },
-          { id: "bio101", code: "BIO101", name: "Introduction to Biology", credits: 4, days: "MWF", time: "09:00", prerequisites: [] },
-          { id: "chem101", code: "CHEM101", name: "General Chemistry", credits: 4, days: "MWF", time: "13:00", prerequisites: [] }
+          { id: "chem101", code: "CHEM101", name: "General Chemistry", credits: 4, days: "MWF", time: "13:00", prerequisites: [] },
+          { id: "ds442", code: "DS442", name: "Artificial Intelligence", credits: 3, days: "TR", time: "13:35", prerequisites: ["CMPSC221"] },
+          { id: "grad500", code: "GRAD500", name: "Advanced Research Methods", credits: 4, days: "W", time: "18:00", prerequisites: [] },
+          { id: "test100", code: "TEST100", name: "Test Base Course", credits: 3, days: "MWF", time: "10:00", prerequisites: [] },
+          { id: "test200", code: "TEST200", name: "Test Mid Course", credits: 3, days: "TTh", time: "11:00", prerequisites: ["TEST100"] },
+          { id: "test300", code: "TEST300", name: "Test Top Course", credits: 3, days: "MWF", time: "15:00", prerequisites: ["TEST200"] },
+          { id: "circ1", code: "CIRC1", name: "Circular 1", credits: 3, days: "TTh", time: "16:00", prerequisites: ["CIRC2"] }
         ]
       }
     ]
@@ -183,7 +198,7 @@ const CourseDashboard: React.FC = () => {
         semesters: year.semesters.map(semester => {
           if (semester.id === semesterId) {
             if (semester.courses.some(c => c.id === courseToAdd.id)) {
-              toast.warn(`${courseToAdd.code} is already in ${semester.name}.`);
+              toast.info(`${courseToAdd.code} is already in ${semester.name}.`);
               return semester;
             }
             const updatedCourses = [...semester.courses, courseToAdd];
@@ -264,18 +279,17 @@ const CourseDashboard: React.FC = () => {
   };
 
   return (
-    <div className="py-6 space-y-6">
+    <div className="mx-auto px-4 max-w-7xl space-y-6">
       {/* Minimal Header - Full Width */}
-      <div className="flex flex-col space-y-4 sm:flex-row sm:space-y-0 items-center justify-between py-6 animate-fade-in w-full mb-6">
+      <div className="flex flex-col space-y-4 sm:flex-row sm:space-y-0 items-center justify-between py-6 animate-fade-in w-full">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Academic Planning</h1>
           <p className="text-gray-600">Plan your courses and track your progress</p>
         </div>
       </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-        {/* Progress Toward Graduation Card */}
-        <Card>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+          {/* Progress Toward Graduation Card */}
+          <Card>
           <CardHeader className="pb-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
@@ -349,9 +363,9 @@ const CourseDashboard: React.FC = () => {
                         </div>
                       )}
 
-                      <Button variant="outline" size="sm" onClick={() => setIsProgramCreditsDialogOpen(true)} className="w-full mt-2">
+                      <Button variant="outline" size="sm" onClick={() => handleOpenCourseSearch("")} className="w-full mt-2">
                         <Search className="h-4 w-4 mr-2" />
-                        Browse All Available Classes
+                        Add Courses
                       </Button>
                     </div>
                   </AccordionContent>
@@ -593,40 +607,43 @@ const CourseDashboard: React.FC = () => {
                             )}
                           </CardContent>
 
-                          <CardFooter className="pt-3 space-y-2">
-                            <Button
-                              onClick={() => handleOpenCourseSearch(semester.id)}
-                              variant="outline"
-                              size="sm"
-                              className="w-full"
-                            >
-                              <PlusCircle size={14} className="mr-2" />
-                              Add Courses
-                            </Button>
+                          <CardFooter className="pt-3">
+                            <div className="w-full space-y-3">
+                              <Button
+                                onClick={() => handleOpenCourseSearch(semester.id)}
+                                variant="outline"
+                                size="sm"
+                                className="w-full"
+                              >
+                                <PlusCircle size={14} className="mr-2" />
+                                Add Courses
+                              </Button>
 
-                            {/* Course Planning Hints */}
-                            {semester.courses.length === 0 && (
-                              <div className="text-xs text-gray-500 mt-2 p-2 bg-blue-50 rounded border-dashed border border-blue-200">
-                                💡 <strong>Tip:</strong> Use the 'Add Courses' button above, or find courses in the 'Course Catalog' or your 'Degree Audit' sections to plan your semester.
-                              </div>
-                            )}
-                            <Button
-                              onClick={() => handleOpenSchedulePage(semester.id)}
-                              variant="default"
-                              size="sm"
-                              className="w-full"
-                              disabled={semester.courses.length === 0}
-                            >
-                              <Zap size={14} className="mr-2" />
-                              {semester.courses.length > 0 ? "Build Conflict-Free Schedule" : "Add Courses First"}
-                            </Button>
+                              {/* Course Planning Hints */}
+                              {semester.courses.length === 0 && (
+                                <div className="text-xs text-gray-500 p-2 bg-blue-50 rounded border-dashed border border-blue-200">
+                                  💡 <strong>Tip:</strong> Use the 'Add Courses' button above, or find courses in the 'Course Catalog' or your 'Degree Audit' sections to plan your semester.
+                                </div>
+                              )}
 
-                            {/* Schedule Planning Info */}
-                            {semester.courses.length > 0 && (
-                              <div className="text-xs text-green-600 mt-1 text-center">
-                                ✅ Ready to create schedule with {semester.courses.length} courses
-                              </div>
-                            )}
+                              <Button
+                                onClick={() => handleOpenSchedulePage(semester.id)}
+                                variant="default"
+                                size="sm"
+                                className="w-full"
+                                disabled={semester.courses.length === 0}
+                              >
+                                <Zap size={14} className="mr-2" />
+                                {semester.courses.length > 0 ? "Build Conflict-Free Schedule" : "Add Courses First"}
+                              </Button>
+
+                              {/* Schedule Planning Info */}
+                              {semester.courses.length > 0 && (
+                                <div className="text-xs text-green-600 text-center">
+                                  ✅ Ready to create schedule with {semester.courses.length} courses
+                                </div>
+                              )}
+                            </div>
                           </CardFooter>
                         </Card>
                       ))}
@@ -834,11 +851,11 @@ const CourseDashboard: React.FC = () => {
         </TabsContent>
       </Tabs>
 
-      <CourseSearch
+      <CourseSearchModal
         open={isCourseSearchOpen}
         onOpenChange={setIsCourseSearchOpen}
         termId={selectedSemesterId}
-        onCourseSelected={(course, termIdFromSearch) => {
+        onCourseSelected={(course) => {
           if (selectedSemesterId) {
             handleAddCourseToPlan(course, selectedSemesterId);
           } else {
@@ -847,7 +864,6 @@ const CourseDashboard: React.FC = () => {
             toast.success(`${course.code} added to your course list! You can assign it to a semester later.`);
           }
         }}
-
       />
 
       {viewingSemester && (<ViewScheduleDialog open={isViewScheduleOpen} onOpenChange={setIsViewScheduleOpen} semesterName={viewingSemester.name} courses={viewingSemester.courses} />)}

@@ -40,13 +40,7 @@ const TermHeader = ({ view, setView, onCompareClick }: TermHeaderProps) => {
             </TabsList>
           </Tabs>
 
-          {/* Compare and AI Advisor buttons near the tabs */}
-          {onCompareClick && (
-            <Button variant="outline" onClick={onCompareClick} size="sm" className="whitespace-nowrap">
-              <ArrowLeftRight className="h-4 w-4 mr-1.5" />
-              <span className="hidden sm:inline">Compare</span>
-            </Button>
-          )}
+
 
 
         </div>
