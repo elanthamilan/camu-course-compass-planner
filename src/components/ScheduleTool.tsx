@@ -29,65 +29,93 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { mockCourses } from "@/lib/mock-data";
 import CourseSearchModal from "./CourseSearchModal";
 
+/**
+ * Props for the ScheduleTool component.
+ */
 interface ScheduleToolProps {
+  /**
+   * The ID of the semester for which schedules are being managed.
+   * Currently not directly used in the component's logic but could be for future enhancements
+   * like fetching term-specific data.
+   */
   semesterId?: string | null;
 }
 
+/**
+ * Main component for the scheduling tool, providing UI for course selection,
+ * busy time management, schedule generation, and viewing.
+ */
 const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) => {
   const navigate = useNavigate();
   const {
-    courses,
-    busyTimes,
-    selectedSchedule,
-    generateSchedules,
-    removeCourse,
-    schedules,
-    selectSchedule,
-    addSchedule,
-    currentTerm,
-    allCourses = mockCourses,
-    selectedSectionMap,
-    updateSelectedSectionMap,
-    excludeHonorsMap,
-    updateExcludeHonorsMap,
-    removeSchedule,
-    setSchedules,
-    studentInfo,
-    addCourse, // addCourse is from useSchedule context
-    moveToCart,
+    courses, // Courses selected by the user for planning
+    busyTimes, // User-defined busy times
+    selectedSchedule, // The currently active schedule being viewed
+    generateSchedules, // Function from context to generate schedules
+    removeCourse, // Function from context to remove a course
+    schedules, // List of all generated/saved schedules
+    selectSchedule, // Function from context to select a schedule
+    addSchedule, // Function from context to add a new (e.g., imported) schedule
+    currentTerm, // The currently active academic term
+    allCourses = mockCourses, // Full catalog of courses; defaults to mock if not provided by context
+    selectedSectionMap, // Map of user-selected specific sections for each course
+    updateSelectedSectionMap, // Func to update selected sections
+    excludeHonorsMap, // Map of user preference to exclude honors sections
+    updateExcludeHonorsMap, // Func to update honors exclusion
+    removeSchedule, // Function from context to delete a schedule
+    setSchedules, // Function from context to manually set all schedules (e.g., for rename)
+    studentInfo, // Information about the current student
+    addCourse, // Function from context to add a course to the planning list
+    moveToCart, // Function from context to move selected schedule to cart
   } = useSchedule();
 
-  const completedCourseCodes = studentInfo?.completedCourses || [];
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const completedCourseCodes = studentInfo?.completedCourses || []; // Student's completed courses for prerequisite checks
+  const fileInputRef = React.useRef<HTMLInputElement>(null); // Ref for file input used in schedule import
+
+  // UI State
   const [isCourseSearchDrawerOpen, setIsCourseSearchDrawerOpen] = useState(false);
-  const [view, setView] = useState("calendar");
+  const [view, setView] = useState<"calendar" | "list">("calendar"); // Current view mode: 'calendar' or 'list'
   const [isAddBusyTimeOpen, setIsAddBusyTimeOpen] = useState(false);
   const [isEditBusyTimeOpen, setIsEditBusyTimeOpen] = useState(false);
-  const [selectedBusyTime, setSelectedBusyTime] = useState(null);
-  const [isAIAdvisorOpen, setIsAIAdvisorOpen] = useState(false); // Re-added AIAdvisor state
+  const [selectedBusyTime, setSelectedBusyTime] = useState<BusyTimeType | null>(null); // Busy time selected for editing
+  const [isAIAdvisorOpen, setIsAIAdvisorOpen] = useState(false);
   const [isCompareOpen, setIsCompareOpen] = useState(false);
   const [isPreferencesOpen, setIsPreferencesOpen] = useState(false);
-  const [selectedCourses, setSelectedCourses] = useState<string[]>([]);
-  const [expandedCourses, setExpandedCourses] = useState<Record<string, boolean>>({});
-  const [lockedCourses, setLockedCourses] = useState<string[]>([]);
-  const [isGenerating, setIsGenerating] = useState(false);
 
+  // Course Selection and Configuration State
+  const [selectedCourses, setSelectedCourses] = useState<string[]>([]); // IDs of courses checked by the user for generation
+  const [expandedCourses, setExpandedCourses] = useState<Record<string, boolean>>({}); // Which courses' details are expanded
+  const [lockedCourses, setLockedCourses] = useState<string[]>([]); // IDs of courses whose sections are locked in the current schedule
+
+  const [isGenerating, setIsGenerating] = useState(false); // Whether schedule generation is in progress
+
+  // Effect to initialize `selectedCourses` based on `courses` from context.
+  // This ensures that if courses are added/removed externally, the checkboxes reflect that.
   useEffect(() => {
     setSelectedCourses(courses.map(course => course.id));
   }, [courses]);
 
-  // Generate initial schedules when courses are first loaded and some are selected
+  // Effect for initial automatic schedule generation.
+  // This attempts to generate schedules when the component mounts if courses are present
+  // and no schedules have been generated yet.
+  // TODO: Consider making auto-generation more explicit or configurable by the user.
   useEffect(() => {
-    if (courses.length > 0 && schedules.length === 0 && selectedCourses.length > 0) {
-      // Only auto-generate once when courses are first loaded and some are selected
+    if (courses.length > 0 && schedules.length === 0 && selectedCourses.length > 0 && !isGenerating) {
+      // Only auto-generate if there are courses, no existing schedules, selected courses for generation, and not already generating.
+      // This aims to provide an initial set of schedules for the user.
       const timeoutId = setTimeout(() => {
+        // console.log("Attempting initial automatic schedule generation."); // For debugging
         handleGenerateSchedule();
-      }, 500); // Increased timeout to ensure state is stable
+      }, 500); // Timeout to allow other initial state updates to settle.
 
       return () => clearTimeout(timeoutId);
     }
-  }, [courses.length, schedules.length]); // Removed selectedCourses.length to prevent circular dependency
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [courses.length, schedules.length]); // Dependencies: re-run if course count or schedule count changes.
+                                          // selectedCourses.length was removed to avoid potential circular updates if it was set by this effect.
+                                          // isGenerating is added to avoid re-triggering if already generating.
 
+  /** Toggles the selection state of a course for schedule generation. */
   const handleCourseToggle = (courseId: string) => {
     setSelectedCourses(prev => {
       if (prev.includes(courseId)) {
@@ -98,53 +126,75 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
     });
   };
 
-  const handleEditBusyTime = (busyTime: any) => {
+  /** Opens the dialog to edit a specific busy time. */
+  const handleEditBusyTime = (busyTime: BusyTimeType) => {
     setSelectedBusyTime(busyTime);
     setIsEditBusyTimeOpen(true);
   };
 
+  /**
+   * Initiates the schedule generation process.
+   * It gathers selected courses and any locked sections from the currently viewed schedule
+   * to pass to the `generateSchedules` context function.
+   */
   const handleGenerateSchedule = () => {
     if (selectedCourses.length === 0) {
       toast.error("Please select at least one course to generate schedules.");
       return;
     }
 
-    setIsGenerating(true);
+    setIsGenerating(true); // Set loading state
 
     try {
-      const fixedSectionsForGeneration: CourseSection[] = [];
+      let fixedSectionsForGeneration: CourseSection[] = [];
+      // If a schedule is selected and there are locked courses,
+      // try to use the sections of those locked courses from the *selectedSchedule* as fixed.
+      // This means locking a course effectively locks its specific section *from the current view*.
       if (selectedSchedule && lockedCourses.length > 0) {
-        const selectedLockedCourseIds = lockedCourses.filter(lcId => selectedCourses.includes(lcId));
+        const selectedAndLockedCourseIds = lockedCourses.filter(lcId => selectedCourses.includes(lcId));
+
         selectedSchedule.sections.forEach(section => {
           const courseIdOfSection = section.id.split('-')[0];
-          if (selectedLockedCourseIds.includes(courseIdOfSection)) {
+          if (selectedAndLockedCourseIds.includes(courseIdOfSection)) {
             fixedSectionsForGeneration.push(section);
           }
         });
-        if (fixedSectionsForGeneration.length !== selectedLockedCourseIds.length) {
-          toast.info("Some locked courses were part of the selection for generation but not found in the current base schedule. They will be scheduled dynamically if possible.");
+
+        // Notify if some locked courses (that were also selected for generation)
+        // couldn't find their sections in the current `selectedSchedule`.
+        // This might happen if the `selectedSchedule` changed after locking.
+        if (fixedSectionsForGeneration.length < selectedAndLockedCourseIds.length) {
+          const missingFixedCourses = selectedAndLockedCourseIds.filter(
+            lcId => !fixedSectionsForGeneration.some(fs => fs.id.startsWith(lcId))
+          );
+          if (missingFixedCourses.length > 0) {
+            toast.warn(`Sections for locked courses (${missingFixedCourses.join(', ')}) were not found in the current base schedule and will be scheduled dynamically if possible.`);
+          }
         }
       }
 
+      // Call the context function to generate schedules
       generateSchedules(selectedCourses, fixedSectionsForGeneration);
 
-      // Reset generating state immediately since generateSchedules is synchronous
-      setIsGenerating(false);
     } catch (error) {
       console.error("Error generating schedules:", error);
-      toast.error("Failed to generate schedules. Please try again.");
-      setIsGenerating(false);
+      toast.error("An unexpected error occurred while generating schedules.");
+    } finally {
+      setIsGenerating(false); // Reset loading state
     }
   };
 
+  /** Toggles the expanded/collapsed state of a course's detail view. */
   const toggleCourseExpanded = (courseId: string) => {
     setExpandedCourses(prev => ({ ...prev, [courseId]: !prev[courseId] }));
   };
 
+  /** Removes a course from the planning list using the context function. */
   const handleDeleteCourse = (courseId: string) => {
-    removeCourse(courseId);
+    removeCourse(courseId); // Context function handles toast
   };
 
+  /** Exports the currently selected schedule to a JSON file. */
   const handleExportSchedule = () => {
     if (!selectedSchedule) { toast.error("No schedule selected to export."); return; }
     if (!currentTerm) { toast.error("Current term context is not available. Cannot export."); return; }
@@ -154,23 +204,25 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
       totalCredits: selectedSchedule.totalCredits,
     };
     downloadJson(exportedScheduleData, `${selectedSchedule.name.replace(/\s+/g, '_')}_${exportedScheduleData.termId}.json`);
-    toast.success("Schedule exported successfully!");
+    toast.success(`Schedule "${selectedSchedule.name}" exported successfully!`);
   };
 
+  /** Triggers the hidden file input for schedule import. */
   const handleImportButtonClick = () => {
-    fileInputRef.current?.click();
+    fileInputRef.current?.click(); // Open file dialog
   };
 
+  /** Moves the selected schedule to the cart and navigates to the cart page. */
   const handleAddToCart = () => {
     if (!selectedSchedule) {
       toast.error("No schedule selected to add to cart.");
       return;
     }
-    moveToCart();
-    // Navigate to cart page after adding to cart
-    navigate("/cart");
+    moveToCart(); // Context function handles toast
+    navigate("/cart"); // Navigate after adding
   };
 
+  /** Handles the file selection for schedule import, parsing and validating the file. */
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) { toast.error("No file selected."); return; }
@@ -213,31 +265,51 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
   };
 
   const handleDuplicateSchedule = () => {
-    if (!selectedSchedule) { toast.error("No schedule option selected to copy."); return; }
+    if (!selectedSchedule) { toast.error("No schedule selected to copy."); return; }
     const newSchedule: ScheduleType = { ...JSON.parse(JSON.stringify(selectedSchedule)), id: uuidv4(), name: `${selectedSchedule.name} (Copy)`, };
-    addSchedule(newSchedule);
-    selectSchedule(newSchedule.id);
-    toast.success(`Schedule option saved as "${newSchedule.name}" for your reference!`);
+    addSchedule(newSchedule); // Context function handles its own toast
+    selectSchedule(newSchedule.id); // Select the newly duplicated schedule
+    // toast.success(`Schedule duplicated as "${newSchedule.name}"!`); // addSchedule already toasts
   };
 
+  /** Renames the currently selected schedule using a prompt. */
   const handleRenameSchedule = () => {
-    if (!selectedSchedule) { toast.error("No schedule option selected to rename."); return; }
-    const newName = prompt("Enter new name for this schedule option:", selectedSchedule.name);
+    if (!selectedSchedule) { toast.error("No schedule selected to rename."); return; }
+    // TODO: Replace window.prompt with a custom dialog for better UX and control.
+    const newName = prompt("Enter new name for this schedule:", selectedSchedule.name);
     if (newName && newName.trim() !== "") {
-      const updatedSchedules = schedules.map(s => s.id === selectedSchedule.id ? { ...s, name: newName.trim() } : s );
-      setSchedules(updatedSchedules);
-      toast.success(`Schedule option renamed to "${newName.trim()}"!`);
-    } else if (newName !== null) { toast.error("Schedule name cannot be empty."); }
+      const oldName = selectedSchedule.name;
+      // Update the schedule name in the main schedules list
+      setSchedules(prevSchedules =>
+        prevSchedules.map(s =>
+          s.id === selectedSchedule.id ? { ...s, name: newName.trim() } : s
+        )
+      );
+      // If the selected schedule is the one being renamed, update its name in the state too
+      // This is implicitly handled if selectSchedule re-fetches from the updated schedules list,
+      // or if setSelectedSchedule is called directly if the list reference doesn't change.
+      // The current selectSchedule(id) will find the updated one from the list.
+      toast.success(`Schedule "${oldName}" renamed to "${newName.trim()}"!`);
+    } else if (newName !== null) { // Only toast error if prompt was not cancelled
+      toast.error("Schedule name cannot be empty.");
+    }
   };
 
+  /** Deletes the currently selected schedule from the list of schedules. */
   const handleDeleteSelectedSchedule = () => {
-    if (!selectedSchedule) { toast.error("No schedule option selected to remove."); return; }
-    if (schedules.length <= 1) { toast.error("Cannot remove the last remaining schedule option."); return; }
+    if (!selectedSchedule) { toast.error("No schedule selected to remove."); return; }
+    if (schedules.length <= 1 && selectedSchedule.id.startsWith("gen-sched-")) {
+      toast.warn("Cannot remove the last generated schedule option. Generate new ones or add/import another to remove this one.");
+      return;
+    }
     const scheduleNameToDelete = selectedSchedule.name;
-    removeSchedule(selectedSchedule.id);
-    toast.success(`Schedule option "${scheduleNameToDelete}" removed from view.`);
+    removeSchedule(selectedSchedule.id); // Context function handles its own toast
+    // selectSchedule(null) is implicitly handled by removeSchedule if it clears selectedSchedule,
+    // or the next schedule in the list could be selected. The current context removeSchedule doesn't change selection.
+    // toast.success(`Schedule "${scheduleNameToDelete}" removed.`); // removeSchedule already toasts
   };
 
+  /** Toggles the lock state of a course for schedule generation. */
   const handleToggleCourseLock = (courseId: string) => {
     const course = courses.find(c => c.id === courseId);
     if (!course) return;
@@ -308,6 +380,7 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
                 </Button>
               </div>
               <AccordionContent className="pt-3 space-y-3">
+                {/* TODO: Consider extracting CourseItem component for the content below */}
                 <div className="space-y-2">
                   <AnimatePresence>
                     {courses.map((course: Course, index: number) => (
@@ -322,15 +395,15 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
                                     <span className="font-medium text-base mr-2">{course.code}</span> <Badge variant="secondary" className="text-xs mr-2">{course.credits}cr</Badge>
                                   </div>
                                   <div className="text-sm text-gray-700 mb-1">{course.name}</div>
-                                  {/* Show selected section info */}
+                                  {/* Show selected section info from the currently active schedule */}
                                   {selectedSchedule && (() => {
-                                    const selectedSection = selectedSchedule.sections.find(section =>
-                                      section.id.split('-')[0] === course.id
+                                    const currentSectionInSchedule = selectedSchedule.sections.find(section =>
+                                      section.courseId === course.id // Compare by courseId
                                     );
-                                    if (selectedSection) {
+                                    if (currentSectionInSchedule) {
                                       return (
                                         <div className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded mb-1">
-                                          Section {selectedSection.sectionNumber} • {selectedSection.instructor} • {selectedSection.schedule?.[0] ? `${selectedSection.schedule[0].days} ${selectedSection.schedule[0].startTime}-${selectedSection.schedule[0].endTime}` : 'TBA'}
+                                          Section {currentSectionInSchedule.sectionNumber} • {currentSectionInSchedule.instructors?.join(', ')} • {currentSectionInSchedule.schedule?.[0] ? `${currentSectionInSchedule.schedule[0].days} ${currentSectionInSchedule.schedule[0].startTime}-${currentSectionInSchedule.schedule[0].endTime}` : 'TBA'}
                                         </div>
                                       );
                                     }
@@ -352,6 +425,7 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
                             <AnimatePresence>
                               {expandedCourses[course.id] && (
                                 <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="mt-2 pt-2 border-t w-full">
+                                  {/* Prerequisite display logic */}
                                   {course.prerequisites && course.prerequisites.length > 0 && (
                                     <div className="mb-2">
                                       <div className="text-xs font-semibold text-gray-600 mb-0.5">Prerequisites:</div>
@@ -365,6 +439,7 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
                                         })()}
                                     </div>
                                   )}
+                                  {/* Section selection UI */}
                                   <div className="mt-3">
                                     <div className="flex items-center justify-between mb-1.5"><Label className="text-xs font-semibold text-gray-600">Available Sections:</Label>
                                       {course.sections && course.sections.some(s => s.sectionType === 'Honors') && (
@@ -379,9 +454,9 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
                                           <div className="flex items-start space-x-2">
                                             <Checkbox id={`section-select-${section.id}`} checked={selectedSectionMap[course.id] === 'all' || (Array.isArray(selectedSectionMap[course.id]) && (selectedSectionMap[course.id] as string[]).includes(section.id))} onCheckedChange={(checkedState) => { const isChecked = checkedState === true; const currentCourseSelection = selectedSectionMap[course.id]; let newCourseSelection: string[] | 'all'; const allPotentiallyVisibleSectionIds = course.sections.filter(s => !(excludeHonorsMap[course.id] && s.sectionType === 'Honors')).map(s => s.id); if (isChecked) { if (currentCourseSelection === 'all') { newCourseSelection = [section.id]; } else { newCourseSelection = [...(currentCourseSelection || []), section.id]; } if (allPotentiallyVisibleSectionIds.every(id => newCourseSelection.includes(id))) { newCourseSelection = 'all'; } } else { if (currentCourseSelection === 'all') { newCourseSelection = allPotentiallyVisibleSectionIds.filter(id => id !== section.id); } else { newCourseSelection = (currentCourseSelection || []).filter(id => id !== section.id); } } updateSelectedSectionMap(course.id, newCourseSelection); }} className="mt-0.5" disabled={excludeHonorsMap[course.id] && section.sectionType === 'Honors'} />
                                             <label htmlFor={`section-select-${section.id}`} className={`flex-1 cursor-pointer ${excludeHonorsMap[course.id] && section.sectionType === 'Honors' ? 'opacity-50' : ''}`}>
-                                              <div className="flex justify-between items-center mb-0.5"><span className="font-medium">Sect {section.sectionNumber}{section.sectionType && section.sectionType !== 'Standard' && (<Badge variant="outline" className="ml-1.5 text-[10px] px-1 py-0">{section.sectionType}</Badge>)}</span><span className="text-gray-500">CRN: {section.crn}</span></div>
-                                              <div className="text-gray-600 text-[11px]">Prof: {section.instructor}</div><div className="text-gray-600 text-[11px]">Loc: {section.location}</div>
-                                              <div className="flex justify-between text-[11px]"><span>Seats: {section.availableSeats}/{section.maxSeats}</span>{section.waitlistCount !== undefined && (<span className={`${section.waitlistCount > 0 ? "text-orange-600" : "text-green-600"}`}>Waitlist: {section.waitlistCount}</span>)}</div>
+                                              <div className="flex justify-between items-center mb-0.5"><span className="font-medium">Sect {section.sectionNumber}{section.sectionType && section.sectionType !== 'Standard' && (<Badge variant="outline" className="ml-1.5 text-[10px] px-1 py-0">{section.sectionType}</Badge>)}</span><span className="text-gray-500">CRN: {section.crn || 'N/A'}</span></div>
+                                              <div className="text-gray-600 text-[11px]">Prof: {section.instructors?.join(', ') || 'TBA'}</div><div className="text-gray-600 text-[11px]">Loc: {section.schedule?.[0]?.room || section.location || 'TBA'}</div>
+                                              <div className="flex justify-between text-[11px]"><span>Seats: {section.enrolled}/{section.capacity}</span>{section.waitlisted !== undefined && (<span className={`${section.waitlisted > 0 ? "text-orange-600" : "text-green-600"}`}>Waitlist: {section.waitlisted}</span>)}</div>
                                               {section.schedule && section.schedule.map((sch, idx) => (<div key={idx} className="flex justify-between text-gray-600 text-[11px] border-t mt-1 pt-0.5"><span>{sch.days}</span><span>{sch.startTime} - {sch.endTime}</span></div>))}
                                             </label>
                                           </div>
@@ -430,31 +505,27 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
                   <Select value={selectedSchedule?.id || ""} onValueChange={(value) => selectSchedule(value === "null" ? null : value)}>
                     <SelectTrigger id="schedule-select-dropdown" className="w-full h-auto min-h-[60px]">
                       <SelectValue placeholder="Select a schedule option to view">
-                        {selectedSchedule && (
+                        {selectedSchedule ? (
                           <div className="text-left py-1">
                             <div className="font-medium text-base">{selectedSchedule.name}</div>
                             <div className="text-sm text-gray-600 mt-1">
-                              {selectedSchedule.sections.length} scheduled • {selectedSchedule.totalCredits} credits
+                              {selectedSchedule.sections.length} course{selectedSchedule.sections.length === 1 ? '' : 's'} • {selectedSchedule.totalCredits} credits
                               {selectedSchedule.conflicts && selectedSchedule.conflicts.length > 0 && (
                                 <span className="text-amber-600 ml-2">⚠️ {selectedSchedule.conflicts.length} conflict{selectedSchedule.conflicts.length > 1 ? 's' : ''}</span>
                               )}
                             </div>
                           </div>
-                        )}
+                        ) : "Select a schedule option"}
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
+                      {/* TODO: Consider extracting ScheduleSelectItem component for the content below */}
                       {schedules.map((schedule) => {
-                        // Get course details for each section
                         const courseDetails = schedule.sections.map(section => {
-                          const courseId = section.id.split('-')[0];
-                          const course = allCourses.find(c => c.id === courseId);
+                          const course = allCourses.find(c => c.id === section.courseId);
                           return {
-                            code: course?.code || courseId.toUpperCase(),
-                            name: course?.name || 'Unknown Course',
-                            instructor: section.instructor || 'TBA',
+                            code: course?.code || section.courseId.toUpperCase(),
                             time: section.schedule?.[0] ? `${section.schedule[0].days} ${section.schedule[0].startTime}-${section.schedule[0].endTime}` : 'TBA',
-                            location: section.schedule?.[0]?.location || section.location || 'TBA'
                           };
                         });
 
@@ -463,21 +534,21 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
                             <div className="w-full">
                               <div className="font-medium text-base mb-2">{schedule.name}</div>
                               <div className="text-sm text-gray-600 mb-2">
-                                {schedule.sections.length} scheduled • {schedule.totalCredits} credits
+                                {schedule.sections.length} course{schedule.sections.length === 1 ? '' : 's'} • {schedule.totalCredits} credits
                                 {schedule.conflicts && schedule.conflicts.length > 0 && (
                                   <span className="text-amber-600 ml-2">⚠️ {schedule.conflicts.length} conflict{schedule.conflicts.length > 1 ? 's' : ''}</span>
                                 )}
                               </div>
                               <div className="space-y-1">
-                                {courseDetails.slice(0, 3).map((course, idx) => (
+                                {courseDetails.slice(0, 3).map((cd, idx) => (
                                   <div key={idx} className="text-xs text-gray-500 flex justify-between">
-                                    <span className="font-medium">{course.code}</span>
-                                    <span>{course.time}</span>
+                                    <span className="font-medium">{cd.code}</span>
+                                    <span>{cd.time}</span>
                                   </div>
                                 ))}
                                 {courseDetails.length > 3 && (
                                   <div className="text-xs text-gray-400">
-                                    +{courseDetails.length - 3} more courses
+                                    +{courseDetails.length - 3} more
                                   </div>
                                 )}
                               </div>
