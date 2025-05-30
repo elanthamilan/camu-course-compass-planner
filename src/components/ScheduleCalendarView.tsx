@@ -142,14 +142,15 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({ lockedCours
               </div>
               
               {/* Days of the week */}
-              {weekDays.map(day => {
+              {weekDays.map((day, dayIndex) => {
                 const hour = index + 7; // 7 AM is the first slot
-                const key = `${day.charAt(0)}-${hour}`;
-                const items = calendarMap[key] || [];
+                // Use the shortWeekDays for consistent key generation for map lookup
+                const mapKey = `${shortWeekDays[dayIndex]}-${hour}`;
+                const items = calendarMap[mapKey] || [];
                 
                 return (
                   <div 
-                    key={`${day}-${timeSlot}`}
+                    key={`${shortWeekDays[dayIndex]}-${timeSlot}`}
                     className={cn(
                       "p-0.5 rounded-lg border min-h-[60px] sm:min-h-[70px] transition-all", // Responsive min-height
                       items.length > 0 ? "border-gray-300 shadow-sm" : "border-gray-100"

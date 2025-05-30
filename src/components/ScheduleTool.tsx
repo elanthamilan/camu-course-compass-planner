@@ -393,4 +393,3 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
 
 export default ScheduleTool;
 
-[end of src/components/ScheduleTool.tsx]

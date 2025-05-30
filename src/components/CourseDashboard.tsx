@@ -17,6 +17,9 @@ import { Label } from "@/components/ui/label";
 import { calculateWhatIfAudit } from '../lib/degree-audit-utils';
 import WhatIfDegreeAuditView from './WhatIfDegreeAuditView';
 import { Course, AcademicProgram, DegreeRequirement } from "../lib/types";
+import CourseSearch from './CourseSearch';
+import ViewScheduleDialog from './ViewScheduleDialog';
+import AddSemesterDialog from './AddSemesterDialog';
 
 interface SemesterData {
   id: string;

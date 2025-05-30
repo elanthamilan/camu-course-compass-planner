@@ -2,7 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { Course } from '../lib/types';
 import { mockCourses } from '../lib/mock-data'; // Assuming allCourses might be passed or used as fallback
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { DialogFooter } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Network } from 'lucide-react'; // For potential use later
 
 // Define the structure for a node in the prerequisite tree

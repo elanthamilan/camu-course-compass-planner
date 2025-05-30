@@ -277,8 +277,12 @@ export const mockSchedules: Schedule[] = [
   },
   {
     id: "sched2", name: "Afternoon Schedule - T/Th Focus", termId: "fall2023",
-    sections: [ mockCourses[0].sections[1], mockCourses[1].sections[1], mockCourses[2].sections[1] ],
-    busyTimes: mockBusyTimes, totalCredits: 9,
+    // Corrected mockCourses[2].sections[1] (eng101's 2nd section, which doesn't exist)
+    // to mockCourses[3].sections[0] (eng234's 1st section: eng234-001).
+    // mockCourses[2] (eng101) only has one section (sections[0]).
+    // mockCourses[3] (eng234) has sections[0] and sections[1].
+    sections: [ mockCourses[0].sections[1], mockCourses[1].sections[1], mockCourses[3].sections[0] ],
+    busyTimes: mockBusyTimes, totalCredits: 9, // Note: totalCredits might need update if section credits differ significantly
     conflicts: [ { type: "time", description: "Conflict between ENG234 and Part-time Job", courses: ["eng234"], severity: "warning" } ]
   }
 ];
