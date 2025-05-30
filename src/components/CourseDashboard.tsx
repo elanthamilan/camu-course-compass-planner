@@ -9,8 +9,8 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
-import { mockPrograms, mockCourses, mockMandatoryCourses } from "@/lib/mock-data"; // mockDegreeRequirements removed as it's part of mockPrograms
-import { PlusCircle, Trash2, ArrowRight, ChevronDown, Eye, CheckCircle2, CircleDot, Circle, PlusSquare } from "lucide-react"; // Added PlusSquare
+import { mockPrograms, mockCourses, mockMandatoryCourses } from "@/lib/mock-data"; 
+import { PlusCircle, Trash2, ArrowRight, ChevronDown, Eye, CheckCircle2, CircleDot, Circle, PlusSquare } from "lucide-react"; 
 import { useSchedule } from '@/contexts/ScheduleContext';
 import { Label } from "@/components/ui/label";
 import { calculateWhatIfAudit } from '../lib/degree-audit-utils';
@@ -331,7 +331,11 @@ const CourseDashboard: React.FC = () => {
           <CardHeader className="pb-2 flex flex-row items-center justify-between">
             <div>
               <CardTitle className="text-4xl font-bold">{actualProgram ? (creditsLeft >= 0 ? creditsLeft : 0) : <span className="text-gray-400">N/A</span>}</CardTitle>
-              <CardDescription>{actualProgram ? `${studentTotalCredits}/${programRequiredCredits} program credits left` : "Select a program to see progress"}</CardDescription>
+              <CardDescription>
+                {actualProgram 
+                  ? `${studentTotalCredits} of ${programRequiredCredits} Credits Completed` 
+                  : "Program details not loaded"}
+              </CardDescription>
             </div>
             <Accordion type="single" collapsible className="w-auto">
               <AccordionItem value="item-1" className="border-none">
@@ -403,7 +407,7 @@ const CourseDashboard: React.FC = () => {
 
         <Card>
           <CardHeader className="pb-2 flex flex-row items-center justify-between">
-            <div><CardTitle className="text-4xl font-bold">{mandatoryCoursesLeft}</CardTitle><CardDescription>{completedMandatoryCourses}/{totalMandatoryCourses} mandatory courses left</CardDescription></div>
+            <div><CardTitle className="text-4xl font-bold">{mandatoryCoursesLeft}</CardTitle><CardDescription>{completedMandatoryCourses} of {totalMandatoryCourses} Mandatory Courses Completed</CardDescription></div>
             <Accordion type="single" collapsible className="w-auto">
               <AccordionItem value="item-1" className="border-none">
                 <Tooltip><TooltipTrigger asChild><AccordionTrigger className="p-2 hover:no-underline [&[data-state=open]>svg]:rotate-180"><Button variant="outline" size="sm">View details <ChevronDown className="h-4 w-4 ml-1 transition-transform duration-200" /></Button></AccordionTrigger></TooltipTrigger><TooltipContent><p>Show/hide the list of mandatory courses and their current status.</p></TooltipContent></Tooltip>

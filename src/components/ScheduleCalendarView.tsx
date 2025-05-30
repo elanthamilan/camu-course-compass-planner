@@ -7,7 +7,11 @@ import { motion } from "framer-motion";
 import { Lock } from "lucide-react"; // Import Lock icon
 import { BusyTimeType } from "@/lib/types"; // Import BusyTimeType
 
-const ScheduleCalendarView = () => {
+interface ScheduleCalendarViewProps {
+  lockedCourses?: string[]; 
+}
+
+const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({ lockedCourses = [] }) => {
   const { selectedSchedule, busyTimes } = useSchedule();
 
   if (!selectedSchedule) return null;
@@ -44,7 +48,8 @@ const ScheduleCalendarView = () => {
             instructor: section.instructor,
             location: schedule.location,
             color: getCourseColorInfo(courseCode),
-            locked: section.locked // Pass locked status
+            // locked: section.locked // This was section.locked, changing to check against lockedCourses prop
+            isCourseLocked: lockedCourses.includes(section.id.split("-")[0]) || lockedCourses.includes(courseCode)
           });
         }
       });
@@ -165,10 +170,10 @@ const ScheduleCalendarView = () => {
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ duration: 0.3 }}
                           >
-                            {item.locked && (
+                            {item.isCourseLocked && (
                               <Lock 
-                                className="absolute top-0.5 right-0.5 h-3 w-3 sm:h-3.5 sm:w-3.5 text-white" // Adjusted for visibility
-                                style={{ filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.7))' }} // Drop shadow for better contrast
+                                className="absolute top-0.5 right-0.5 h-3 w-3 sm:h-3.5 sm:w-3.5 text-white" 
+                                style={{ filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.7))' }} 
                               />
                             )}
                             <div className="font-semibold text-[11px] sm:text-xs">{item.courseCode}</div> {/* Responsive text */}

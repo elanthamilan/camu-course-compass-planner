@@ -362,7 +362,7 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
             {selectedSchedule && (<div className="text-sm text-gray-500">{selectedSchedule.totalCredits} credits {selectedSchedule.conflicts && selectedSchedule.conflicts.length > 0 && (<span className="text-amber-500">• {selectedSchedule.conflicts.length} conflict{selectedSchedule.conflicts.length > 1 ? 's' : ''}</span>)}</div>)}
           </div>
           <AnimatePresence mode="wait">
-            {view === "calendar" ? (<motion.div key="calendar" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}><ScheduleCalendarView /></motion.div>) 
+            {view === "calendar" ? (<motion.div key="calendar" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}><ScheduleCalendarView lockedCourses={lockedCourses} /></motion.div>) 
                                : (<motion.div key="list" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}><ScheduleListView /></motion.div>)}
           </AnimatePresence>
         </motion.div>
