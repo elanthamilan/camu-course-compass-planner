@@ -36,35 +36,42 @@ export const isSectionMeetingConflict = (meetingA: SectionSchedule, meetingB: Se
 };
 
 export const isSectionConflictWithBusyTimes = (section: CourseSection, busyTimes: BusyTime[]): boolean => {
-  if (!section || !section.schedule || !busyTimes) return false;
+  // A single CourseSection is assumed to have one meeting time/days directly on it.
+  // If a CourseSection could have multiple schedules (e.g. MWF and TTh lab),
+  // then section.schedule would need to be an array, and the logic would iterate it.
+  // Based on current CourseSection type, schedule details are direct properties.
+  if (!section || !section.days || !section.startTime || !section.endTime || !busyTimes) return false;
+
   for (const busyTime of busyTimes) {
     if (!busyTime.days || !busyTime.startTime || !busyTime.endTime) continue; // Skip invalid busy time entry
-    for (const sectionMeeting of section.schedule) {
-      if (!sectionMeeting.days || !sectionMeeting.startTime || !sectionMeeting.endTime) continue; // Skip invalid section meeting
-      const sectionDays = sectionMeeting.days.split(',').map(d => d.trim());
-      if (doDaysOverlap(sectionDays, busyTime.days) && 
-          doTimesOverlap(sectionMeeting.startTime, sectionMeeting.endTime, busyTime.startTime, busyTime.endTime)) {
-        return true; 
-      }
+
+    // section.days is already string[] based on CourseSection type from lib/types.ts
+    // and mock data. No need for split(',').
+    if (doDaysOverlap(section.days, busyTime.days) &&
+        doTimesOverlap(section.startTime, section.endTime, busyTime.startTime, busyTime.endTime)) {
+      return true;
     }
   }
   return false; 
 };
 
-export const isSectionConflictWithOtherSections = (section: CourseSection, otherSections: CourseSection[]): boolean => {
-  if (!section || !section.schedule || !otherSections) return false;
-  for (const otherSection of otherSections) {
-    if (!otherSection || !otherSection.schedule || section.id === otherSection.id) continue; 
-    for (const meetingA of section.schedule) {
-      if (!meetingA.days || !meetingA.startTime || !meetingA.endTime) continue;
-      for (const meetingB of otherSection.schedule) {
-        if (!meetingB.days || !meetingB.startTime || !meetingB.endTime) continue;
-        if (isSectionMeetingConflict(meetingA, meetingB)) {
-          return true;
-        }
-      }
+export const isSectionConflictWithOtherSections = (sectionA: CourseSection, otherSections: CourseSection[]): boolean => {
+  // Assuming sectionA and sections in otherSections have schedule details directly on them.
+  if (!sectionA || !sectionA.days || !sectionA.startTime || !sectionA.endTime || !otherSections) return false;
+
+  for (const sectionB of otherSections) {
+    if (!sectionB || !sectionB.days || !sectionB.startTime || !sectionB.endTime || sectionA.id === sectionB.id) continue;
+
+    // section.days is already string[]
+    if (doDaysOverlap(sectionA.days, sectionB.days) &&
+        doTimesOverlap(sectionA.startTime, sectionA.endTime, sectionB.startTime, sectionB.endTime)) {
+      return true;
     }
   }
   return false;
 };
 // --- End Time Conflict Helper Functions ---
+// Note: isSectionMeetingConflict might be redundant if CourseSection only has one meeting time.
+// If CourseSection were to have a `schedule: SectionSchedule[]` property,
+// then isSectionMeetingConflict would be used by the higher-level conflict functions.
+// For now, isSectionConflictWithOtherSections is simplified to assume single meeting per section.

@@ -50,14 +50,14 @@ const initialYearsData: YearData[] = [
         ]
       },
       {
-        id: "Fall2024", name: "Fall 2024", creditsSelected: 11, courses: [
+        id: "Fall2024", name: "Fall 2024", creditsSelected: 8, courses: [ // Corrected creditsSelected from 11 to 8 (4+3+1)
           { id: "phys210", code: "PHYS210", name: "Physics I: Mechanics", credits: 4, days: "MWF", time: "13:00", prerequisites: [] },
           { id: "phil101", code: "PHIL101", name: "Introduction to Logic", credits: 3, days: "MWF", time: "11:00", prerequisites: [] },
           { id: "univ100", code: "UNIV100", name: "University Seminar", credits: 1, days: "W", time: "14:00", prerequisites: [] }
         ]
       },
       {
-        id: "Spring2025", name: "Spring 2025", creditsSelected: 10, courses: [
+        id: "Spring2025", name: "Spring 2025", creditsSelected: 11, courses: [ // Corrected creditsSelected from 10 to 11 (3+4+4)
           { id: "econ101", code: "ECON101", name: "Principles of Microeconomics", credits: 3, days: "MWF", time: "10:00", prerequisites: [] },
           { id: "bio101", code: "BIO101", name: "Introduction to Biology", credits: 4, days: "MWF", time: "09:00", prerequisites: [] },
           { id: "chem101", code: "CHEM101", name: "General Chemistry", credits: 4, days: "MWF", time: "13:00", prerequisites: [] }
@@ -142,7 +142,7 @@ const CourseDashboard: React.FC = () => {
       }
       if (!yearOfSemester) { toast.error("Semester not found."); return prevYearsData; }
       if (!semesterFoundAndEmpty) { toast.error(`Cannot remove semester with ${semesterCoursesCount} course(s). Please remove all courses first.`); return prevYearsData; }
-      const updatedYearsData = prevYearsData.map(year => year.year === yearOfSemester!.year ? { ...year, semesters: year.semesters.filter(s => s.id !== semesterIdToRemove) } : year).filter(year => year.semesters.length > 0);
+      const updatedYearsData = prevYearsData.map(year => year.year === yearOfSemester!.year ? { ...year, semesters: year.semesters.filter(s => s.id !== semesterIdToRemove) } : year).filter(year => year.semesters.length > 0 || prevYearsData.length === 1);
       toast.success("Semester removed successfully.");
       return updatedYearsData;
     });
