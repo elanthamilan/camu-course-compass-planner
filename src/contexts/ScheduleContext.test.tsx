@@ -2,7 +2,7 @@ import React, { useContext, useEffect } from 'react';
 import { render, act, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { ScheduleProvider, useSchedule, ScheduleContextType, SchedulePreferences } from './ScheduleContext';
-import { Course, BusyTime, CourseSection, Term } from '@/lib/types';
+import { Course, BusyTime, CourseSection, Term, Schedule } from '@/lib/types';
 import { toast } from 'sonner';
 
 // Mock sonner
@@ -58,34 +58,42 @@ jest.mock('@/lib/mock-data', () => {
   const localMockedTestTerms: Term[] = [
     {id: 'T1', name: 'Test Term 1', startDate: new Date('2024-01-01'), endDate: new Date('2024-05-15')}
   ];
+  const localMockSchedules: Schedule[] = [
+    {
+      id: 'S1', name: 'Test Schedule 1', termId: 'T1',
+      sections: [localMockedTestCourses[0].sections[0]],
+      totalCredits: 3, conflicts: [], busyTimes: []
+    }
+  ];
   return {
     ...jest.requireActual('@/lib/mock-data'),
     mockCourses: localMockedTestCourses,
     mockBusyTimes: localMockedTestBusyTimes,
-    mockSchedules: [],
+    mockSchedules: localMockSchedules,
     mockTerms: localMockedTestTerms,
-    mockStudent: { studentId: "testStudent", name: "Test Student", majorId: "cs", completedCourses:[] }
+    mockStudent: { studentId: "testStudent", name: "Test Student", majorId: "cs", completedCourses:[]}
   };
 });
 
-// Top-level mock data for tests to reference for assertions/setup if needed.
 const mockedTestCourses: Course[] = jest.requireMock('@/lib/mock-data').mockCourses;
-const mockedTestTerms: Term[] = jest.requireMock('@/lib/mock-data').mockTerms;
-
 
 let lastGeneratedSchedules: any[] = [];
 let lastBusyTimes: BusyTime[] = [];
 
-const BaseTestConsumer: React.FC<{
-  coursesToSelect: string[];
+
+const GenerateSchedulesTestConsumer: React.FC<{
+  coursesToSelect?: string[];
   fixedSectionsToPass?: CourseSection[];
   prefsToSet?: Partial<SchedulePreferences>;
-  generateButtonText: string;
-}> = ({ coursesToSelect, fixedSectionsToPass, prefsToSet, generateButtonText }) => {
+  generateButtonText?: string;
+}> = ({ coursesToSelect = [], fixedSectionsToPass, prefsToSet, generateButtonText = "Generate" }) => {
   const context = useSchedule();
   if (!context) throw new Error("useSchedule must be used within ScheduleProvider");
 
-  const { generateSchedules, schedules, busyTimes, courses, selectTerm, currentTerm, allTerms, updateSchedulePreferences } = context;
+  const {
+    generateSchedules, schedules, busyTimes, courses,
+    selectTerm, currentTerm, allTerms, updateSchedulePreferences,
+  } = context;
 
   useEffect(() => {
     if (allTerms.length > 0 && !currentTerm) {
@@ -98,7 +106,7 @@ const BaseTestConsumer: React.FC<{
         updateSchedulePreferences(prefsToSet);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [prefsToSet]); // updateSchedulePreferences should be stable
+  }, [prefsToSet]);
 
   useEffect(() => {
     lastGeneratedSchedules = schedules;
@@ -107,14 +115,17 @@ const BaseTestConsumer: React.FC<{
 
   return (
     <div>
-      <button onClick={() => generateSchedules(coursesToSelect, fixedSectionsToPass)}>
-        {generateButtonText}
-      </button>
+      {coursesToSelect.length > 0 && generateButtonText && (
+          <button onClick={() => generateSchedules(coursesToSelect, fixedSectionsToPass)}>
+            {generateButtonText}
+          </button>
+      )}
       <div data-testid="schedules-count">{schedules ? schedules.length : 0}</div>
       <div data-testid="courses-count">{courses ? courses.length : 0}</div>
     </div>
   );
 };
+
 
 const timeToMinutes = (time: string): number => {
   const [hours, minutes] = time.split(':').map(Number);
@@ -139,10 +150,10 @@ describe('ScheduleContext - generateSchedules', () => {
   test('generates conflict-free schedules with selected courses', async () => {
     render(
       <ScheduleProvider>
-        <BaseTestConsumer coursesToSelect={['C1', 'C3']} generateButtonText="Generate Base" />
+        <GenerateSchedulesTestConsumer coursesToSelect={['C1', 'C3']} generateButtonText="Generate Base" />
       </ScheduleProvider>
     );
-    expect(screen.getByTestId('courses-count').textContent).toBe('3'); // Context initializes with mockCourses.slice(0,3)
+    expect(screen.getByTestId('courses-count').textContent).toBe('3');
 
     await act(async () => {
       fireEvent.click(screen.getByText('Generate Base'));
@@ -178,10 +189,10 @@ describe('ScheduleContext - generateSchedules', () => {
     }
   });
 
-  test.skip('generates schedules respecting preferences (morning and no Fridays)', async () => { // Skipping this test
+  test.skip('generates schedules respecting preferences (morning and no Fridays)', async () => {
     render(
         <ScheduleProvider>
-          <BaseTestConsumer
+          <GenerateSchedulesTestConsumer
             coursesToSelect={['C1', 'C2']}
             prefsToSet={{ timePreference: 'morning', avoidFridayClasses: true }}
             generateButtonText="Generate With Prefs"
@@ -196,21 +207,21 @@ describe('ScheduleContext - generateSchedules', () => {
 
     expect(lastGeneratedSchedules.length).toBeGreaterThan(0);
     for (const schedule of lastGeneratedSchedules) {
-      expect(schedule.sections.length).toBeGreaterThan(0); // Ensure schedules are not empty
+      expect(schedule.sections.length).toBeGreaterThan(0);
       for (const section of schedule.sections) {
-        expect(timeToMinutes(section.endTime)).toBeLessThanOrEqual(13 * 60); // Ends by 1 PM
-        expect(section.days.includes('F')).toBe(false); // No Friday classes
+        expect(timeToMinutes(section.endTime)).toBeLessThanOrEqual(13 * 60);
+        expect(section.days.includes('F')).toBe(false);
       }
     }
   });
 
-  test.skip('generates schedules with fixed sections and no conflicts', async () => { // Skipping this test
-    const fixedSection = mockedTestCourses.find(c => c.id === 'C1')?.sections[0]; // C1-S1: MW 09:00-10:15
+  test.skip('generates schedules with fixed sections and no conflicts', async () => {
+    const fixedSection = mockedTestCourses.find(c => c.id === 'C1')?.sections[0];
     if (!fixedSection) throw new Error("Fixed section C1-S1 not found in mock data");
 
     render(
       <ScheduleProvider>
-        <BaseTestConsumer
+        <GenerateSchedulesTestConsumer
             coursesToSelect={['C3']}
             sectionsToFix={[fixedSection]}
             generateButtonText="Generate With Fixed"
@@ -239,8 +250,78 @@ describe('ScheduleContext - generateSchedules', () => {
             }
         }
       }
-      const c3s2InSchedule = schedule.sections.find((s: CourseSection) => s.id === 'C3-S2'); // C3-S1 conflicts with busy time
+      const c3s2InSchedule = schedule.sections.find((s: CourseSection) => s.id === 'C3-S2');
       expect(c3s2InSchedule).toBeDefined();
     }
+  });
+});
+
+// New test suite for Shopping Cart
+describe('ScheduleContext - Shopping Cart', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test('moveToCart correctly moves selectedSchedule to shoppingCart', async () => {
+    let capturedContext: ScheduleContextType | null = null;
+    const TestComponent = () => {
+      capturedContext = useSchedule();
+      // No automatic selection/moveToCart here, will be triggered by test.
+      return null;
+    };
+
+    render(
+      <ScheduleProvider> {/* Provider gives initial mockSchedules, S1 is selected by default by Provider */}
+        <TestComponent />
+      </ScheduleProvider>
+    );
+
+    // Ensure a schedule was selected (S1 is the first in mockSchedules from @/lib/mock-data)
+    // The ScheduleProvider itself sets selectedSchedule to mockSchedules[0] if mockSchedules is not empty.
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 0)); // Allow context to initialize
+    });
+    expect(capturedContext?.selectedSchedule?.id).toBe('S1');
+    const scheduleToMove = capturedContext!.selectedSchedule;
+
+    await act(async () => {
+      capturedContext!.moveToCart();
+    });
+
+    expect(capturedContext!.shoppingCart).not.toBeNull();
+    expect(capturedContext!.shoppingCart?.id).toBe(scheduleToMove!.id);
+    expect(capturedContext!.shoppingCart?.name).toBe(scheduleToMove!.name);
+    expect(toast.success).toHaveBeenCalledWith(`Schedule "${scheduleToMove!.name}" moved to registration cart!`);
+  });
+
+  test('clearCart correctly clears the shoppingCart', async () => {
+     let capturedContext: ScheduleContextType | null = null;
+     const TestComponent = () => {
+       capturedContext = useSchedule();
+       return null;
+     };
+
+     render(<ScheduleProvider><TestComponent /></ScheduleProvider>);
+
+     // Ensure schedule S1 is selected and move it to cart for setup
+     await act(async () => {
+        await new Promise(resolve => setTimeout(resolve, 0)); // allow initial state to set
+        if(capturedContext && capturedContext.schedules.length > 0 && !capturedContext.selectedSchedule) {
+            capturedContext.selectSchedule(capturedContext.schedules[0].id);
+        }
+        await new Promise(resolve => setTimeout(resolve, 0)); // allow selection to process
+        capturedContext!.moveToCart();
+        await new Promise(resolve => setTimeout(resolve, 0)); // allow moveToCart to process
+     });
+
+    expect(capturedContext!.shoppingCart).not.toBeNull();
+    if (!capturedContext!.shoppingCart) throw new Error("Cart was not populated for clearCart test");
+
+    await act(async () => {
+      capturedContext!.clearCart();
+    });
+
+    expect(capturedContext!.shoppingCart).toBeNull();
+    expect(toast.info).toHaveBeenCalledWith('Shopping cart cleared.');
   });
 });
