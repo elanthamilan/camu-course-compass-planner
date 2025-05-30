@@ -10,9 +10,11 @@ import {
 import { calculateDegreeAudit } from '../lib/degree-audit-utils';
 import { mockStudent, mockDegree, mockCourses } from '../lib/mock-data';
 import Header from '../components/Header';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import CourseCatalogView from '../components/CourseCatalogView'; 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { CheckCircle, XCircle, Clock, ListChecks, Info } from 'lucide-react';
@@ -84,9 +86,15 @@ const DegreeAuditPage: React.FC = () => {
     <div className="min-h-screen bg-gray-50">
       <Header />
       <main className="container mx-auto p-4 sm:p-6 lg:p-8">
-        <Card className="mb-6 shadow-lg border-border animate-fade-in">
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold text-gray-800">Degree Audit Summary</CardTitle>
+        <Tabs defaultValue="audit" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 sm:max-w-xs mb-4">
+            <TabsTrigger value="audit">Degree Audit</TabsTrigger>
+            <TabsTrigger value="catalog">Course Catalog</TabsTrigger>
+          </TabsList>
+          <TabsContent value="audit">
+            <Card className="mb-6 shadow-lg border-border animate-fade-in">
+              <CardHeader>
+                <CardTitle className="text-2xl font-bold text-gray-800">Degree Audit Summary</CardTitle>
             <CardDescription>
               Student: {mockStudent.name} ({mockStudent.id}) | Degree: {mockDegree.name}
             </CardDescription>
@@ -187,6 +195,11 @@ const DegreeAuditPage: React.FC = () => {
             </Accordion>
           </div>
         ))}
+          </TabsContent>
+          <TabsContent value="catalog">
+            <CourseCatalogView />
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );
