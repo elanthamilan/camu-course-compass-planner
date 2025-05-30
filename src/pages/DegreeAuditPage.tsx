@@ -22,6 +22,8 @@ import { CheckCircle, XCircle, Clock, ListChecks, Info } from 'lucide-react';
 const DegreeAuditPage: React.FC = () => {
   const [degreeAuditData, setDegreeAuditData] = useState<DegreeAuditResults | null>(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<string>("audit");
+  const [targetCourseInCatalog, setTargetCourseInCatalog] = useState<string | null>(null);
 
   useEffect(() => {
     // In a real app, studentInfo, degree, and allCourses might come from context, props, or API calls.
@@ -82,11 +84,18 @@ const DegreeAuditPage: React.FC = () => {
     return acc;
   }, {} as Record<string, DegreeRequirementAudit[]>);
 
+  const handleViewCourseInCatalog = (courseCodeOrId: string) => {
+    setTargetCourseInCatalog(courseCodeOrId);
+    setActiveTab("catalog");
+    // Optional: Consider a smoother scroll or focusing logic later
+    setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 0);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
       <main className="container mx-auto p-4 sm:p-6 lg:p-8">
-        <Tabs defaultValue="audit" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 sm:max-w-xs mb-4">
             <TabsTrigger value="audit">Degree Audit</TabsTrigger>
             <TabsTrigger value="catalog">Course Catalog</TabsTrigger>
@@ -181,11 +190,16 @@ const DegreeAuditPage: React.FC = () => {
                               const courseDetail = mockCourses.find(c => c.id === courseIdOrCode || c.code === courseIdOrCode);
                               return (
                                 <li key={courseIdOrCode}>
-                                  {courseDetail ? `${courseDetail.code} - ${courseDetail.name} (${courseDetail.credits} cr)` : courseIdOrCode}
+                                  <span 
+                                    onClick={() => handleViewCourseInCatalog(courseDetail ? courseDetail.code : courseIdOrCode)}
+                                    className="cursor-pointer text-blue-600 hover:underline font-medium"
+                                  >
+                                    {courseDetail ? `${courseDetail.code} - ${courseDetail.name} (${courseDetail.credits} cr)` : courseIdOrCode}
+                                  </span>
                                 </li>
                               );
                             })}
-                          {req.courses.length > 5 && <li>... and more</li>}
+                          {req.courses.length > 5 && <li className="text-xs text-gray-500">... and more (see catalog for all options)</li>}
                         </ul>
                       </div>
                     )}
@@ -197,7 +211,10 @@ const DegreeAuditPage: React.FC = () => {
         ))}
           </TabsContent>
           <TabsContent value="catalog">
-            <CourseCatalogView />
+            <CourseCatalogView 
+              targetCourseCode={targetCourseInCatalog} 
+              onTargetCourseViewed={() => setTargetCourseInCatalog(null)} 
+            />
           </TabsContent>
         </Tabs>
       </main>

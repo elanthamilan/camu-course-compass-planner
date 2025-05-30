@@ -8,8 +8,14 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"; // DialogClose not used here
 import { XIcon, CalendarDays, Users, MapPin, Info, ThumbsUp, ThumbsDown, AlertTriangle, CheckSquare, Square, Rows, Columns, Check, Plus, Minus } from 'lucide-react'; // Added more icons
+import EmbeddedCourseSequenceView from './EmbeddedCourseSequenceView'; // Import the new component
 
-const CourseCatalogView: React.FC = () => {
+interface CourseCatalogViewProps {
+  targetCourseCode?: string | null;
+  onTargetCourseViewed?: () => void;
+}
+
+const CourseCatalogView: React.FC<CourseCatalogViewProps> = ({ targetCourseCode, onTargetCourseViewed }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("all");
   const [selectedCredits, setSelectedCredits] = useState("all");
@@ -39,6 +45,27 @@ const CourseCatalogView: React.FC = () => {
       if (detailView) detailView.scrollTop = 0;
     }
   }, [selectedCourse]);
+
+  useEffect(() => {
+    if (targetCourseCode) {
+      const courseToSelect = mockCourses.find(c => c.code === targetCourseCode || c.id === targetCourseCode);
+      if (courseToSelect) {
+        setSelectedCourse(courseToSelect);
+        // Scroll course list to selected course if possible (more complex, skip for now)
+        // Ensure detail panel is visible if it's on a different part of the page
+         const detailPanel = document.getElementById('course-detail-view');
+         // Ensure the panel is rendered before trying to scroll. Delay might be needed if panel appears after state update.
+         setTimeout(() => {
+            if (detailPanel) detailPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+         }, 0);
+      }
+      if (onTargetCourseViewed) {
+        onTargetCourseViewed(); 
+      }
+    }
+  // setSelectedCourse is stable, mockCourses is stable.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [targetCourseCode, onTargetCourseViewed]);
 
   const handleAttributeToggle = (attribute: string) => {
     setSelectedAttributes(prev =>
@@ -257,14 +284,24 @@ const CourseCatalogView: React.FC = () => {
             {(selectedCourse.prerequisites && selectedCourse.prerequisites.length > 0) && (
               <div className="mb-3">
                 <h5 className="font-semibold text-sm mb-1 text-gray-600">Prerequisites</h5>
-                <div className="flex flex-wrap gap-1">
+                <div className="space-y-1"> {/* Changed from flex flex-wrap to space-y for block layout */}
                   {selectedCourse.prerequisites.map(prereqCode => {
                     const prereqCourseDetails = mockCourses.find(c => c.code === prereqCode || c.id === prereqCode);
                     return (
-                      <Badge key={prereqCode} variant="secondary" className="text-xs cursor-pointer hover:bg-blue-100 hover:text-blue-700"
-                        onClick={() => { if (prereqCourseDetails) setSelectedCourse(prereqCourseDetails); }}>
-                        {prereqCode}{prereqCourseDetails ? ` - ${prereqCourseDetails.name.substring(0,20)}...` : ''}
-                      </Badge>
+                      <div key={prereqCode} className="mb-1"> {/* Wrapper for each prerequisite and its sub-prereqs */}
+                        <Badge 
+                          variant="secondary" 
+                          className="text-xs cursor-pointer hover:bg-blue-100 hover:text-blue-700 py-0.5 px-1.5"
+                          onClick={() => { if (prereqCourseDetails) setSelectedCourse(prereqCourseDetails); }}
+                        >
+                          {prereqCode}{prereqCourseDetails ? ` - ${prereqCourseDetails.name.substring(0,25)}${prereqCourseDetails.name.length > 25 ? '...' : ''}` : ''}
+                        </Badge>
+                        {prereqCourseDetails && prereqCourseDetails.prerequisites && prereqCourseDetails.prerequisites.length > 0 && (
+                          <div className="text-xs text-gray-500 ml-4 pl-2 border-l border-gray-300 mt-0.5">
+                            Requires: {prereqCourseDetails.prerequisites.join(', ')}
+                          </div>
+                        )}
+                      </div>
                     );
                   })}
                 </div>
@@ -273,14 +310,24 @@ const CourseCatalogView: React.FC = () => {
             {(selectedCourse.corequisites && selectedCourse.corequisites.length > 0) && (
               <div className="mb-3">
                 <h5 className="font-semibold text-sm mb-1 text-gray-600">Corequisites</h5>
-                 <div className="flex flex-wrap gap-1">
+                 <div className="space-y-1"> {/* Changed from flex flex-wrap to space-y for block layout */}
                   {selectedCourse.corequisites.map(coreqCode => {
                     const coreqCourseDetails = mockCourses.find(c => c.code === coreqCode || c.id === coreqCode);
                     return (
-                      <Badge key={coreqCode} variant="secondary" className="text-xs cursor-pointer hover:bg-blue-100 hover:text-blue-700"
-                        onClick={() => { if (coreqCourseDetails) setSelectedCourse(coreqCourseDetails); }}>
-                        {coreqCode}{coreqCourseDetails ? ` - ${coreqCourseDetails.name.substring(0,20)}...` : ''}
-                      </Badge>
+                      <div key={coreqCode} className="mb-1"> {/* Wrapper for each corequisite and its sub-prereqs */}
+                        <Badge 
+                          variant="secondary" 
+                          className="text-xs cursor-pointer hover:bg-blue-100 hover:text-blue-700 py-0.5 px-1.5"
+                          onClick={() => { if (coreqCourseDetails) setSelectedCourse(coreqCourseDetails); }}
+                        >
+                          {coreqCode}{coreqCourseDetails ? ` - ${coreqCourseDetails.name.substring(0,25)}${coreqCourseDetails.name.length > 25 ? '...' : ''}` : ''}
+                        </Badge>
+                        {coreqCourseDetails && coreqCourseDetails.prerequisites && coreqCourseDetails.prerequisites.length > 0 && (
+                          <div className="text-xs text-gray-500 ml-4 pl-2 border-l border-gray-300 mt-0.5">
+                            (Prerequisites for this corequisite: {coreqCourseDetails.prerequisites.join(', ')})
+                          </div>
+                        )}
+                      </div>
                     );
                   })}
                 </div>
@@ -332,6 +379,13 @@ const CourseCatalogView: React.FC = () => {
             {(!selectedCourse.sections || selectedCourse.sections.length === 0) && (
                 <p className="text-xs text-gray-400 italic mt-3 pt-3 border-t">No sections listed for this course.</p>
             )}
+
+            {/* Embedded Course Sequence View */}
+            <EmbeddedCourseSequenceView 
+              targetCourse={selectedCourse} 
+              allCourses={mockCourses} 
+              onCourseSelect={setSelectedCourse} 
+            />
           </div>
         )}
       </div>
