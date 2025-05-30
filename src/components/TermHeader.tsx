@@ -39,12 +39,12 @@ const TermHeader = ({ view, setView }: TermHeaderProps) => {
         </Tabs>
 
         <Button 
-          variant="default" // Changed to default variant
+          variant="outline" // Make it less prominent than primary schedule actions
           className="transition-all duration-200 animate-scale-in w-full sm:w-auto" // Full width on small, auto on sm+
           onClick={() => navigate("/cart")}
         >
           <ShoppingCartIcon className="mr-2 h-4 w-4" />
-          Move to cart
+          View Cart
         </Button>
       </div>
     </div>

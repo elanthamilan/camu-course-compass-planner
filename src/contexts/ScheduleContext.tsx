@@ -255,23 +255,38 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
       setSelectedSchedule(null);
       return;
     }
-    if (processedCourses.length < coursesToSchedule.length) {
+    // Corrected typo: coursesToSchedule.length -> coursesToActuallySchedule.length
+    if (processedCourses.length < coursesToActuallySchedule.length) { 
         toast.info("Some selected courses had no available sections after applying preferences and were excluded.");
     }
+
+    console.log("[Scheduler] Initial processedCourses codes:", processedCourses.map(c => c.code));
+    console.log("[Scheduler] Fixed sections for this run:", fixedSections.map(s => s.id));
 
     const foundSchedules: Schedule[] = [];
     // Initialize with all selected course codes (including those that might be locked)
     const coursesNotScheduled = new Set<string>(selectedCourseIds.map(id => courses.find(c=>c.id === id)?.code || id));
 
     function buildSchedulesRecursive(courseIndex: number, currentSectionsAccumulator: CourseSection[], generatedCount: number): number {
+      console.log(`[Scheduler] buildSchedulesRecursive: courseIndex=${courseIndex}, accumulator=${currentSectionsAccumulator.map(s=>s.id)}, generatedCount=${generatedCount}`);
+      
       if (generatedCount >= MAX_SCHEDULES_TO_GENERATE) {
+        console.log("[Scheduler] Max schedules generated, returning.");
         return generatedCount;
       }
 
       // Base case: all processable courses have been considered
       if (courseIndex === processedCourses.length) {
+        console.log("[Scheduler] Reached end of processedCourses. Attempting to form a schedule.");
         // currentSectionsAccumulator already includes fixedSections from the initial call
         const finalSections = [...currentSectionsAccumulator];
+        
+        // Ensure the schedule is not empty and actually contains courses beyond just fixed ones if others were intended.
+        // Or, if only fixed sections were intended, that's fine too.
+        if (finalSections.length === 0 && coursesToActuallySchedule.length > 0) {
+            console.log("[Scheduler] Schedule is empty and courses were intended, not pushing.");
+            return generatedCount; // Don't count this as a "found" schedule if it's empty unintentionally
+        }
         
         const newSchedule: Schedule = {
           id: `gen-sched-${Date.now()}-${foundSchedules.length + 1}`,
@@ -285,6 +300,7 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
           }, 0),
           conflicts: [] // Basic conflict check could be done here again for the whole schedule
         };
+        console.log("[Scheduler] Schedule found and pushed:", newSchedule.id);
         foundSchedules.push(newSchedule);
         // Update coursesNotScheduled based on ALL sections in the final schedule
         finalSections.forEach(s => {
@@ -295,34 +311,58 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
       }
 
       const currentCourseToProcess = processedCourses[courseIndex];
+      console.log(`[Scheduler] Processing course: ${currentCourseToProcess?.code} (${currentCourseToProcess?.sections?.length} sections) at index ${courseIndex}`);
       let newGeneratedCount = generatedCount;
 
+      if (!currentCourseToProcess) { // Should not happen if courseIndex < processedCourses.length
+        console.error("[Scheduler] currentCourseToProcess is undefined, this should not happen.");
+        return newGeneratedCount;
+      }
+      
+      let courseScheduledInChildren = false;
       for (const section of currentCourseToProcess.sections) {
+        console.log(`[Scheduler] Trying section ${section.id} for course ${currentCourseToProcess.code}`);
         // Conflict check against ALL sections accumulated so far (including fixed ones)
         if (isSectionConflictWithBusyTimes(section, busyTimes) || 
             isSectionConflictWithOtherSections(section, currentSectionsAccumulator)) {
+          console.log(`[Scheduler] Section ${section.id} conflicts.`);
           continue;
         }
 
         currentSectionsAccumulator.push(section);
+        courseScheduledInChildren = true; // Mark that this course was attempted
         newGeneratedCount = buildSchedulesRecursive(courseIndex + 1, currentSectionsAccumulator, newGeneratedCount);
         currentSectionsAccumulator.pop(); // Backtrack
+        courseScheduledInChildren = currentSectionsAccumulator.some(s => s.id.startsWith(currentCourseToProcess.id)); // Re-check after backtrack
 
         if (newGeneratedCount >= MAX_SCHEDULES_TO_GENERATE) {
+          console.log("[Scheduler] Max schedules reached in section loop.");
           break;
         }
       }
-      // If the current course couldn't be scheduled (no valid sections found), 
+      // If the current course couldn't be scheduled (no valid sections found for it in the loop, or it had no sections to begin with),
       // still try to schedule the remaining courses.
-      if (currentCourseToProcess.sections.length === 0 || !currentSectionsAccumulator.some(s => s.id.startsWith(currentCourseToProcess.id))) {
+      // The condition `!currentSectionsAccumulator.some(s => s.id.startsWith(currentCourseToProcess.id))` is complex
+      // A simpler way: if after iterating all sections of currentCourseToProcess, it wasn't added to any successful path from its children.
+      // The variable 'courseScheduledInChildren' might be more reliable if managed carefully.
+      // The original condition: `currentCourseToProcess.sections.length === 0 || !currentSectionsAccumulator.some(s => s.id.startsWith(currentCourseToProcess.id))`
+      // Let's log when this specific skip happens.
+      if (!courseScheduledInChildren) {
+         console.log(`[Scheduler] Course ${currentCourseToProcess.code} could not be scheduled with any of its sections. Attempting to schedule remaining courses.`);
          newGeneratedCount = buildSchedulesRecursive(courseIndex + 1, currentSectionsAccumulator, newGeneratedCount);
       }
       return newGeneratedCount;
     }
     
+    console.log("[Scheduler] generateSchedules: Starting timeout for buildSchedulesRecursive");
+    const startTime = Date.now();
+
     setTimeout(() => {
+      console.log("[Scheduler] Timeout triggered. Calling buildSchedulesRecursive.");
       // Initial call with fixedSections already included in currentSectionsAccumulator
       buildSchedulesRecursive(0, [...fixedSections], 0); 
+      const endTime = Date.now();
+      console.log(`[Scheduler] buildSchedulesRecursive finished. Duration: ${endTime - startTime}ms. Found ${foundSchedules.length} schedules.`);
 
       if (foundSchedules.length > 0) {
         setSchedules(prev => [...prev.filter(s => !s.name.startsWith("Generated Schedule")), ...foundSchedules]);

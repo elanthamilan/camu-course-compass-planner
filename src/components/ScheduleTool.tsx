@@ -13,7 +13,7 @@ import EditBusyTimeDialog from "./EditBusyTimeDialog";
 // import AIAdvisorDialog from "./AIAdvisor"; // REMOVED
 import TunePreferencesDialog from "./TunePreferencesDialog";
 import CompareSchedulesDialog from "./CompareSchedulesDialog";
-import { PlusCircle, Sliders, ArrowLeftRight, ChevronDown, ChevronUp, CalendarPlus, Sparkles, Trash2, Download, Upload, Settings, ListChecks, CalendarDays, Edit3, Copy as CopyIcon, Share2, Lock, Unlock, AlertTriangle } from "lucide-react"; 
+import { PlusCircle, Sliders, ArrowLeftRight, ChevronDown, ChevronUp, CalendarPlus, Sparkles, Trash2, Download, Upload, Settings, ListChecks, CalendarDays, Edit3, Copy as CopyIcon, Share2, Lock, Unlock, AlertTriangle, ShoppingCart } from "lucide-react"; // Added ShoppingCart
 import { motion, AnimatePresence } from "framer-motion";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { downloadJson } from "@/lib/utils"; 
@@ -52,6 +52,7 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
     setSchedules, 
     studentInfo, 
     addCourse, // addCourse is from useSchedule context
+    moveToCart, 
   } = useSchedule();
 
   const completedCourseCodes = studentInfo?.completedCourses || [];
@@ -349,6 +350,19 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
                     <DropdownMenuContent align="end" className="w-56">
                       <DropdownMenuItem onClick={handleExportSchedule} disabled={!selectedSchedule}><Download className="mr-2 h-4 w-4" /> Export Schedule</DropdownMenuItem>
                       <DropdownMenuItem onClick={handleImportButtonClick}><Upload className="mr-2 h-4 w-4" /> Import Schedule</DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem 
+                        onClick={() => {
+                          if (selectedSchedule) {
+                            moveToCart();
+                            // Optional: navigate("/cart"); // If immediate navigation is desired
+                          }
+                        }} 
+                        disabled={!selectedSchedule}
+                      >
+                        <ShoppingCart className="mr-2 h-4 w-4" />
+                        Move to Cart
+                      </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={handleDuplicateSchedule} disabled={!selectedSchedule}><CopyIcon className="mr-2 h-4 w-4" /> Duplicate Schedule</DropdownMenuItem>
                       <DropdownMenuItem onClick={handleRenameSchedule} disabled={!selectedSchedule}><Edit3 className="mr-2 h-4 w-4" /> Rename Schedule</DropdownMenuItem>

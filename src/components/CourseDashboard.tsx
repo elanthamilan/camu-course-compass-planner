@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { mockPrograms, mockCourses, mockMandatoryCourses } from "@/lib/mock-data"; 
@@ -322,10 +323,6 @@ const CourseDashboard: React.FC = () => {
         </CardFooter>
       </Card>
 
-      {currentWhatIfProgram && whatIfAuditResults && (
-        <WhatIfDegreeAuditView whatIfProgram={currentWhatIfProgram} whatIfRequirements={whatIfAuditResults} onFindCoursesForRequirement={handleFindCoursesForRequirement} />
-      )}
-      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card>
           <CardHeader className="pb-2 flex flex-row items-center justify-between">
@@ -433,48 +430,108 @@ const CourseDashboard: React.FC = () => {
         </Card>
       </div>
 
-      <div className="space-y-6">
-        {yearsData.map((year) => (
-          <div key={year.year}>
-            <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-3"><h3 className="text-xl font-semibold">{year.year}</h3><p className="text-sm text-muted-foreground">{year.semesters.reduce((acc, sem) => acc + sem.creditsSelected, 0)} credits · {year.schedules} Schedules</p></div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {year.semesters.map((semester) => (
-                <Card key={semester.id} className="flex flex-col">
-                  <CardHeader>
-                    <div className="flex justify-between items-center">
-                      <CardTitle className="text-lg">{semester.name.replace(/\s\d{4}$/, "")}</CardTitle>
-                      <div className="flex space-x-1">
-                        <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive/80" onClick={() => handleRemoveSemester(semester.id)} aria-label="Remove semester"><Trash2 size={16} /></Button></TooltipTrigger><TooltipContent><p>Remove this semester (only if empty).</p></TooltipContent></Tooltip>
-                      </div>
-                    </div>
-                    <CardDescription>{semester.creditsSelected}/18 credits selected</CardDescription>
-                  </CardHeader>
-                  <CardContent className="flex-grow">
-                    <Select defaultValue="case-western"><SelectTrigger className="mb-3 text-xs h-8"><SelectValue placeholder="Select University" /></SelectTrigger><SelectContent><SelectItem value="case-western">Case Western Reserve University</SelectItem><SelectItem value="cleveland-state">Cleveland State University</SelectItem></SelectContent></Select>
-                    {semester.courses.length > 0 ? (
-                      <ul className="space-y-3">
-                        {semester.courses.map(course => (
-                          <li key={course.id} className="text-xs border-b pb-2 last:border-0 last:pb-0">
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <div className="flex items-center mb-0.5"><span className="font-semibold mr-1.5">{course.code}</span><Badge variant="secondary" className="mr-1.5">{course.credits} cr</Badge></div>
-                                <p className="text-muted-foreground leading-tight">{course.name}</p>
-                                {course.prerequisites && course.prerequisites.length > 0 && (<p className="mt-1 text-amber-600 text-[11px] leading-tight">Prereqs: {course.prerequisites.join(', ')}</p>)}
-                              </div>
-                              <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive/80" onClick={() => handleDeleteCourse(semester.id, course.id)} aria-label="Delete course"><Trash2 size={14} /></Button></TooltipTrigger><TooltipContent><p>Remove this course from the semester.</p></TooltipContent></Tooltip>
-                            </div>
-                          </li>))}
-                      </ul>) : (<p className="text-xs text-muted-foreground text-center mt-4">No courses added yet.</p>)}
-                  </CardContent>
-                  <CardFooter className="flex flex-col sm:flex-row gap-2 pt-4"> 
-                    <Tooltip><TooltipTrigger asChild><Button onClick={() => handleOpenCourseSearch(semester.id)} variant="outline" size="sm" className="w-full"><PlusCircle size={14} className="mr-1.5" /> Add Courses</Button></TooltipTrigger><TooltipContent><p>Search and add courses to this semester.</p></TooltipContent></Tooltip>
-                    <Tooltip><TooltipTrigger asChild><Button onClick={() => handleOpenSchedulePage(semester.id)} variant="default" size="sm" className="w-full">View Schedule <ArrowRight size={14} className="ml-1.5" /></Button></TooltipTrigger><TooltipContent><p>Open the detailed scheduling tool for this semester.</p></TooltipContent></Tooltip>
-                  </CardFooter>
-                </Card>))}
-            </div>
-            <div className="flex justify-center mt-4"><Tooltip><TooltipTrigger asChild><Button variant="outline" onClick={handleOpenAddSemesterDialog} className="w-full max-w-md border-dashed hover:border-solid"><PlusCircle size={16} className="mr-2" /> Add Semester</Button></TooltipTrigger><TooltipContent><p>Add a new academic semester to your plan.</p></TooltipContent></Tooltip></div>
-          </div>))}
-      </div>
+      <Tabs defaultValue="academic-plan" className="w-full mt-6">
+        <TabsList className="grid w-full grid-cols-2 mb-6">
+          <TabsTrigger value="academic-plan">My Academic Plan</TabsTrigger>
+          <TabsTrigger value="explore-programs">Explore Programs & What-If</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="academic-plan">
+          <div className="space-y-6">
+            {yearsData.map((year) => (
+              <div key={year.year}>
+                <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-3"><h3 className="text-xl font-semibold">{year.year}</h3><p className="text-sm text-muted-foreground">{year.semesters.reduce((acc, sem) => acc + sem.creditsSelected, 0)} credits · {year.schedules} Schedules</p></div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {year.semesters.map((semester) => (
+                    <Card key={semester.id} className="flex flex-col">
+                      <CardHeader>
+                        <div className="flex justify-between items-center">
+                          <CardTitle className="text-lg">{semester.name.replace(/\s\d{4}$/, "")}</CardTitle>
+                          <div className="flex space-x-1">
+                            <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive/80" onClick={() => handleRemoveSemester(semester.id)} aria-label="Remove semester"><Trash2 size={16} /></Button></TooltipTrigger><TooltipContent><p>Remove this semester (only if empty).</p></TooltipContent></Tooltip>
+                          </div>
+                        </div>
+                        <CardDescription>{semester.creditsSelected}/18 credits selected</CardDescription>
+                      </CardHeader>
+                      <CardContent className="flex-grow">
+                        <Select defaultValue="case-western"><SelectTrigger className="mb-3 text-xs h-8"><SelectValue placeholder="Select University" /></SelectTrigger><SelectContent><SelectItem value="case-western">Case Western Reserve University</SelectItem><SelectItem value="cleveland-state">Cleveland State University</SelectItem></SelectContent></Select>
+                        {semester.courses.length > 0 ? (
+                          <ul className="space-y-3">
+                            {semester.courses.map(course => (
+                              <li key={course.id} className="text-xs border-b pb-2 last:border-0 last:pb-0">
+                                <div className="flex justify-between items-start">
+                                  <div>
+                                    <div className="flex items-center mb-0.5"><span className="font-semibold mr-1.5">{course.code}</span><Badge variant="secondary" className="mr-1.5">{course.credits} cr</Badge></div>
+                                    <p className="text-muted-foreground leading-tight">{course.name}</p>
+                                    {course.prerequisites && course.prerequisites.length > 0 && (<p className="mt-1 text-amber-600 text-[11px] leading-tight">Prereqs: {course.prerequisites.join(', ')}</p>)}
+                                  </div>
+                                  <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive/80" onClick={() => handleDeleteCourse(semester.id, course.id)} aria-label="Delete course"><Trash2 size={14} /></Button></TooltipTrigger><TooltipContent><p>Remove this course from the semester.</p></TooltipContent></Tooltip>
+                                </div>
+                              </li>))}
+                          </ul>) : (<p className="text-xs text-muted-foreground text-center mt-4">No courses added yet.</p>)}
+                      </CardContent>
+                      <CardFooter className="flex flex-col sm:flex-row gap-2 pt-4"> 
+                        <Tooltip><TooltipTrigger asChild><Button onClick={() => handleOpenCourseSearch(semester.id)} variant="outline" size="sm" className="w-full"><PlusCircle size={14} className="mr-1.5" /> Add Courses</Button></TooltipTrigger><TooltipContent><p>Search and add courses to this semester.</p></TooltipContent></Tooltip>
+                        <Tooltip><TooltipTrigger asChild><Button onClick={() => handleOpenSchedulePage(semester.id)} variant="default" size="sm" className="w-full">View Schedule <ArrowRight size={14} className="ml-1.5" /></Button></TooltipTrigger><TooltipContent><p>Open the detailed scheduling tool for this semester.</p></TooltipContent></Tooltip>
+                      </CardFooter>
+                    </Card>))}
+                </div>
+                <div className="flex justify-center mt-4"><Tooltip><TooltipTrigger asChild><Button variant="outline" onClick={handleOpenAddSemesterDialog} className="w-full max-w-md border-dashed hover:border-solid"><PlusCircle size={16} className="mr-2" /> Add Semester</Button></TooltipTrigger><TooltipContent><p>Add a new academic semester to your plan.</p></TooltipContent></Tooltip></div>
+              </div>))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="explore-programs">
+          <Card className="w-full mb-4">
+            <CardHeader><CardTitle>Explore Programs (What-If Analysis)</CardTitle><CardDescription>See how your completed courses apply to a different major or minor.</CardDescription></CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="whatif-major-select">Select a "What-If" Major:</Label>
+                <Select value={selectedWhatIfMajorId || ""} onValueChange={(value) => setSelectedWhatIfMajorId(value === "none" ? null : value)}>
+                  <SelectTrigger id="whatif-major-select" className="mt-1"><SelectValue placeholder="Choose a major to explore..." /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None (Show my actual major)</SelectItem>
+                    {mockPrograms.filter(p => p.type === 'Major').map(program => (<SelectItem key={program.id} value={program.id}>{program.name}</SelectItem>))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="whatif-minor-select">Add a "What-If" Minor (Optional):</Label>
+                <Select value={selectedWhatIfMinorId || ""} onValueChange={(value) => setSelectedWhatIfMinorId(value === "none" ? null : value)} disabled={!selectedWhatIfMajorId}>
+                  <SelectTrigger id="whatif-minor-select" className="mt-1"><SelectValue placeholder="Choose a minor to add..." /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    {mockPrograms.filter(p => p.type === 'Minor').map(program => (<SelectItem key={program.id} value={program.id}>{program.name}</SelectItem>))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+            <CardFooter className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => { setSelectedWhatIfMajorId(null); setSelectedWhatIfMinorId(null); setWhatIfAuditResults(null); setCurrentWhatIfProgram(null); toast.info("What-If analysis cleared. Showing your actual program progress."); }}>Clear What-If</Button>
+              <Button onClick={() => {
+                if (!selectedWhatIfMajorId) { setWhatIfAuditResults(null); setCurrentWhatIfProgram(null); toast.info("Please select a 'What-If' Major to analyze."); return; }
+                const targetMajorProgram = mockPrograms.find(p => p.id === selectedWhatIfMajorId);
+                if (targetMajorProgram) {
+                  const currentCompletedCourseCodes = studentInfo?.completedCourses || [];
+                  const auditResults = calculateWhatIfAudit(currentCompletedCourseCodes, targetMajorProgram, mockCourses);
+                  setWhatIfAuditResults(auditResults); setCurrentWhatIfProgram(targetMajorProgram); toast.success(`What-If analysis complete for ${targetMajorProgram.name}.`);
+                } else { toast.error("Could not find the selected What-If program details."); setWhatIfAuditResults(null); setCurrentWhatIfProgram(null); }
+              }} disabled={!selectedWhatIfMajorId}>Analyze Selected Program(s)</Button>
+            </CardFooter>
+          </Card>
+
+          {currentWhatIfProgram && whatIfAuditResults && (
+            <WhatIfDegreeAuditView whatIfProgram={currentWhatIfProgram} whatIfRequirements={whatIfAuditResults} onFindCoursesForRequirement={handleFindCoursesForRequirement} />
+          )}
+
+          <div className="mt-6 pt-6 border-t">
+            <h3 className="text-lg font-semibold text-muted-foreground">Course Catalogue</h3>
+            <p className="text-sm text-muted-foreground mt-2">
+              (Future area for browsing all available courses)
+            </p>
+          </div>
+        </TabsContent>
+      </Tabs>
 
       <CourseSearch 
         open={isCourseSearchOpen} 
