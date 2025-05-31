@@ -10,7 +10,9 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "jest",
-    "deploy": "npm run build && gh-pages -d dist"
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist",
+    "deploy:force": "gh-pages -d dist -f"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.11",
