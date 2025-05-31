@@ -68,6 +68,39 @@ This project is built with:
 
 ## How can I deploy this project?
 
+This project supports multiple deployment platforms:
+
+### Netlify Deployment (Recommended)
+
+1. **Connect your repository to Netlify:**
+   - Go to [Netlify](https://netlify.com) and sign in
+   - Click "New site from Git"
+   - Connect your GitHub repository
+   - Select the `refactor/schedule-functionality` branch
+
+2. **Configure build settings:**
+   - Build command: `npm run build`
+   - Publish directory: `dist`
+   - Node.js version: `18` (automatically detected from `.nvmrc`)
+
+3. **Deploy:**
+   - Netlify will automatically build and deploy your site
+   - The `netlify.toml` configuration handles SPA routing and optimizations
+
+### GitHub Pages Deployment
+
+1. **Build and deploy:**
+   ```sh
+   npm run deploy
+   ```
+
+2. **Or force deploy:**
+   ```sh
+   npm run deploy:force
+   ```
+
+### Lovable Deployment
+
 Simply open [Lovable](https://lovable.dev/projects/a9866116-10eb-43cc-8f79-4ebbad587b9b) and click on Share -> Publish.
 
 ## Can I connect a custom domain to my Lovable project?

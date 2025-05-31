@@ -20,7 +20,10 @@ const App = () => (
       <Toaster />
       <Sonner />
       <ScheduleProvider>
-        <BrowserRouter basename={import.meta.env.PROD ? '/camu-course-compass-planner' : ''}>
+        <BrowserRouter basename={
+          // Use root path for Netlify, GitHub Pages path for GitHub deployment
+          import.meta.env.PROD && !import.meta.env.VITE_NETLIFY ? '/camu-course-compass-planner' : ''
+        }>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/schedule" element={<SchedulePage />} />
