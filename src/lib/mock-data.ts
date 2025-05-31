@@ -299,6 +299,7 @@ export const mockCourses: Course[] = [
   { id: "test200", code: "TEST200", name: "Test Mid Course", credits: 3, department: "Testing", prerequisites: ["TEST100"], sections: [{id: "test200-001", courseId: "test200", crn: "00200", instructor:"Staff", sectionNumber:"001", schedule:[], location:"", maxSeats:10, availableSeats:10}] },
   { id: "test300", code: "TEST300", name: "Test Top Course", credits: 3, department: "Testing", prerequisites: ["TEST200"], sections: [{id: "test300-001", courseId: "test300", crn: "00300", instructor:"Staff", sectionNumber:"001", schedule:[], location:"", maxSeats:10, availableSeats:10}] },
   { id: "test400", code: "TEST400", name: "Test Course with Missing Prereq", credits: 3, department: "Testing", prerequisites: ["XYZ123"], sections: [{id: "test400-001", courseId: "test400", crn: "00400", instructor:"Staff", sectionNumber:"001", schedule:[], location:"", maxSeats:10, availableSeats:10}] },
+
   // Circular dependency test courses
   { id: "circ1", code: "CIRC1", name: "Circular 1", credits: 3, department: "Testing", prerequisites: ["CIRC2"], sections: [{id: "circ1-001", courseId: "circ1", crn: "00501", instructor:"Staff", sectionNumber:"001", schedule:[], location:"", maxSeats:10, availableSeats:10}] },
   { id: "circ2", code: "CIRC2", name: "Circular 2", credits: 3, department: "Testing", prerequisites: ["CIRC1"], sections: [{id: "circ2-001", courseId: "circ2", crn: "00502", instructor:"Staff", sectionNumber:"001", schedule:[], location:"", maxSeats:10, availableSeats:10}] },
@@ -849,10 +850,7 @@ export const mockCourses: Course[] = [
         maxSeats: 50, availableSeats: 15, sectionType: "Ensemble", term: "Fall 2024", campus: "East Campus",
       }
     ]
-  }
-  // End of new courses
-];
-
+  },
   // Start of New Courses
   {
     id: "NURS201",

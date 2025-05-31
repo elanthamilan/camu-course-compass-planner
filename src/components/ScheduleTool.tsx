@@ -98,22 +98,37 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
   // Effect for initial automatic schedule generation.
   // This attempts to generate schedules when the component mounts if courses are present
   // and no schedules have been generated yet.
-  // TODO: Consider making auto-generation more explicit or configurable by the user.
+  // UPDATED: Now also triggers immediate generation when autoGenerate=true in URL
   useEffect(() => {
-    if (courses.length > 0 && schedules.length === 0 && selectedCourses.length > 0 && !isGenerating) {
-      // Only auto-generate if there are courses, no existing schedules, selected courses for generation, and not already generating.
-      // This aims to provide an initial set of schedules for the user.
+    const urlParams = new URLSearchParams(window.location.search);
+    const shouldAutoGenerate = urlParams.get('autoGenerate') === 'true';
+
+    if (shouldAutoGenerate && courses.length > 0 && selectedCourses.length > 0 && !isGenerating) {
+      // IMMEDIATE generation when coming from "Build Conflict-Free Schedule" button
+      console.log("Triggering IMMEDIATE schedule generation from homepage button");
+      handleGenerateSchedule();
+
+      // Remove the autoGenerate flag from URL to prevent repeated generation
+      urlParams.delete('autoGenerate');
+      const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
+      window.history.replaceState({}, '', newUrl);
+
+      // Exit early to prevent the delayed auto-generation from also running
+      return;
+    }
+
+    // Only run delayed auto-generation if NOT coming from homepage
+    if (courses.length > 0 && schedules.length === 0 && selectedCourses.length > 0 && !isGenerating && !shouldAutoGenerate) {
+      // Original auto-generation logic with delay (only if not immediate generation)
       const timeoutId = setTimeout(() => {
-        // console.log("Attempting initial automatic schedule generation."); // For debugging
+        console.log("Attempting delayed automatic schedule generation");
         handleGenerateSchedule();
       }, 500); // Timeout to allow other initial state updates to settle.
 
       return () => clearTimeout(timeoutId);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [courses.length, schedules.length]); // Dependencies: re-run if course count or schedule count changes.
-                                          // selectedCourses.length was removed to avoid potential circular updates if it was set by this effect.
-                                          // isGenerating is added to avoid re-triggering if already generating.
+  }, [courses.length, schedules.length, selectedCourses.length]); // Dependencies: re-run if course count or schedule count changes.
 
   /** Toggles the selection state of a course for schedule generation. */
   const handleCourseToggle = (courseId: string) => {

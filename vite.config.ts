@@ -5,6 +5,7 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
+  base: mode === 'production' ? '/camu-course-compass-planner/' : '/',
   server: {
     host: "127.0.0.1",
     port: 8080,

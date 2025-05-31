@@ -20,6 +20,7 @@ export interface Course {
 
 export interface CourseSection {
   id: string;
+  courseId: string; // Added to ensure every section knows its parent course
   crn: string;
   instructor: string;
   schedule: SectionSchedule[];

@@ -69,16 +69,16 @@ const CourseSearchModal: React.FC<CourseSearchModalProps> = ({
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent className="h-[90vh] max-w-6xl mx-auto flex flex-col">
-        <DrawerHeader>
+        <DrawerHeader className="flex-shrink-0">
           <DrawerTitle className="flex items-center">
             <Search className="h-5 w-5 mr-2" />
             Add Course {termId && `to ${termId}`}
           </DrawerTitle>
         </DrawerHeader>
 
-        <div className="flex-1 flex flex-col space-y-4 px-4">
+        <div className="flex-1 flex flex-col min-h-0 px-4">
           {/* Search Controls */}
-          <div className="flex gap-4">
+          <div className="flex gap-4 mb-4 flex-shrink-0">
             <div className="flex-1">
               <Input
                 type="text"
@@ -104,15 +104,18 @@ const CourseSearchModal: React.FC<CourseSearchModalProps> = ({
           </div>
 
           {/* Results Count */}
-          <div className="p-2 bg-gray-50 rounded-lg border">
+          <div className="p-2 bg-gray-50 rounded-lg border mb-4 flex-shrink-0">
             <p className="text-sm font-medium text-gray-700">
               {filteredCourses.length} courses found
+              {filteredCourses.length > 6 && (
+                <span className="text-xs text-gray-500 ml-2">• Scroll to see more</span>
+              )}
             </p>
           </div>
 
-          {/* Course List */}
-          <div className="flex-1 overflow-y-auto">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {/* Course List - Scrollable Area */}
+          <div className="flex-1 overflow-y-auto min-h-0 pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 hover:scrollbar-thumb-gray-400 scroll-smooth">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pb-4">
               {filteredCourses.map((course) => (
                 <div
                   key={course.id}
@@ -252,7 +255,7 @@ const CourseSearchModal: React.FC<CourseSearchModalProps> = ({
           </div>
         </div>
 
-        <DrawerFooter>
+        <DrawerFooter className="flex-shrink-0 border-t bg-white">
           <Button variant="outline" onClick={handleClose}>
             <X className="h-4 w-4 mr-2" />
             Close

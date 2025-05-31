@@ -77,6 +77,8 @@ module.exports = {
   plugins: [
     // Add tailwindcss-animate if it's being used (it was in the original issue)
     require('tailwindcss-animate'),
+    // Add tailwind-scrollbar for custom scrollbar styling
+    require('tailwind-scrollbar'),
   ],
   // Add safelist for dynamic classes as provided by user
   safelist: [

@@ -119,10 +119,21 @@ const CourseDashboard: React.FC = () => {
 
     if (semester && semester.courses.length > 0) {
       // Sync courses to ScheduleContext before navigating
-      semester.courses.forEach(course => {
-        addCourse(course);
+      // IMPORTANT: Get full course data with sections from mockCourses
+      semester.courses.forEach(semesterCourse => {
+        // Find the full course data from mockCourses using the course ID
+        const fullCourse = mockCourses.find(c => c.id === semesterCourse.id);
+        if (fullCourse) {
+          addCourse(fullCourse); // Add the full course with sections
+        } else {
+          console.warn(`Course ${semesterCourse.id} not found in mockCourses`);
+          // Fallback: add the semester course as-is (but it won't have sections)
+          addCourse(semesterCourse);
+        }
       });
-      navigate(`/schedule?semester=${semesterId}`);
+
+      // Navigate to schedule page with immediate generation flag
+      navigate(`/schedule?semester=${semesterId}&autoGenerate=true`);
     } else {
       toast.error("Please add courses to this semester before building a schedule.");
     }
