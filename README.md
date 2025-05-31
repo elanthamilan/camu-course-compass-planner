@@ -1,4 +1,8 @@
-# Welcome to your Lovable project
+# CAMU Course Compass Planner
+
+An intelligent course planning and scheduling system built with React, TypeScript, and modern web technologies.
+
+🌐 **Live Demo:** https://elanthamilan.github.io/camu-course-compass-planner/
 
 ## Project info
 
