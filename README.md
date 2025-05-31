@@ -4,6 +4,8 @@ An intelligent course planning and scheduling system built with React, TypeScrip
 
 🌐 **Live Demo:** https://elanthamilan.github.io/camu-course-compass-planner/
 
+⚡ **Status:** Rebuilding with latest fixes...
+
 ## Project info
 
 **URL**: https://lovable.dev/projects/a9866116-10eb-43cc-8f79-4ebbad587b9b
