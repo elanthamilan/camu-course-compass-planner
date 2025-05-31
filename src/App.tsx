@@ -20,7 +20,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <ScheduleProvider>
-        <BrowserRouter>
+        <BrowserRouter basename={import.meta.env.PROD ? '/camu-course-compass-planner' : ''}>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/schedule" element={<SchedulePage />} />
