@@ -33,7 +33,14 @@ const filterEligibleCourses = (
   excludeHonorsMap: Record<string, boolean>,
   selectedSectionMap: Record<string, string[] | 'all'>
 ): { eligibleCoursesForScheduling: Course[], schedulableCourses: Course[], fixedCourseIds: string[] } => {
+  console.log("[Debug] filterEligibleCourses: All Courses", allCourses);
+  console.log("[Debug] filterEligibleCourses: Selected IDs", selectedCourseIds);
+  console.log("[Debug] filterEligibleCourses: Fixed Sections", fixedSections);
+  console.log("[Debug] filterEligibleCourses: Exclude Honors Map", excludeHonorsMap);
+  console.log("[Debug] filterEligibleCourses: Selected Section Map", selectedSectionMap);
+
   const fixedCourseIds = fixedSections.map(section => section.id.split('-')[0]);
+  console.log("[Debug] filterEligibleCourses: Fixed Course IDs", fixedCourseIds);
 
   // Filter out courses that are already covered by fixedSections from the initial selection
   const eligibleCoursesForScheduling = allCourses.filter(course =>
@@ -42,6 +49,7 @@ const filterEligibleCourses = (
 
   // Further process the eligible courses to apply section-specific preferences
   const schedulableCourses = eligibleCoursesForScheduling.map(course => {
+    console.log(`[Debug] filterEligibleCourses: Processing eligible course ${course.id}`, course);
     let availableSections = course.sections;
     // Filter out honors sections if excluded
     if (excludeHonorsMap[course.id]) {
@@ -53,8 +61,16 @@ const filterEligibleCourses = (
       availableSections = availableSections.filter(section => selection.includes(section.id));
     }
     return { ...course, sections: availableSections };
-  }).filter(course => course.sections.length > 0); // Only include courses that still have sections after filtering
+  }).filter(course => {
+    const hasSections = course.sections.length > 0;
+    if (!hasSections) {
+      console.log(`[Debug] filterEligibleCourses: Course ${course.id} filtered out, no available sections after preferences.`);
+    }
+    return hasSections;
+  }); // Only include courses that still have sections after filtering
 
+  console.log("[Debug] filterEligibleCourses: Result - Eligible for Scheduling", eligibleCoursesForScheduling);
+  console.log("[Debug] filterEligibleCourses: Result - Schedulable (after section prefs)", schedulableCourses);
   return { eligibleCoursesForScheduling, schedulableCourses, fixedCourseIds };
 };
 
@@ -89,34 +105,47 @@ const recursivelyBuildSchedules = (
   coursesNotScheduled: Set<string>,
   initialFixedSectionsCount: number
 ): number => {
+  console.log(`[Debug] recursivelyBuildSchedules: Index=${courseIndex}, CurrentSections#=${currentScheduleSections.length}, GenCount=${generatedSchedulesCount}, Schedulable#=${schedulableCourses.length}, FixedCount=${initialFixedSectionsCount}`);
+  // console.log("[Debug] recursivelyBuildSchedules: Current Sections", JSON.stringify(currentScheduleSections.map(s=>s.id)));
+  // console.log("[Debug] recursivelyBuildSchedules: Schedulable Courses", JSON.stringify(schedulableCourses.map(c=>c.id)));
+
+
   // Stop if the maximum number of schedules to generate has been reached
   if (generatedSchedulesCount >= MAX_SCHEDULES_TO_GENERATE) {
+    console.log("[Debug] recursivelyBuildSchedules: Max schedules generated, returning.");
     return generatedSchedulesCount;
   }
 
   // Base case: all schedulable courses have been considered
   if (courseIndex === schedulableCourses.length) {
+    console.log("[Debug] recursivelyBuildSchedules: Base case reached (all courses processed).");
     const finalSections = [...currentScheduleSections];
+    console.log("[Debug] recursivelyBuildSchedules: Final sections for potential schedule", finalSections.map(s=>s.id));
 
     // Base Case Condition:
     // If there were courses intended to be scheduled (schedulableCourses.length > 0),
     // then a valid generated schedule must contain more sections than the initial fixed sections.
     // This ensures that at least one course from `schedulableCourses` was actually added.
     if (schedulableCourses.length > 0 && finalSections.length <= initialFixedSectionsCount) {
+        console.log("[Debug] recursivelyBuildSchedules: Base Case - Not a valid new combination (no new schedulable courses added to fixed ones).");
         return generatedSchedulesCount; // Not a valid new schedule combination
     }
     // Also, if there were no schedulable courses and no fixed sections, don't save an empty schedule.
     if (schedulableCourses.length === 0 && initialFixedSectionsCount === 0 && finalSections.length === 0) {
+        console.log("[Debug] recursivelyBuildSchedules: Base Case - Empty schedule (no schedulable, no fixed), not saving.");
         return generatedSchedulesCount;
     }
+
+    console.log("[Debug] recursivelyBuildSchedules: Base Case - Valid schedule found, adding.");
     const newSchedule: Schedule = {
-      id: `gen-sched-${Date.now()}-${foundSchedules.length + 1}`,
+      id: `gen-sched-${Date.now()}-${foundSchedules.length + 1}`, // Date.now() will be mocked in tests
       name: `Generated Schedule ${foundSchedules.length + 1} (${finalSections.length} courses)`,
       termId: currentTermId || "",
       sections: finalSections,
       busyTimes,
       totalCredits: finalSections.reduce((acc, section) => {
-        const parentCourse = allCourses.find(c => c.id === section.id.split('-')[0]);
+        // Use section.courseId for robustness instead of splitting section.id
+        const parentCourse = allCourses.find(c => c.id === section.courseId);
         return acc + (parentCourse?.credits || 0);
       }, 0),
       conflicts: []
@@ -124,8 +153,9 @@ const recursivelyBuildSchedules = (
     foundSchedules.push(newSchedule);
 
     finalSections.forEach(s => {
-      const courseCode = allCourses.find(c => c.id === s.id.split('-')[0])?.code;
-      if (courseCode) coursesNotScheduled.delete(courseCode);
+      // Use section.courseId for robustness
+      const parentCourse = allCourses.find(c => c.id === s.courseId);
+      if (parentCourse?.code) coursesNotScheduled.delete(parentCourse.code);
     });
     return generatedSchedulesCount + 1;
   }
@@ -134,22 +164,36 @@ const recursivelyBuildSchedules = (
   let newGeneratedSchedulesCount = generatedSchedulesCount;
 
   if (!currentCourse) {
+    console.log("[Debug] recursivelyBuildSchedules: Current course is undefined, returning."); // Should ideally not happen if courseIndex < schedulableCourses.length
     return newGeneratedSchedulesCount;
   }
+  console.log(`[Debug] recursivelyBuildSchedules: Processing course ${currentCourse.id} (${currentCourse.code})`);
 
-  let courseWasScheduledInThisPath = false;
+  // let courseWasScheduledInThisPath = false; // Old variable, replaced for clarity
+  let currentCourseSuccessfullyContributed = false; // True if any section of this course leads to a new schedule
+
   for (const section of currentCourse.sections) {
-    if (isSectionConflictWithBusyTimes(section, busyTimes) ||
-        isSectionConflictWithOtherSections(section, currentScheduleSections)) {
+    console.log(`[Debug] recursivelyBuildSchedules: Trying section ${section.id} for course ${currentCourse.id}`);
+    const conflictWithBusy = isSectionConflictWithBusyTimes(section, busyTimes);
+    const conflictWithOther = isSectionConflictWithOtherSections(section, currentScheduleSections);
+
+    if (conflictWithBusy || conflictWithOther) {
+      if (conflictWithBusy) console.log(`[Debug] recursivelyBuildSchedules: Section ${section.id} conflicts with BUSY TIMES.`);
+      if (conflictWithOther) console.log(`[Debug] recursivelyBuildSchedules: Section ${section.id} conflicts with OTHER SECTIONS in current path: ${currentScheduleSections.map(s=>s.id).join(', ')}`);
       continue;
     }
 
+    console.log(`[Debug] recursivelyBuildSchedules: Section ${section.id} is VALID for now. Adding to current path.`);
     currentScheduleSections.push(section);
-    courseWasScheduledInThisPath = true;
-    newGeneratedSchedulesCount = recursivelyBuildSchedules(
-      courseIndex + 1,
-      currentScheduleSections,
-      newGeneratedSchedulesCount,
+    // courseWasScheduledInThisPath = true; // Old logic
+
+    const countBeforeRecursiveCall = newGeneratedSchedulesCount;
+    newGeneratedSchedulesCount = recursivelyBuildSchedules( // Recursive call
+      courseIndex + 1, // Process the next course
+      currentScheduleSections, // Pass the current path including the new section
+      countBeforeRecursiveCall, // Pass the count *before* this path explored further
+                                // If this path finds schedules, it will increment its return from this base.
+                                // This ensures newGeneratedSchedulesCount correctly reflects total unique schedules found.
       schedulableCourses,
       foundSchedules,
       allCourses,
@@ -159,20 +203,32 @@ const recursivelyBuildSchedules = (
       coursesNotScheduled,
       initialFixedSectionsCount
     );
+
+    if (newGeneratedSchedulesCount > countBeforeRecursiveCall) {
+      currentCourseSuccessfullyContributed = true; // This section (and thus this course) was part of at least one new schedule found
+    }
+
     currentScheduleSections.pop(); // Backtrack
+    console.log(`[Debug] recursivelyBuildSchedules: Backtracked. Removed section ${section.id}. Current path: ${currentScheduleSections.map(s=>s.id).join(', ')}`);
 
     if (newGeneratedSchedulesCount >= MAX_SCHEDULES_TO_GENERATE) {
+      console.log(`[Debug] recursivelyBuildSchedules: Max schedules reached after trying section ${section.id}. Breaking from section loop for course ${currentCourse.id}`);
       break;
     }
   }
 
-  // If no section of the current course could be scheduled,
-  // try to build schedules with the remaining courses.
-  if (!courseWasScheduledInThisPath) {
-     newGeneratedSchedulesCount = recursivelyBuildSchedules(
-      courseIndex + 1,
-      currentScheduleSections,
-      newGeneratedSchedulesCount,
+  // If NO section of the current course led to any new schedule (i.e., currentCourseSuccessfullyContributed is false),
+  // then try to build schedules by SKIPPING the current course entirely.
+  if (!currentCourseSuccessfullyContributed) {
+    console.log(`[Debug] recursivelyBuildSchedules: No section for course ${currentCourse.id} contributed to a new schedule. Trying to schedule subsequent courses without it.`);
+    // Pass newGeneratedSchedulesCount, which reflects schedules found through prior paths NOT involving this currentCourse's sections that failed.
+    // If currentCourse was the first one, newGeneratedSchedulesCount would be the initial 0.
+    // If prior courses in the recursion already found schedules, newGeneratedSchedulesCount reflects that.
+    // This call explores paths that entirely exclude currentCourse.
+    newGeneratedSchedulesCount = recursivelyBuildSchedules(
+      courseIndex + 1, // Move to the next course, effectively skipping currentCourse
+      currentScheduleSections, // Pass the schedule sections *as they were before trying currentCourse's sections*
+      newGeneratedSchedulesCount, // Continue with the count of schedules found so far
       schedulableCourses,
       foundSchedules,
       allCourses,
@@ -270,7 +326,7 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
       termId: "fall2024",
       sections: mockSchedules[0]?.sections || [],
       busyTimes: [],
-      totalCredits: 15,
+      totalCredits: 9, // Corrected from 15, based on mockSchedules[0]
       conflicts: []
     },
     {
@@ -279,7 +335,7 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
       termId: "fall2024",
       sections: mockSchedules[1]?.sections || [],
       busyTimes: [],
-      totalCredits: 16,
+      totalCredits: 9, // Corrected from 16, based on mockSchedules[1]
       conflicts: []
     }
   ]);
@@ -374,7 +430,10 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
    * Note: This is typically not for schedules generated by the algorithm.
    */
   const addSchedule = (schedule: Schedule) => {
-    // Consider adding a check for duplicate schedule IDs or names if necessary
+    if (schedules.find(s => s.id === schedule.id)) {
+      toast.error(`Schedule with ID "${schedule.id}" already exists and cannot be added again.`);
+      return;
+    }
     setSchedules(prev => [...prev, schedule]);
     toast.success(`Added schedule: ${schedule.name}`);
   };
@@ -399,11 +458,12 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
     if (schedule) {
       setSelectedSchedule(schedule);
       // toast.info(`Selected schedule: ${schedule.name}`); // Optional: can be noisy
-    } else if (!scheduleId) {
-      setSelectedSchedule(null); // Explicitly null when deselecting
+    } else if (scheduleId) { // scheduleId was provided but schedule not found
+      toast.warn(`Could not find schedule with ID "${scheduleId}".`);
+      setSelectedSchedule(null); // Or keep previous selectedSchedule, debatable. Clearing seems safer.
+    } else { // scheduleId is null (deselecting)
+      setSelectedSchedule(null);
     }
-    // If schedule not found for a given ID, selectedSchedule remains unchanged or becomes null.
-    // Could add a toast.warn if a scheduleId is provided but not found.
   };
 
   /**
@@ -411,9 +471,11 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
    * busy times, and user preferences.
    */
   const generateSchedules = (selectedCourseIds: string[], fixedSections: CourseSection[] = []) => {
+    console.log("[Debug] generateSchedules: Called with selectedCourseIds:", selectedCourseIds, "fixedSections:", fixedSections);
     toast.info("Generating schedules based on preferences...");
 
     if (!selectedCourseIds || selectedCourseIds.length === 0) {
+      console.log("[Debug] generateSchedules: No courses selected.");
       toast.error("No courses selected for schedule generation.");
       setSchedules([]);
       setSelectedSchedule(null);
@@ -421,55 +483,76 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const { eligibleCoursesForScheduling, schedulableCourses, fixedCourseIds } = filterEligibleCourses(
-      courses,
-      selectedCourseIds,
-      fixedSections,
-      excludeHonorsMap,
-      selectedSectionMap
+      courses, // All courses from context
+      selectedCourseIds, // IDs of courses user wants to schedule
+      fixedSections, // Sections user has locked
+      excludeHonorsMap, // Preferences for excluding honors
+      selectedSectionMap // Preferences for specific sections
     );
+    console.log("[Debug] generateSchedules: Eligible courses for dynamic scheduling:", eligibleCoursesForScheduling.map(c=>c.id));
+    console.log("[Debug] generateSchedules: Schedulable courses (after section prefs):", schedulableCourses.map(c=>c.id));
+    console.log("[Debug] generateSchedules: Fixed course IDs derived:", fixedCourseIds);
+
 
     // Handle cases where no courses are available for scheduling
     if (eligibleCoursesForScheduling.length === 0 && fixedSections.length > 0) {
+      console.log("[Debug] generateSchedules: All selected courses are covered by fixed sections.");
       // All selected courses are covered by fixed sections, create a schedule with only these fixed sections.
       const newSchedule: Schedule = {
-        id: `gen-sched-${Date.now()}-locked`,
+        id: `gen-sched-${Date.now()}-locked`, // Date.now() will be mocked in tests
         name: `Schedule with Locked Courses (${fixedSections.length} courses)`,
         termId: currentTerm?.id || "",
         sections: [...fixedSections], // Directly use the provided fixed sections
         busyTimes,
         totalCredits: fixedSections.reduce((acc, section) => {
           // Find the parent course to get credit information
-          const parentCourse = courses.find(c => c.id === section.id.split('-')[0]);
+          // Use section.courseId for robustness
+          const parentCourse = courses.find(c => c.id === section.courseId);
           return acc + (parentCourse?.credits || 0);
         }, 0),
         conflicts: [] // Conflict checking for fixed sections can be added if necessary
       };
-      setSchedules(prev => [...prev.filter(s => !s.name.startsWith("Generated Schedule")), newSchedule]);
+      setSchedules(prev => [...prev.filter(s => !s.id.startsWith("gen-sched-")), newSchedule]); // Filter by ID prefix
       setSelectedSchedule(newSchedule);
       toast.success(`Successfully created a schedule with ${fixedSections.length} locked course(s).`);
       return;
     }
 
     if (eligibleCoursesForScheduling.length === 0 && fixedSections.length === 0) {
+      console.log("[Debug] generateSchedules: No courses available to schedule (neither selected nor locked).");
       toast.error("No courses were selected for scheduling, or all selected courses were empty.");
       setSchedules([]); // Clear previous generated schedules
       setSelectedSchedule(null);
       return;
     }
 
-    if (schedulableCourses.length === 0) {
+    if (schedulableCourses.length === 0 && eligibleCoursesForScheduling.length > 0) {
+      // This case means courses were selected, not all were fixed, but after applying section-specific
+      // preferences (like specific sections chosen by user, or honors exclusion), none remained.
+      console.log("[Debug] generateSchedules: No courses have available sections after applying user's section preferences.");
       toast.error("No courses have available sections after applying your section preferences (e.g., specific sections, excluding honors). Please adjust your preferences or course selections.");
       setSchedules([]);
       setSelectedSchedule(null);
       return;
     }
+     if (schedulableCourses.length === 0 && fixedSections.length > 0 && eligibleCoursesForScheduling.length === 0) {
+      // This specific case is when all selected courses were fixed, so schedulableCourses would be empty.
+      // This is handled by the (eligibleCoursesForScheduling.length === 0 && fixedSections.length > 0) block above.
+      // Adding a log here for completeness, though it might be redundant if the above block always catches it.
+      console.log("[Debug] generateSchedules: All selected courses were fixed, and no other courses were available/selected for dynamic scheduling.");
+      // The schedule with only fixed sections is created above. No further error needed here.
+      // Fall through if already handled. If not, it implies an edge case not caught.
+    }
+
 
     // Notify if some courses were filtered out due to section preferences
     if (schedulableCourses.length < eligibleCoursesForScheduling.length) {
+        console.log("[Debug] generateSchedules: Some courses were filtered out due to section preferences.");
         toast.info("Some selected courses had no available sections after applying section-specific preferences (like specific sections or excluding honors) and were not included in the generation process.");
     }
 
     // Schedule generation algorithm starts here
+    console.log("[Debug] generateSchedules: Starting recursive build process...");
     const foundSchedules: Schedule[] = [];
     // This set is used to track which of the originally selected courses could not be scheduled.
     const coursesNotScheduled = new Set<string>(
@@ -508,20 +591,23 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
       const allScheduledCourseIdsInFoundSchedules = new Set<string>();
       foundSchedules.forEach(schedule => {
         schedule.sections.forEach(section => {
-          allScheduledCourseIdsInFoundSchedules.add(section.id.split('-')[0]);
+          // Use section.courseId
+          allScheduledCourseIdsInFoundSchedules.add(section.courseId);
         });
       });
 
-      const coursesThatCouldNotBePlaced = selectedCourseIds.filter(id => {
-        // A course is considered "not placed" if it wasn't a fixed section and isn't in any generated schedule.
-        const isFixed = fixedCourseIds.includes(id);
-        const isInGenerated = allScheduledCourseIdsInFoundSchedules.has(id);
-        return !isFixed && !isInGenerated;
-      }).map(id => courses.find(c => c.id === id)?.code || id);
+      const coursesThatCouldNotBePlaced = selectedCourseIds
+        .filter(courseId => {
+          // A course is "not placed" if it's not fixed AND not in any generated schedule's sections.
+          const isFixed = fixedCourseIds.includes(courseId);
+          const isInGenerated = allScheduledCourseIdsInFoundSchedules.has(courseId);
+          return !isFixed && !isInGenerated;
+        })
+        .map(courseId => courses.find(c => c.id === courseId)?.code || courseId);
 
 
       if (coursesThatCouldNotBePlaced.length > 0) {
-        toast.info(`Could not include the following courses in the generated schedules: ${coursesThatCouldNotBePlaced.join(', ')}. This might be due to conflicts or no available sections fitting your preferences.`);
+        toast.info(`Could not include the following selected courses in the generated schedules: ${coursesThatCouldNotBePlaced.join(', ')}. This might be due to conflicts or lack of suitable sections based on your preferences.`);
       }
     } else {
       // Handle the case where no schedules could be generated
@@ -576,21 +662,39 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
     }
     setSelectedSchedule(prev => {
       if (!prev) return null;
-      const courseId = section.id.split('-')[0];
-      const hasSectionForCourse = prev.sections.some(s => s.id.startsWith(`${courseId}-`));
+      // Use section.courseId for robustness
+      const courseId = section.courseId;
+      const parentCourse = courses.find(c => c.id === courseId);
+
+      if (!parentCourse) {
+        toast.error(`Could not find course details for ${section.courseId} to update credits.`);
+        // Still add the section visually, but credits might be off.
+        // Or, decide to prevent adding if parent course details for credits are missing.
+        // For now, proceeding with section add but credits will not include this one.
+         return {
+          ...prev,
+          sections: [...prev.sections.filter(s => s.courseId !== courseId), section],
+          // totalCredits remains unchanged as parentCourse is not found
+        };
+      }
+
+      const hasSectionForCourse = prev.sections.some(s => s.courseId === courseId);
       let updatedSections = prev.sections;
       if (hasSectionForCourse) {
-        updatedSections = prev.sections.filter(s => !s.id.startsWith(`${courseId}-`));
+        // Remove existing section(s) for this course before adding the new one
+        updatedSections = prev.sections.filter(s => s.courseId !== courseId);
       }
-      const parentCourse = courses.find(c => c.id === courseId);
-      return {
+
+      const oldCreditsForThisCourse = hasSectionForCourse ? (parentCourse.credits || 0) : 0;
+      const newTotalCredits = prev.totalCredits - oldCreditsForThisCourse + (parentCourse.credits || 0);
+
+      const newScheduleData = {
         ...prev,
         sections: [...updatedSections, section],
-        totalCredits: (prev.totalCredits - (parentCourse && hasSectionForCourse ? parentCourse.credits : 0)) + (parentCourse?.credits || 0)
+        totalCredits: newTotalCredits
       };
-    });
-      toast.success(`Section ${section.id.split('-')[1]} for ${parentCourse?.code} added to ${prev.name}.`);
-      return newSchedule;
+      toast.success(`Section ${section.sectionNumber} for ${parentCourse.code} added to ${prev.name}. Credits: ${newTotalCredits}`);
+      return newScheduleData;
     });
   };
 
@@ -601,23 +705,36 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
     setSelectedSchedule(prev => {
-      if (!prev) return null; // Should not happen if selectedSchedule guard passed
+      if (!prev) return null;
 
       const sectionToRemove = prev.sections.find(s => s.id === sectionId);
       if (!sectionToRemove) {
         toast.warn(`Section ${sectionId} not found in the selected schedule.`);
         return prev;
       }
-      const courseId = sectionToRemove.id.split('-')[0];
+      // Use sectionToRemove.courseId for robustness
+      const courseId = sectionToRemove.courseId;
       const parentCourse = courses.find(c => c.id === courseId);
 
-      const newSchedule = {
+      if (!parentCourse) {
+          toast.error(`Could not find course details for ${courseId} to update credits accurately.`);
+          // Proceed with removal, but credits might become inaccurate if not found.
+          // A more robust approach might prevent removal or log an internal error.
+          return {
+            ...prev,
+            sections: prev.sections.filter(s => s.id !== sectionId),
+            // totalCredits remains unchanged or could be recalculated from scratch if critical
+          };
+      }
+
+      const newTotalCredits = Math.max(0, prev.totalCredits - (parentCourse.credits || 0));
+      const newScheduleData = {
         ...prev,
         sections: prev.sections.filter(s => s.id !== sectionId),
-        totalCredits: Math.max(0, prev.totalCredits - (parentCourse?.credits || 0))
+        totalCredits: newTotalCredits
       };
-      toast.success(`Section ${sectionToRemove.sectionNumber} for ${parentCourse?.code} removed from ${prev.name}.`);
-      return newSchedule;
+      toast.success(`Section ${sectionToRemove.sectionNumber} for ${parentCourse.code} removed from ${prev.name}. Credits: ${newTotalCredits}`);
+      return newScheduleData;
     });
   };
 

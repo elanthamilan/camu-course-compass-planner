@@ -200,7 +200,8 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
     if (!currentTerm) { toast.error("Current term context is not available. Cannot export."); return; }
     const exportedScheduleData: ExportedSchedule = {
       version: "1.0", name: selectedSchedule.name, termId: selectedSchedule.termId || currentTerm.id,
-      exportedSections: selectedSchedule.sections.map(section => ({ courseId: section.id.split("-")[0], sectionId: section.id, })),
+      // Use section.courseId for robustness in export
+      exportedSections: selectedSchedule.sections.map(section => ({ courseId: section.courseId, sectionId: section.id, })),
       totalCredits: selectedSchedule.totalCredits,
     };
     downloadJson(exportedScheduleData, `${selectedSchedule.name.replace(/\s+/g, '_')}_${exportedScheduleData.termId}.json`);
@@ -246,8 +247,9 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
         } else { sectionsFound = false; toast.error(`Course ${expSection.courseId} not found in catalog.`); break; }
       }
       if (!sectionsFound) { if (fileInputRef.current) fileInputRef.current.value = ""; return; }
-      const recalculatedTotalCredits = newSections.reduce((acc, section) => {
-          const parentCourse = courseCatalog.find(c => c.id === section.id.split('-')[0] || c.code === section.id.split('-')[0]);
+      const recalculatedTotalCredits = newSections.reduce((acc, currentSection) => {
+          // Ensure currentSection has courseId, which it should as it's from courseCatalog.sections
+          const parentCourse = courseCatalog.find(c => c.id === currentSection.courseId);
           return acc + (parentCourse?.credits || 0);
       }, 0);
       if (recalculatedTotalCredits !== importedData.totalCredits) {
@@ -275,7 +277,8 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
   /** Renames the currently selected schedule using a prompt. */
   const handleRenameSchedule = () => {
     if (!selectedSchedule) { toast.error("No schedule selected to rename."); return; }
-    // TODO: Replace window.prompt with a custom dialog for better UX and control.
+    // TODO: Replace window.prompt with a custom dialog (e.g., <InputAlert /> or similar) for better UX and control.
+    // This current implementation using prompt() is basic and has UX limitations.
     const newName = prompt("Enter new name for this schedule:", selectedSchedule.name);
     if (newName && newName.trim() !== "") {
       const oldName = selectedSchedule.name;
@@ -497,61 +500,59 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
 
         {/* Right Side - Calendar/List View */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Schedule Options Above Calendar */}
+          {/* Schedule Options Dropdown and Actions */}
           {schedules && schedules.length > 0 ? (
             <div className="flex-shrink-0 p-4 border-b bg-white">
-              <div className="flex gap-3 items-center">
-                <div className="flex-1">
+              <div className="flex flex-col sm:flex-row gap-3 items-center">
+                <div className="flex-1 w-full sm:w-auto">
+                  {/* Schedule Selector Dropdown */}
                   <Select value={selectedSchedule?.id || ""} onValueChange={(value) => selectSchedule(value === "null" ? null : value)}>
-                    <SelectTrigger id="schedule-select-dropdown" className="w-full h-auto min-h-[60px]">
-                      <SelectValue placeholder="Select a schedule option to view">
+                    <SelectTrigger id="schedule-select-dropdown" className="w-full h-auto min-h-[60px] text-left">
+                      <SelectValue placeholder="Select a schedule option to view...">
                         {selectedSchedule ? (
-                          <div className="text-left py-1">
-                            <div className="font-medium text-base">{selectedSchedule.name}</div>
-                            <div className="text-sm text-gray-600 mt-1">
+                          <div className="py-1">
+                            <div className="font-semibold text-base truncate" title={selectedSchedule.name}>{selectedSchedule.name}</div>
+                            <div className="text-xs text-gray-500 mt-0.5">
                               {selectedSchedule.sections.length} course{selectedSchedule.sections.length === 1 ? '' : 's'} • {selectedSchedule.totalCredits} credits
                               {selectedSchedule.conflicts && selectedSchedule.conflicts.length > 0 && (
-                                <span className="text-amber-600 ml-2">⚠️ {selectedSchedule.conflicts.length} conflict{selectedSchedule.conflicts.length > 1 ? 's' : ''}</span>
+                                <Badge variant="destructive" className="ml-2 text-xs">
+                                  <AlertTriangle className="h-3 w-3 mr-1" />
+                                  {selectedSchedule.conflicts.length} conflict{selectedSchedule.conflicts.length > 1 ? 's' : ''}
+                                </Badge>
                               )}
                             </div>
                           </div>
-                        ) : "Select a schedule option"}
+                        ) : "Select a schedule option..."}
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
-                      {/* TODO: Consider extracting ScheduleSelectItem component for the content below */}
+                      {/* TODO: Consider extracting ScheduleSelectItem component for the content below if it grows more complex */}
                       {schedules.map((schedule) => {
-                        const courseDetails = schedule.sections.map(section => {
-                          const course = allCourses.find(c => c.id === section.courseId);
-                          return {
-                            code: course?.code || section.courseId.toUpperCase(),
-                            time: section.schedule?.[0] ? `${section.schedule[0].days} ${section.schedule[0].startTime}-${section.schedule[0].endTime}` : 'TBA',
-                          };
-                        });
+                        // For display in dropdown, get a summary of course codes
+                        const courseCodesSummary = schedule.sections.slice(0, 3).map(section => {
+                           const course = allCourses.find(c => c.id === section.courseId);
+                           return course?.code || section.courseId.toUpperCase();
+                        }).join(', ');
+                        const moreCoursesCount = schedule.sections.length > 3 ? schedule.sections.length - 3 : 0;
 
                         return (
-                          <SelectItem key={schedule.id} value={schedule.id} className="py-4">
+                          <SelectItem key={schedule.id} value={schedule.id} className="py-2.5">
                             <div className="w-full">
-                              <div className="font-medium text-base mb-2">{schedule.name}</div>
-                              <div className="text-sm text-gray-600 mb-2">
+                              <div className="font-medium text-sm mb-1 truncate" title={schedule.name}>{schedule.name}</div>
+                              <div className="text-xs text-gray-500 mb-1.5">
                                 {schedule.sections.length} course{schedule.sections.length === 1 ? '' : 's'} • {schedule.totalCredits} credits
                                 {schedule.conflicts && schedule.conflicts.length > 0 && (
-                                  <span className="text-amber-600 ml-2">⚠️ {schedule.conflicts.length} conflict{schedule.conflicts.length > 1 ? 's' : ''}</span>
+                                  <Badge variant="destructive" className="ml-1.5 text-xs px-1.5 py-0.5">
+                                     <AlertTriangle className="h-3 w-3 mr-1" />
+                                    {schedule.conflicts.length} conflict{schedule.conflicts.length > 1 ? 's' : ''}
+                                  </Badge>
                                 )}
                               </div>
-                              <div className="space-y-1">
-                                {courseDetails.slice(0, 3).map((cd, idx) => (
-                                  <div key={idx} className="text-xs text-gray-500 flex justify-between">
-                                    <span className="font-medium">{cd.code}</span>
-                                    <span>{cd.time}</span>
-                                  </div>
-                                ))}
-                                {courseDetails.length > 3 && (
-                                  <div className="text-xs text-gray-400">
-                                    +{courseDetails.length - 3} more
-                                  </div>
-                                )}
-                              </div>
+                              {schedule.sections.length > 0 && (
+                                <div className="text-xs text-gray-400 italic">
+                                  Includes: {courseCodesSummary}{moreCoursesCount > 0 ? ` +${moreCoursesCount} more` : ''}
+                                </div>
+                              )}
                             </div>
                           </SelectItem>
                         );

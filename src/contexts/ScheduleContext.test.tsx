@@ -385,6 +385,106 @@ describe('ScheduleContext - generateSchedules', () => {
   test.skip('ORIGINAL: generates schedules with fixed sections and no conflicts', async () => {});
 });
 
+// --- NEW TESTS FOR ADD/SELECT SCHEDULE and CREDIT CALCULATIONS ---
+describe('ScheduleContext - Manual Schedule Management and Credits', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    dateNowSpy.mockImplementation(() => mockDateNow);
+  });
+
+  const courseC1S1 = createMockCourseSection('C101-S1', 'C101', 'S1', [createMockSectionSchedule('c1s1', 'M,W,F', '10:00', '11:00')]);
+  const courseC1S2 = createMockCourseSection('C101-S2', 'C101', 'S2', [createMockSectionSchedule('c1s2', 'T,Th', '10:00', '11:30')]);
+  const courseC2S1 = createMockCourseSection('C202-S1', 'C202', 'S1', [createMockSectionSchedule('c2s1', 'M,W,F', '13:00', '14:00')]);
+
+  const mockCourse1 = createMockCourse('C101', 'CS101', 'Intro to CS', [courseC1S1, courseC1S2], 3);
+  const mockCourse2 = createMockCourse('C202', 'MA202', 'Calculus II', [courseC2S1], 4);
+
+  it('should add a new schedule and prevent duplicates', () => {
+    const { context } = renderScheduleContextForGenerate();
+    const newSchedule: Schedule = { id: 'manual-sched-1', name: 'My Custom Schedule', termId: 'fall2024', sections: [], totalCredits: 0, busyTimes: [], conflicts: [] };
+
+    act(() => {
+      context.addSchedule(newSchedule);
+    });
+    expect(context.schedules.find(s => s.id === 'manual-sched-1')).toBeDefined();
+    expect(toast.success).toHaveBeenCalledWith(`Added schedule: ${newSchedule.name}`);
+
+    act(() => {
+      context.addSchedule(newSchedule); // Try adding again
+    });
+    expect(toast.error).toHaveBeenCalledWith(`Schedule with ID "${newSchedule.id}" already exists and cannot be added again.`);
+    expect(context.schedules.filter(s => s.id === 'manual-sched-1').length).toBe(1); // Still only one
+  });
+
+  it('should select a schedule and handle non-existent selection', () => {
+    const { context } = renderScheduleContextForGenerate();
+    const schedule1: Schedule = { id: 's1', name: 'Schedule 1', termId: 'fall2024', sections: [], totalCredits: 0, busyTimes: [], conflicts: [] };
+    act(() => context.addSchedule(schedule1));
+
+    act(() => context.selectSchedule('s1'));
+    expect(context.selectedSchedule?.id).toBe('s1');
+
+    act(() => context.selectSchedule(null));
+    expect(context.selectedSchedule).toBeNull();
+
+    act(() => context.selectSchedule('non-existent-id'));
+    expect(context.selectedSchedule).toBeNull(); // Assuming it clears selection
+    expect(toast.warn).toHaveBeenCalledWith('Could not find schedule with ID "non-existent-id".');
+  });
+
+  it('should correctly update totalCredits when adding/removing sections', () => {
+    const { context } = renderScheduleContextForGenerate([mockCourse1, mockCourse2]);
+
+    const initialSchedule: Schedule = {
+      id: 'test-cred-sched', name: 'Credit Test Schedule', termId: 'fall2024',
+      sections: [], totalCredits: 0, busyTimes: [], conflicts: []
+    };
+    act(() => {
+      context.setSchedules([initialSchedule]); // Use setSchedules to clear others and add our test one
+      context.selectSchedule(initialSchedule.id);
+    });
+
+    expect(context.selectedSchedule?.totalCredits).toBe(0);
+
+    // Add section from C1 (3 credits)
+    act(() => context.addSectionToSchedule(courseC1S1));
+    expect(context.selectedSchedule?.totalCredits).toBe(3);
+    expect(context.selectedSchedule?.sections).toContain(courseC1S1);
+
+    // Add section from C2 (4 credits)
+    act(() => context.addSectionToSchedule(courseC2S1));
+    expect(context.selectedSchedule?.totalCredits).toBe(7); // 3 + 4
+    expect(context.selectedSchedule?.sections).toContain(courseC2S1);
+
+    // Replace section from C1 (C1S1 with C1S2 - same course, credits should adjust if different, but here parentCourse.credits is used)
+    // Since mockCourse1.credits is 3, replacing a section of the same course should result in totalCredits remaining the same after adjustment.
+    act(() => context.addSectionToSchedule(courseC1S2));
+    expect(context.selectedSchedule?.totalCredits).toBe(7); // (7 - 3) + 3 = 7
+    expect(context.selectedSchedule?.sections).not.toContain(courseC1S1);
+    expect(context.selectedSchedule?.sections).toContain(courseC1S2);
+
+    // Remove section from C1 (3 credits)
+    act(() => context.removeSectionFromSchedule(courseC1S2.id));
+    expect(context.selectedSchedule?.totalCredits).toBe(4); // 7 - 3
+
+    // Remove section from C2 (4 credits)
+    act(() => context.removeSectionFromSchedule(courseC2S1.id));
+    expect(context.selectedSchedule?.totalCredits).toBe(0);
+
+    // Try to remove again, ensure it doesn't go negative (already handled by Math.max in func)
+    act(() => context.removeSectionFromSchedule(courseC2S1.id)); // Section already removed
+    expect(context.selectedSchedule?.totalCredits).toBe(0);
+
+  });
+
+  it('initial shoppingCart schedules should have corrected totalCredits', () => {
+    const { context } = renderScheduleContextForGenerate(); // Renders provider with default initial state
+    const cart = context.shoppingCart;
+    expect(cart.find(s => s.id === 'cart-schedule-1')?.totalCredits).toBe(9);
+    expect(cart.find(s => s.id === 'cart-schedule-2')?.totalCredits).toBe(9);
+  });
+
+});
 
 // --- Original Shopping Cart tests (kept as is) ---
 describe('ScheduleContext - Shopping Cart', () => {
