@@ -129,6 +129,12 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [courses.length, schedules.length, selectedCourses.length]); // Dependencies: re-run if course count or schedule count changes.
 
+  useEffect(() => {
+    if (!selectedSchedule && schedules.length > 0) {
+      selectSchedule(schedules[0].id);
+    }
+  }, [selectedSchedule, schedules, selectSchedule]);
+
   /** Toggles the selection state of a course for schedule generation. */
   const handleCourseToggle = (courseId: string) => {
     setSelectedCourses(prev => {
@@ -346,7 +352,7 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
                                   if (currentSectionInSchedule) {
                                     return (
                                       <div className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded mb-1">
-                                        Section {currentSectionInSchedule.sectionNumber} • {currentSectionInSchedule.instructors?.join(', ')} • {currentSectionInSchedule.schedule?.[0] ? `${currentSectionInSchedule.schedule[0].days} ${currentSectionInSchedule.schedule[0].startTime}-${currentSectionInSchedule.schedule[0].endTime}` : 'TBA'}
+                                        Section {currentSectionInSchedule.sectionNumber} • {currentSectionInSchedule.instructor} • {currentSectionInSchedule.schedule?.[0] ? `${currentSectionInSchedule.schedule[0].days} ${currentSectionInSchedule.schedule[0].startTime}-${currentSectionInSchedule.schedule[0].endTime}` : 'TBA'}
                                       </div>
                                     );
                                   }
@@ -428,7 +434,6 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
             </>
           )}
         </div>
-      </div>
 
       {/* Dialogs */}
       <AddBusyTimeDialog open={isAddBusyTimeOpen} onOpenChange={setIsAddBusyTimeOpen} />
@@ -453,7 +458,6 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
           addCourse(course);
           setIsCourseDetailBottomSheetOpen(false);
         }}
-        // @ts-expect-error: selectedCourseForDetail may be null, but CourseDetailBottomSheet expects Course | null
         isAdded={selectedCourseForDetail ? courses.some((c: Course) => c.id === selectedCourseForDetail.id) : false}
       />
 

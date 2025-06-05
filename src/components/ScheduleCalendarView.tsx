@@ -1,4 +1,3 @@
-
 import { useSchedule } from "@/contexts/ScheduleContext";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -43,10 +42,17 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({ lockedCours
       const days = schedule.days.split(",");
       days.forEach(day => {
         const startHour = parseInt(schedule.startTime.split(":")[0]);
+        const startMinute = parseInt(schedule.startTime.split(":")[1]);
         const endHour = parseInt(schedule.endTime.split(":")[0]);
+        const endMinute = parseInt(schedule.endTime.split(":")[1]);
 
-        for (let hour = startHour; hour < endHour; hour++) {
-          const timeKey = `${hour}`;
+        // Calculate the duration in hours, including partial hours
+        const duration = (endHour + endMinute/60) - (startHour + startMinute/60);
+        
+        // Add the section to each hour slot it occupies
+        for (let i = 0; i < duration; i++) {
+          const currentHour = Math.floor(startHour + i);
+          const timeKey = `${currentHour}`;
           const dayKey = day.trim();
           const key = `${dayKey}-${timeKey}`;
 
@@ -64,22 +70,31 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({ lockedCours
             instructor: section.instructor,
             location: schedule.location,
             color: getCourseColorInfo(courseCode),
-            // locked: section.locked // This was section.locked, changing to check against lockedCourses prop
-            isCourseLocked: lockedCourses.includes(section.id.split("-")[0]) || lockedCourses.includes(courseCode)
+            isCourseLocked: lockedCourses.includes(section.id.split("-")[0]) || lockedCourses.includes(courseCode),
+            startTime: schedule.startTime,
+            endTime: schedule.endTime,
+            days: schedule.days
           });
         }
       });
     });
   });
 
-  // Add busy times to the calendar map
+  // Add busy times to the calendar map with improved time handling
   busyTimes.forEach(busyTime => {
     busyTime.days.forEach(day => {
       const startHour = parseInt(busyTime.startTime.split(":")[0]);
+      const startMinute = parseInt(busyTime.startTime.split(":")[1]);
       const endHour = parseInt(busyTime.endTime.split(":")[0]);
+      const endMinute = parseInt(busyTime.endTime.split(":")[1]);
 
-      for (let hour = startHour; hour < endHour; hour++) {
-        const timeKey = `${hour}`;
+      // Calculate the duration in hours, including partial hours
+      const duration = (endHour + endMinute/60) - (startHour + startMinute/60);
+      
+      // Add the busy time to each hour slot it occupies
+      for (let i = 0; i < duration; i++) {
+        const currentHour = Math.floor(startHour + i);
+        const timeKey = `${currentHour}`;
         const key = `${day}-${timeKey}`;
 
         if (!calendarMap[key]) {
@@ -89,7 +104,10 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({ lockedCours
         calendarMap[key].push({
           type: 'busy',
           title: busyTime.title,
-          busyTimeType: busyTime.type
+          busyTimeType: busyTime.type,
+          startTime: busyTime.startTime,
+          endTime: busyTime.endTime,
+          days: busyTime.days
         });
       }
     });

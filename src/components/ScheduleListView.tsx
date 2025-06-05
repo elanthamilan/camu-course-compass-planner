@@ -1,4 +1,3 @@
-
 import { useSchedule } from "@/contexts/ScheduleContext";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -34,33 +33,17 @@ const ScheduleListView = () => {
       <div className="overflow-x-auto"> {/* Wrapper for horizontal scrolling */}
         <Table className="min-w-full sm:w-full"> {/* Ensure table takes at least full width or its own content width */}
           <TableHeader>
-            <TableRow>
-              <TableHead className="w-[120px] p-2 sm:p-4">Course Code</TableHead> {/* Responsive padding */}
-              <TableHead className="p-2 sm:p-4">Course Name</TableHead>
-              <TableHead className="w-[80px] p-2 sm:p-4">Class #</TableHead>
-              <TableHead className="w-[80px] p-2 sm:p-4">Credits</TableHead>
-              <TableHead className="w-[100px] p-2 sm:p-4">Section</TableHead>
-              <TableHead className="p-2 sm:p-4">Instructor</TableHead>
-              <TableHead className="p-2 sm:p-4">Schedule</TableHead>
-              <TableHead className="p-2 sm:p-4">Location</TableHead>
-            </TableRow>
+            <TableRow><TableHead className="w-[120px] p-2 sm:p-4">Course Code</TableHead><TableHead className="p-2 sm:p-4">Course Name</TableHead><TableHead className="w-[80px] p-2 sm:p-4">Class #</TableHead><TableHead className="w-[80px] p-2 sm:p-4">Credits</TableHead><TableHead className="w-[100px] p-2 sm:p-4">Section</TableHead><TableHead className="p-2 sm:p-4">Instructor</TableHead><TableHead className="p-2 sm:p-4">Schedule</TableHead><TableHead className="p-2 sm:p-4">Location</TableHead></TableRow>
           </TableHeader>
           <TableBody>
             {selectedSchedule.sections.map((section: CourseSection) => {
               const courseCode = section.id.split("-")[0].toUpperCase();
-              // This mapping should ideally come from the Course objects in context for accuracy
               const courseDetails = courses.find((c: Course) => c.id === section.id.split("-")[0] || c.code === section.id.split("-")[0]);
-              
               const colorInfo = getCourseColorInfo(courseCode);
-              
               return (
-                <TableRow key={section.id} className="hover:bg-muted/50 transition-colors text-xs sm:text-sm"> {/* Responsive text */}
+                <TableRow key={section.id} className="hover:bg-muted/50 transition-colors text-xs sm:text-sm">
                   <TableCell className="p-2 sm:p-4 font-medium">
-                    <span className={cn(
-                      "py-1 px-2 rounded text-xs sm:text-sm font-medium flex items-center w-fit", // w-fit for badge-like width
-                      colorInfo.backgroundClass,
-                      colorInfo.foregroundClass
-                    )}>
+                    <span className={cn("py-1 px-2 rounded text-xs sm:text-sm font-medium flex items-center w-fit", colorInfo.backgroundClass, colorInfo.foregroundClass)}>
                       {section.locked && <Lock className="h-3 w-3 mr-1.5 flex-shrink-0" />}
                       {courseCode}
                     </span>
@@ -74,7 +57,7 @@ const ScheduleListView = () => {
                     {section.schedule.map((sch: SectionSchedule, i: number) => (
                       <div key={i} className="mb-1 last:mb-0">
                         <div className="text-xs sm:text-sm">{sch.days}</div>
-                        <div className="text-[10px] sm:text-xs text-muted-foreground">{sch.startTime} - {sch.endTime}</div> {/* Use muted-foreground */}
+                        <div className="text-[10px] sm:text-xs text-muted-foreground">{sch.startTime} - {sch.endTime}</div>
                       </div>
                     ))}
                   </TableCell>
@@ -82,12 +65,9 @@ const ScheduleListView = () => {
                 </TableRow>
               );
             })}
-            {/* Display busy times */}
             {selectedSchedule.busyTimes.map((busyTime) => (
               <TableRow key={busyTime.id} className="bg-muted/30 hover:bg-muted/50 text-xs sm:text-sm">
-                <TableCell className="p-2 sm:p-4" colSpan={2}>
-                  <span className="font-medium text-foreground">{busyTime.title} (Busy)</span>
-                </TableCell>
+                <TableCell className="p-2 sm:p-4" colSpan={2}><span className="font-medium text-foreground">{busyTime.title} (Busy)</span></TableCell>
                 <TableCell className="p-2 sm:p-4 text-muted-foreground">-</TableCell>
                 <TableCell className="p-2 sm:p-4 text-muted-foreground">-</TableCell>
                 <TableCell className="p-2 sm:p-4 text-muted-foreground">-</TableCell>

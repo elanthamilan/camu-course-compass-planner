@@ -92,9 +92,15 @@ module.exports = {
     'bg-course-univ',
     'bg-course-econ',
     'bg-course-default',
-    {
-      pattern: /^text-course-.*-foreground$/,
-    },
-    // Add other specific dynamic classes if known
+    'text-course-cs-foreground',
+    'text-course-math-foreground',
+    'text-course-eng-foreground',
+    'text-course-bio-foreground',
+    'text-course-chem-foreground',
+    'text-course-phys-foreground',
+    'text-course-phil-foreground',
+    'text-course-univ-foreground',
+    'text-course-econ-foreground',
+    'text-course-default-foreground'
   ]
 }
