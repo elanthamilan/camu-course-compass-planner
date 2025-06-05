@@ -5,9 +5,12 @@ import Header from '@/components/Header';
 import AIAdvisor from '@/components/AIAdvisor';
 import { Button } from '@/components/ui/button';
 import { Sparkles } from 'lucide-react'; // Import Sparkles
+import { useIsMobile } from "@/hooks/use-mobile";
+import AIAdvisorBottomSheet from "@/components/AIAdvisorBottomSheet";
 
 const Index = () => {
   const [isAIAdvisorOpen, setIsAIAdvisorOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -17,7 +20,11 @@ const Index = () => {
         <CourseDashboard />
       </main>
 
-      <AIAdvisor open={isAIAdvisorOpen} onOpenChange={setIsAIAdvisorOpen} />
+      {isMobile ? (
+        <AIAdvisorBottomSheet open={isAIAdvisorOpen} onOpenChange={setIsAIAdvisorOpen} />
+      ) : (
+        <AIAdvisor open={isAIAdvisorOpen} onOpenChange={setIsAIAdvisorOpen} />
+      )}
 
       {/* Mobile Floating Action Button for AI Advisor on mobile */}
       <div className="fixed right-4 bottom-20 lg:hidden z-40">

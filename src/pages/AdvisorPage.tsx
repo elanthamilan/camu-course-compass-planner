@@ -1,8 +1,20 @@
 
+import React, { useState, useEffect } from 'react'; // Added useEffect
 import Header from '@/components/Header';
 import AIAdvisor from '@/components/AIAdvisor';
+import AIAdvisorBottomSheet from '@/components/AIAdvisorBottomSheet'; // Added
+import { useIsMobile } from '@/hooks/use-mobile'; // Added
 
 const AdvisorPage = () => {
+  const isMobile = useIsMobile(); // Added
+  const [isSheetOpen, setIsSheetOpen] = useState(false); // Added
+
+  useEffect(() => {
+    if (isMobile) {
+      setIsSheetOpen(true); // Open by default on mobile
+    }
+  }, [isMobile]);
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
@@ -36,10 +48,14 @@ const AdvisorPage = () => {
           </div>
         </div>
         
-        {/* Embed AI advisor directly on the page */}
-        <div className="bg-white rounded-lg shadow-lg p-4 animate-scale-in">
-          <AIAdvisor open={true} onOpenChange={() => {}} />
-        </div>
+        {/* Conditional AI Advisor */}
+        {isMobile ? (
+          <AIAdvisorBottomSheet open={isSheetOpen} onOpenChange={setIsSheetOpen} />
+        ) : (
+          <div className="bg-white rounded-lg shadow-lg p-4 animate-scale-in">
+            <AIAdvisor open={true} onOpenChange={() => { /* Desktop version is always open, no-op change */ }} />
+          </div>
+        )}
 
         {/* New Section: Schedule Sharing Information */}
         <div className="mt-10 bg-white rounded-lg shadow-md p-6 animate-fade-in" style={{animationDelay: "300ms"}}>

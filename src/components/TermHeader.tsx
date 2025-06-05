@@ -34,9 +34,9 @@ const TermHeader = ({ view, setView, onCompareClick }: TermHeaderProps) => {
                 <CalendarIcon className="mr-1 h-4 w-4" />
                 Calendar
               </TabsTrigger>
-              <TabsTrigger value={isMobile ? "manage" : "list"} className="flex items-center">
+              <TabsTrigger value="list" className="flex items-center">
                 <ListIcon className="mr-1 h-4 w-4" />
-                {isMobile ? "Manage" : "List"}
+                List
               </TabsTrigger>
             </TabsList>
           </Tabs>
