@@ -21,7 +21,7 @@ const TermHeader = ({ view, setView, onCompareClick }: TermHeaderProps) => {
     // Responsive flex layout: stacks on small screens, row on sm and up
     <div className="flex flex-col space-y-4 sm:flex-row sm:space-y-0 items-center justify-between py-6 animate-fade-in">
       <div>
-        <h2 className="text-2xl font-semibold text-center sm:text-left">{currentTerm.name}</h2> {/* Centered on small, left on sm+ */}
+        <h2 className="text-xl sm:text-2xl font-semibold text-center sm:text-left">{currentTerm.name}</h2> {/* Centered on small, left on sm+ */}
       </div>
 
       {/* Group Tabs and Buttons for better responsive layout */}

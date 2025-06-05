@@ -50,7 +50,7 @@ const RegistrationSummary: React.FC = () => {
 
       {/* Simple Header */}
       <div className="mb-6 max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col items-start space-y-3 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 mb-4">
           <div className="flex items-center space-x-3">
             <span className="text-3xl">🛒</span>
             <div>
@@ -62,7 +62,7 @@ const RegistrationSummary: React.FC = () => {
               </p>
             </div>
           </div>
-          <div className="text-right">
+          <div className="text-left sm:text-right w-full sm:w-auto">
             <p className="text-sm text-gray-500">{shoppingCart[0]?.termId || 'No term'}</p>
             <p className="font-semibold text-lg">
               {shoppingCart.reduce((total, schedule) => total + schedule.totalCredits, 0)} total credits
@@ -76,7 +76,7 @@ const RegistrationSummary: React.FC = () => {
         {shoppingCart.map((schedule, scheduleIndex) => (
           <Card key={schedule.id} className="shadow-lg animate-fade-in">
             <CardHeader>
-              <CardTitle className="text-xl flex items-center justify-between">
+              <CardTitle className="text-xl flex flex-col items-start space-y-2 xs:flex-row xs:items-center xs:justify-between xs:space-y-0">
                 <span>{schedule.name}</span>
                 <div className="flex items-center space-x-2">
                   <Badge variant="secondary" className="text-sm">
@@ -100,7 +100,7 @@ const RegistrationSummary: React.FC = () => {
                     const parentCourse = getParentCourse(section.id);
                     return (
                       <div key={section.id} className="border rounded-lg p-4 bg-gray-50">
-                        <div className="flex items-start justify-between mb-3">
+                        <div className="flex flex-col items-start space-y-2 xs:flex-row xs:items-start xs:justify-between xs:space-y-0 mb-3">
                           <div>
                             <h4 className="text-lg font-bold text-gray-800">
                               {parentCourse?.code || section.id.split('-')[0]}

@@ -13,6 +13,7 @@ const Header: React.FC = () => {
   const location = useLocation();
   const isRoot = location.pathname === '/';
   const [isAiAdvisorOpen, setIsAiAdvisorOpen] = useState(false); // State for AI Advisor
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // State for Mobile Menu
   const { shoppingCart } = useSchedule(); // Access cart state
 
   // Navigation items - Ask AI Advisor will be handled separately
@@ -119,11 +120,11 @@ const Header: React.FC = () => {
 
         {/* Mobile Navigation Trigger */}
         <div className="md:hidden">
-          <Sheet>
+          <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
             <Tooltip>
               <TooltipTrigger asChild>
                 <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon">
+                  <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(true)}>
                     <Menu className="h-6 w-6" />
                     <span className="sr-only">Open menu</span>
                   </Button>
@@ -142,6 +143,7 @@ const Header: React.FC = () => {
                     variant="ghost"
                     className="justify-start text-base"
                     asChild
+                    onClick={() => setIsMobileMenuOpen(false)}
                   >
                     <Link to={item.to}>
                       {item.icon}
@@ -156,8 +158,8 @@ const Header: React.FC = () => {
                       variant="ghost"
                       className="justify-start text-base"
                       onClick={() => {
-                        // This should ideally close the sheet first if onOpenChange for Sheet is managed
                         setIsAiAdvisorOpen(true);
+                        setIsMobileMenuOpen(false);
                       }}
                     >
                       <Sparkles className="h-4 w-4 mr-2" />
@@ -171,7 +173,7 @@ const Header: React.FC = () => {
                 {/* Add other links like Home, Schedule, Cart if needed in mobile */}
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="ghost" className="justify-start text-base" asChild>
+                    <Button variant="ghost" className="justify-start text-base" asChild onClick={() => setIsMobileMenuOpen(false)}>
                       <Link to="/">Home</Link>
                     </Button>
                   </TooltipTrigger>
@@ -179,7 +181,7 @@ const Header: React.FC = () => {
                 </Tooltip>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="ghost" className="justify-start text-base" asChild>
+                    <Button variant="ghost" className="justify-start text-base" asChild onClick={() => setIsMobileMenuOpen(false)}>
                       <Link to="/schedule">Schedule</Link>
                     </Button>
                   </TooltipTrigger>
@@ -187,7 +189,7 @@ const Header: React.FC = () => {
                 </Tooltip>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="ghost" className="justify-start text-base relative" asChild>
+                    <Button variant="ghost" className="justify-start text-base relative" asChild onClick={() => setIsMobileMenuOpen(false)}>
                       <Link to="/cart">
                         <ShoppingCart className="h-4 w-4 mr-2" />
                         Cart

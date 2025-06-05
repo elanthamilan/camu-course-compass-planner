@@ -294,8 +294,8 @@ const CourseDashboard: React.FC = () => {
       {/* Minimal Header - Full Width */}
       <div className="flex flex-col space-y-4 sm:flex-row sm:space-y-0 items-center justify-between py-6 animate-fade-in w-full">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Academic Planning</h1>
-          <p className="text-gray-600">Plan your courses and track your progress</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Academic Planning</h1>
+          <p className="text-sm sm:text-base text-gray-600">Plan your courses and track your progress</p>
         </div>
       </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
@@ -353,7 +353,7 @@ const CourseDashboard: React.FC = () => {
                                 <div>
                                   <span className="text-sm font-medium">{req.name}</span>
                                   {req.description && (
-                                    <p className="text-xs text-gray-600 mt-1">{req.description}</p>
+                                    <p className="text-xs sm:text-sm text-gray-600 mt-1">{req.description}</p>
                                   )}
                                 </div>
                               </div>
@@ -438,9 +438,9 @@ const CourseDashboard: React.FC = () => {
                               {!isCompleted && !isInProgress && <span className="text-lg">📝</span>}
                               <div>
                                 <span className="font-medium text-sm">{course.code}</span>
-                                <p className="text-xs text-muted-foreground">{course.name}</p>
+                                 <p className="text-xs sm:text-sm text-muted-foreground">{course.name}</p>
                                 {course.prerequisites && course.prerequisites.length > 0 && (
-                                  <p className="text-xs text-amber-600 mt-1">
+                                  <p className="text-xs sm:text-sm text-amber-600 mt-1">
                                     📋 Need to take first: {course.prerequisites.join(', ')}
                                   </p>
                                 )}
@@ -477,7 +477,7 @@ const CourseDashboard: React.FC = () => {
       </div>
 
       <Tabs defaultValue="academic-plan" className="w-full mt-6">
-        <TabsList className="grid w-full grid-cols-3 mb-6">
+        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 mb-6">
           <TabsTrigger value="academic-plan" className="flex items-center">
             <span className="mr-2">📅</span>
             Plan My Classes
@@ -495,20 +495,20 @@ const CourseDashboard: React.FC = () => {
         <TabsContent value="academic-plan">
           <div className="relative">
             {/* Timeline Line */}
-            <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-200 via-purple-200 to-green-200"></div>
+            <div className="absolute left-4 sm:left-6 lg:left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-200 via-purple-200 to-green-200"></div>
 
             <div className="space-y-8">
               {yearsData.map((year, yearIndex) => (
                 <div key={year.year} className="relative">
                   {/* Timeline Node */}
-                  <div className={`absolute left-6 w-4 h-4 rounded-full border-4 border-white shadow-lg z-10 ${
+                  <div className={`absolute left-2 sm:left-4 lg:left-6 w-4 h-4 rounded-full border-4 border-white shadow-lg z-10 ${
                     year.semesters.some(s => s.courses.length > 0)
                       ? 'bg-blue-500'
                       : 'bg-gray-300'
                   }`}></div>
 
                   {/* Year Content */}
-                  <div className="ml-16">
+                  <div className="ml-8 sm:ml-12 lg:ml-16">
                     <div className="mb-6">
                       <div className="flex items-center space-x-3 mb-2">
                         <h3 className="text-2xl font-bold text-gray-900">{year.year}</h3>
@@ -554,10 +554,10 @@ const CourseDashboard: React.FC = () => {
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-7 w-7 text-gray-400 hover:text-red-500"
+                                    className="h-8 w-8 text-gray-400 hover:text-red-500"
                                     onClick={() => handleRemoveSemester(semester.id)}
                                   >
-                                    <Trash2 size={14} />
+                                    <Trash2 size={16} />
                                   </Button>
                                 </TooltipTrigger>
                                 <TooltipContent>Remove semester</TooltipContent>
@@ -586,12 +586,12 @@ const CourseDashboard: React.FC = () => {
                                     <div className="flex justify-between items-start">
                                       <div className="flex-1">
                                         <div className="flex items-center space-x-2 mb-1">
-                                          <span className="font-semibold text-sm">{course.code}</span>
+                                          <span className="font-semibold text-xs sm:text-sm">{course.code}</span>
                                           <Badge variant="outline" className="text-xs px-1 py-0">
                                             {course.credits}cr
                                           </Badge>
                                         </div>
-                                        <p className="text-xs text-gray-600 leading-tight">{course.name}</p>
+                                        <p className="text-xs sm:text-sm text-gray-700 leading-tight">{course.name}</p>
                                         {course.prerequisites && course.prerequisites.length > 0 && (
                                           <p className="text-xs text-amber-600 mt-1">
                                             Prereqs: {course.prerequisites.join(', ')}
@@ -601,10 +601,10 @@ const CourseDashboard: React.FC = () => {
                                       <Button
                                         variant="ghost"
                                         size="icon"
-                                        className="h-6 w-6 text-gray-400 hover:text-red-500"
+                                        className="h-8 w-8 text-gray-400 hover:text-red-500"
                                         onClick={() => handleDeleteCourse(semester.id, course.id)}
                                       >
-                                        <Trash2 size={12} />
+                                        <Trash2 size={14} />
                                       </Button>
                                     </div>
                                   </div>
@@ -674,8 +674,8 @@ const CourseDashboard: React.FC = () => {
 
               {/* Add Year Section */}
               <div className="relative">
-                <div className="absolute left-6 w-4 h-4 bg-gray-300 rounded-full border-4 border-white shadow-lg z-10"></div>
-                <div className="ml-16">
+                <div className="absolute left-2 sm:left-4 lg:left-6 w-4 h-4 bg-gray-300 rounded-full border-4 border-white shadow-lg z-10"></div>
+                <div className="ml-8 sm:ml-12 lg:ml-16">
                   <Card className="border-dashed border-2 hover:border-solid hover:bg-gray-50 transition-all cursor-pointer" onClick={handleOpenAddSemesterDialog}>
                     <CardContent className="text-center py-6">
                       <PlusCircle className="h-6 w-6 text-gray-400 mx-auto mb-2" />
@@ -807,9 +807,10 @@ const CourseDashboard: React.FC = () => {
                 )}
               </div>
             </CardContent>
-            <CardFooter className="flex justify-between">
+            <CardFooter className="flex flex-col sm:flex-row sm:justify-between space-y-2 sm:space-y-0">
               <Button
                 variant="outline"
+                size="sm"
                 onClick={() => {
                   setSelectedWhatIfMajorId(null);
                   setSelectedWhatIfMinorId(null);
