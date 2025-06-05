@@ -475,10 +475,25 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
           <Button
             size="lg"
             className="rounded-full shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground h-12 w-12 p-0 flex items-center justify-center"
-            onClick={() => setIsManageSheetOpen(true)}
-            aria-label="Manage Schedule"
+            onClick={() => {
+              if (isManageSheetOpen) {
+                setIsManageSheetOpen(false);
+                // Optional: ensure mobileView is 'calendar' or 'list' if coming from sheet,
+                // but typically it would be already, so just closing is fine.
+                // if (mobileView !== 'calendar' && mobileView !== 'list') {
+                //   setMobileView('calendar');
+                // }
+              } else {
+                setIsManageSheetOpen(true);
+              }
+            }}
+            aria-label={isManageSheetOpen ? "Show Calendar" : "Manage Schedule"}
           >
-            <SlidersHorizontal className="h-5 w-5" />
+            {isManageSheetOpen ? (
+              <CalendarIcon className="h-5 w-5" />
+            ) : (
+              <SlidersHorizontal className="h-5 w-5" />
+            )}
           </Button>
           {/* AI Advisor Floating Button */}
           <Button

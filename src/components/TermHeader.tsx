@@ -40,13 +40,18 @@ const TermHeader = ({ view, setView, onCompareClick }: TermHeaderProps) => {
               </TabsTrigger>
             </TabsList>
           </Tabs>
-
-
-
-
         </div>
-
-
+        {onCompareClick && (
+          <Button
+            variant="outline"
+            size="sm" // Standard size for header buttons
+            onClick={onCompareClick}
+            className="w-full sm:w-auto" // Full width on small screens, auto on larger
+          >
+            <ArrowLeftRight className="mr-2 h-4 w-4" />
+            Compare
+          </Button>
+        )}
       </div>
     </div>
   );
