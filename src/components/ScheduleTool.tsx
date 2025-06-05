@@ -3,6 +3,7 @@ import TermHeader from "./TermHeader";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Course, CourseSection, ExportedSchedule, Schedule } from "@/lib/types";
 import type { BusyTime } from "@/lib/types";
 import { useSchedule } from "@/contexts/ScheduleContext";
@@ -11,10 +12,10 @@ import ScheduleListView from "./ScheduleListView";
 import BusyTimeItem from "./BusyTimeItem";
 import AddBusyTimeDialog from "./AddBusyTimeDialog";
 import EditBusyTimeDialog from "./EditBusyTimeDialog";
-import AIAdvisorBottomSheet from "./AIAdvisorBottomSheet";
+import AIAdvisor from "./AIAdvisor";
 import TunePreferencesDialog from "./TunePreferencesDialog";
 import CompareSchedulesDialog from "./CompareSchedulesDialog";
-import { PlusCircle, Sliders, ArrowLeftRight, ChevronDown, ChevronUp, CalendarPlus, Sparkles, Trash2, Download, Upload, Settings, ListChecks, CalendarDays, Edit3, Copy as CopyIcon, Share2, Lock, Unlock, AlertTriangle, ShoppingCart, X, Edit2, Clock, BookOpen, SlidersHorizontal, List as ListIcon, Calendar as CalendarIcon } from "lucide-react"; // Added ShoppingCart, X, Edit2, Clock, BookOpen, SlidersHorizontal, ListIcon, CalendarIcon
+import { PlusCircle, Sliders, ArrowLeftRight, ChevronDown, ChevronUp, CalendarPlus, Sparkles, Trash2, Download, Upload, Settings, ListChecks, CalendarDays, Edit3, Copy as CopyIcon, Share2, Lock, Unlock, AlertTriangle, ShoppingCart, X, Edit2, Clock, BookOpen, SlidersHorizontal, List as ListIcon, Calendar as CalendarIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import CourseSearchModal from "./CourseSearchModal";
@@ -22,6 +23,7 @@ import CourseDetailBottomSheet from "./CourseDetailBottomSheet";
 import AddBusyTimeBottomSheet from "./AddBusyTimeBottomSheet";
 import EditBusyTimeBottomSheet from "./EditBusyTimeBottomSheet";
 import TunePreferencesBottomSheet from "./TunePreferencesBottomSheet";
+import AIAdvisorBottomSheet from "./AIAdvisorBottomSheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { mockCourses } from "@/lib/mock-data";
 import { v4 as uuidv4 } from 'uuid';
@@ -65,6 +67,7 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
   const [isEditBusyTimeBottomSheetOpen, setIsEditBusyTimeBottomSheetOpen] = useState(false);
   const [isTunePreferencesBottomSheetOpen, setIsTunePreferencesBottomSheetOpen] = useState(false);
   const [isAIAdvisorBottomSheetOpen, setIsAIAdvisorBottomSheetOpen] = useState(false);
+  const [isAIAdvisorOpen, setIsAIAdvisorOpen] = useState(false);
   const [view, setView] = useState<"calendar" | "list">("calendar"); // Current view mode: 'calendar' or 'list'
   const [mobileView, setMobileView] = useState<"calendar" | "manage">("calendar"); // Mobile view state
 
@@ -74,13 +77,14 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
       setMobileView("calendar"); // Ensure mobile view is in calendar mode when showing list
     }
   }, [isMobile, view]);
+
   const [isAddBusyTimeOpen, setIsAddBusyTimeOpen] = useState(false);
   const [isEditBusyTimeOpen, setIsEditBusyTimeOpen] = useState(false);
   const [selectedBusyTime, setSelectedBusyTime] = useState<BusyTime | null>(null); // Busy time selected for editing
   const [isCompareOpen, setIsCompareOpen] = useState(false);
   const [isPreferencesOpen, setIsPreferencesOpen] = useState(false);
   const [isCourseDetailBottomSheetOpen, setIsCourseDetailBottomSheetOpen] = useState(false);
-  const [selectedCourseForDetail] = useState<Course | null>(null); // Only use selectedCourseForDetail, remove setSelectedCourseForDetail
+  const [selectedCourseForDetail, setSelectedCourseForDetail] = useState<Course | null>(null);
 
   // Course Selection and Configuration State
   const [selectedCourses, setSelectedCourses] = useState<string[]>([]); // IDs of courses checked by the user for generation
@@ -128,12 +132,6 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [courses.length, schedules.length, selectedCourses.length]); // Dependencies: re-run if course count or schedule count changes.
-
-  useEffect(() => {
-    if (!selectedSchedule && schedules.length > 0) {
-      selectSchedule(schedules[0].id);
-    }
-  }, [selectedSchedule, schedules, selectSchedule]);
 
   /** Toggles the selection state of a course for schedule generation. */
   const handleCourseToggle = (courseId: string) => {
@@ -214,49 +212,6 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
     removeCourse(courseId); // Context function handles toast
   };
 
-  /** Triggers the hidden file input for schedule import. */
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) { toast.error("No file selected."); return; }
-    try {
-      const fileContent = await file.text();
-      const importedData = JSON.parse(fileContent) as ExportedSchedule;
-      if (importedData.version !== "1.0" || !importedData.name || !importedData.termId || !Array.isArray(importedData.exportedSections) || typeof importedData.totalCredits !== 'number') {
-        toast.error("Invalid schedule file format.");
-        if (fileInputRef.current) fileInputRef.current.value = "";
-        return;
-      }
-      const courseCatalog = allCourses && allCourses.length > 0 ? allCourses : mockCourses;
-      const newSections: CourseSection[] = [];
-      let sectionsFound = true;
-      for (const expSection of importedData.exportedSections) {
-        const parentCourse = courseCatalog.find(c => c.id === expSection.courseId || c.code === expSection.courseId);
-        if (parentCourse) {
-          const sectionDetail = parentCourse.sections.find(s => s.id === expSection.sectionId);
-          if (sectionDetail) { newSections.push(sectionDetail); }
-          else { sectionsFound = false; toast.error(`Section ${expSection.sectionId} for course ${expSection.courseId} not found in catalog.`); break; }
-        } else { sectionsFound = false; toast.error(`Course ${expSection.courseId} not found in catalog.`); break; }
-      }
-      if (!sectionsFound) { if (fileInputRef.current) fileInputRef.current.value = ""; return; }
-      const recalculatedTotalCredits = newSections.reduce((acc, currentSection) => {
-          // Ensure currentSection has courseId, which it should as it's from courseCatalog.sections
-          const parentCourse = courseCatalog.find(c => c.id === currentSection.courseId);
-          return acc + (parentCourse?.credits || 0);
-      }, 0);
-      if (recalculatedTotalCredits !== importedData.totalCredits) {
-          toast.info(`Total credits recalculated to ${recalculatedTotalCredits} based on found sections. Original was ${importedData.totalCredits}.`);
-      }
-      const newSchedule: Schedule = {
-        id: uuidv4(), name: `${importedData.name} (Imported)`, termId: importedData.termId, sections: newSections,
-        totalCredits: recalculatedTotalCredits, busyTimes: [], conflicts: [],
-      };
-      addSchedule(newSchedule);
-      selectSchedule(newSchedule.id);
-      toast.success(`Schedule "${newSchedule.name}" imported successfully!`);
-    } catch (error) { console.error("Error importing schedule:", error); toast.error("Failed to import schedule. Ensure the file is a valid JSON."); }
-    finally { if (fileInputRef.current) { fileInputRef.current.value = ""; } }
-  };
-
   /** Toggles the lock state of a course for schedule generation. */
   const handleToggleCourseLock = (courseId: string) => {
     const course = courses.find(c => c.id === courseId);
@@ -285,13 +240,12 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
   };
 
   return (
-    <div>
-      <input type="file" accept=".json" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none' }} />
+    <>
+      <input type="file" accept=".json" ref={fileInputRef} style={{ display: 'none' }} />
 
       {/* Header */}
       <div className="flex-shrink-0 border-b bg-white">
         <div className="container mx-auto px-4 max-w-7xl">
-          {/* TermHeader is now standalone in the header for mobile as well */}
           <TermHeader
             view={termHeaderView}
             setView={handleTermHeaderViewChange}
@@ -300,153 +254,315 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
         </div>
       </div>
 
-        {/* Main Content */}
-        <div className="flex-1 flex overflow-hidden">
-          {/* Mobile: Show full-page manage/config view when in 'manage' mode */}
-          {isMobile && mobileView === "manage" ? (
-            <div className="w-full h-full overflow-y-auto bg-white flex flex-col">
-              <div className="p-4 space-y-4">
-                {/* Busy Times Section */}
-                <div className="mb-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-medium text-base">Busy Times ({busyTimes.length})</h3>
-                    <Button size="sm" variant="outline" onClick={() => setIsAddBusyTimeBottomSheetOpen(true)}>
-                      <PlusCircle className="h-4 w-4 mr-1" /> Add Busy Time
+      {/* Main Content */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Desktop: Left Sidebar */}
+        {!isMobile && (
+          <div className="w-80 flex-shrink-0 border-r bg-white overflow-y-auto">
+            <div className="p-4 space-y-4">
+              {/* Busy Times Accordion */}
+              <Accordion type="single" collapsible defaultValue="busy-times">
+                <AccordionItem value="busy-times" className="border-b-0">
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+                    <AccordionTrigger className="flex items-center hover:bg-gray-100 transition-colors [&[data-state=open]>svg]:rotate-180 flex-1 p-0">
+                      <h3 className="font-medium text-sm">Busy Times ({busyTimes.length})</h3>
+                    </AccordionTrigger>
+                    <Button variant="outline" size="sm" onClick={() => {
+                      if (isMobile) {
+                        setIsAddBusyTimeBottomSheetOpen(true);
+                      } else {
+                        setIsAddBusyTimeOpen(true);
+                      }
+                    }} className="h-8 px-3 ml-2">
+                      <PlusCircle className="h-4 w-4 mr-1" />
+                      Add
                     </Button>
                   </div>
-                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                  <AccordionContent className="pt-3 space-y-3">
+                    <AnimatePresence>
+                      {busyTimes.map((busyTime) => (
+                        <motion.div
+                          key={busyTime.id}
+                          initial={{ opacity: 0, y: 5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.95 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <BusyTimeItem busyTime={busyTime} onEdit={handleEditBusyTime} />
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
                     {busyTimes.length === 0 && (
                       <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded-md text-center">No busy times added.</div>
                     )}
-                    {busyTimes.map((busyTime) => (
-                      <BusyTimeItem key={busyTime.id} busyTime={busyTime} onEdit={handleEditBusyTime} />
-                    ))}
-                  </div>
-                </div>
-                {/* Courses Section */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-medium text-base">Courses ({selectedCourses.length}/{courses.length} selected)</h3>
-                    <Button size="sm" variant="outline" onClick={() => setIsCourseSearchDrawerOpen(true)}>
-                      <PlusCircle className="h-4 w-4 mr-1" /> Add Course
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+
+              {/* Courses Accordion */}
+              <Accordion type="single" collapsible defaultValue="courses">
+                <AccordionItem value="courses" className="border-b-0">
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+                    <AccordionTrigger className="flex items-center hover:bg-gray-100 transition-colors [&[data-state=open]>svg]:rotate-180 flex-1 p-0">
+                      <h3 className="font-medium text-sm">Courses ({selectedCourses.length}/{courses.length})</h3>
+                    </AccordionTrigger>
+                    <Button variant="outline" size="sm" onClick={() => setIsCourseSearchDrawerOpen(true)} className="h-8 px-3 ml-2">
+                      <PlusCircle className="h-4 w-4 mr-1" />
+                      Add
                     </Button>
                   </div>
-                  <div className="space-y-2 max-h-96 overflow-y-auto">
-                    {courses.length === 0 && (
-                      <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded-md text-center">No courses added.</div>
-                    )}
-                    {courses.map((course) => (
-                      <motion.div key={course.id} className={`bg-white border rounded-lg p-4 flex flex-col justify-between items-start group hover:shadow-sm transition-all w-full ${selectedCourses.includes(course.id) ? 'border-blue-300 bg-blue-50' : 'border-gray-200'}`} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ duration: 0.2 }}>
-                        <div className="flex items-start w-full space-x-2">
-                          <Checkbox id={`course-${course.id}`} checked={selectedCourses.includes(course.id)} onCheckedChange={() => handleCourseToggle(course.id)} className="mt-1" />
-                          <div className="flex-1">
-                            <div className="flex justify-between items-start w-full">
-                              <div>
-                                <label htmlFor={`course-${course.id}`} className="cursor-pointer">
-                                  <span className="font-medium text-base mr-2">{course.code}</span> <Badge variant="secondary" className="text-xs mr-2">{course.credits}cr</Badge>
-                                </label>
-                                <div className="text-sm text-gray-700 mb-1">{course.name}</div>
-                                {/* Show selected section info from the currently active schedule */}
-                                {selectedSchedule && (() => {
-                                  const currentSectionInSchedule = selectedSchedule.sections.find(section => section.courseId === course.id);
-                                  if (currentSectionInSchedule) {
-                                    return (
-                                      <div className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded mb-1">
-                                        Section {currentSectionInSchedule.sectionNumber} • {currentSectionInSchedule.instructor} • {currentSectionInSchedule.schedule?.[0] ? `${currentSectionInSchedule.schedule[0].days} ${currentSectionInSchedule.schedule[0].startTime}-${currentSectionInSchedule.schedule[0].endTime}` : 'TBA'}
-                                      </div>
-                                    );
-                                  }
-                                  return null;
-                                })()}
-                              </div>
-                              <div className="flex space-x-1">
-                                <Button variant="ghost" size="icon" className={`h-8 w-8 ${lockedCourses.includes(course.id) ? 'bg-blue-100 hover:bg-blue-200' : ''}`} onClick={() => handleToggleCourseLock(course.id)}>{lockedCourses.includes(course.id) ? <Lock className="h-4 w-4 text-blue-600 fill-current" /> : <Unlock className="h-4 w-4 text-gray-500" />}</Button>
-                                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive/90" onClick={() => handleDeleteCourse(course.id)} aria-label="Delete course"><Trash2 className="h-4 w-4" /></Button>
+                  <AccordionContent className="pt-3 space-y-3">
+                    <div className="space-y-2 max-h-96 overflow-y-auto">
+                      <AnimatePresence>
+                        {courses.map((course) => (
+                          <motion.div
+                            key={course.id}
+                            className={`bg-white border rounded-lg p-3 flex flex-col justify-between items-start group hover:shadow-sm transition-all w-full ${selectedCourses.includes(course.id) ? 'border-blue-300 bg-blue-50' : 'border-gray-200'}`}
+                            initial={{ opacity: 0, y: 5 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            transition={{ duration: 0.2 }}
+                          >
+                            <div className="flex items-start w-full space-x-2">
+                              <Checkbox
+                                id={`desktop-course-${course.id}`}
+                                checked={selectedCourses.includes(course.id)}
+                                onCheckedChange={() => handleCourseToggle(course.id)}
+                                className="mt-1"
+                              />
+                              <div className="flex-1">
+                                <div className="flex justify-between items-start w-full">
+                                  <div>
+                                    <label htmlFor={`desktop-course-${course.id}`} className="cursor-pointer">
+                                      <span className="font-medium text-sm mr-2">{course.code}</span>
+                                      <Badge variant="secondary" className="text-xs mr-2">{course.credits}cr</Badge>
+                                    </label>
+                                    <div className="text-xs text-gray-700 mb-1">{course.name}</div>
+                                    {/* Show selected section info from the currently active schedule */}
+                                    {selectedSchedule && (() => {
+                                      const currentSectionInSchedule = selectedSchedule.sections.find(section => section.courseId === course.id);
+                                      if (currentSectionInSchedule) {
+                                        return (
+                                          <div className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded mb-1">
+                                            Section {currentSectionInSchedule.sectionNumber} • {currentSectionInSchedule.instructor} • {currentSectionInSchedule.schedule?.[0] ? `${currentSectionInSchedule.schedule[0].days} ${currentSectionInSchedule.schedule[0].startTime}-${currentSectionInSchedule.schedule[0].endTime}` : 'TBA'}
+                                          </div>
+                                        );
+                                      }
+                                      return null;
+                                    })()}
+                                  </div>
+                                  <div className="flex space-x-1">
+                                    <Button variant="ghost" size="icon" className={`h-6 w-6 ${lockedCourses.includes(course.id) ? 'bg-blue-100 hover:bg-blue-200' : ''}`} onClick={() => handleToggleCourseLock(course.id)}>
+                                      {lockedCourses.includes(course.id) ? <Lock className="h-3 w-3 text-blue-600 fill-current" /> : <Unlock className="h-3 w-3 text-gray-500" />}
+                                    </Button>
+                                    <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive/90" onClick={() => handleDeleteCourse(course.id)} aria-label="Delete course">
+                                      <Trash2 className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
+                          </motion.div>
+                        ))}
+                      </AnimatePresence>
+                      {courses.length === 0 && (
+                        <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded-md text-center">No courses added.</div>
+                      )}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </div>
+          </div>
+        )}
+
+        {/* Mobile: Show full-page manage/config view when in 'manage' mode */}
+        {isMobile && mobileView === "manage" ? (
+          <div className="w-full h-full overflow-y-auto bg-white flex flex-col">
+            <div className="p-4 space-y-4">
+              {/* Busy Times Section */}
+              <Accordion type="single" collapsible defaultValue="busy-times">
+                <AccordionItem value="busy-times" className="border-b-0">
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+                    <AccordionTrigger className="flex items-center hover:bg-gray-100 transition-colors [&[data-state=open]>svg]:rotate-180 flex-1 p-0">
+                      <h3 className="font-medium text-base">Busy Times ({busyTimes.length})</h3>
+                    </AccordionTrigger>
+                    <Button variant="outline" size="sm" onClick={() => setIsAddBusyTimeBottomSheetOpen(true)} className="h-8 px-3 ml-2">
+                      <PlusCircle className="h-4 w-4 mr-1" />
+                      Add
+                    </Button>
                   </div>
-                </div>
-                {/* Preferences and Generate Schedule Button */}
-                <div className="fixed bottom-0 left-0 w-full bg-white border-t p-4 flex flex-col gap-2 z-40">
-                  <Button variant="outline" onClick={() => setIsTunePreferencesBottomSheetOpen(true)} className="w-full h-10">
-                    <SlidersHorizontal className="h-4 w-4 mr-2" /> Preferences
-                  </Button>
-                  <Button onClick={handleGenerateSchedule} variant="default" className="w-full h-10 transition-colors" disabled={selectedCourses.length === 0 || isGenerating}>
-                    <span className="flex items-center justify-center">
-                      <Sparkles className={`h-4 w-4 mr-2 ${isGenerating ? 'animate-spin' : ''}`} />
-                      {isGenerating ? 'Generating...' : selectedCourses.length === 0 ? 'Generate Schedule' : `Generate Schedule (${selectedCourses.length} selected)`}
-                    </span>
-                  </Button>
-                </div>
+                  <AccordionContent className="pt-3 space-y-3">
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      <AnimatePresence>
+                        {busyTimes.map((busyTime) => (
+                          <motion.div
+                            key={busyTime.id}
+                            initial={{ opacity: 0, y: 5 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            transition={{ duration: 0.2 }}
+                          >
+                            <BusyTimeItem busyTime={busyTime} onEdit={handleEditBusyTime} />
+                          </motion.div>
+                        ))}
+                      </AnimatePresence>
+                      {busyTimes.length === 0 && (
+                        <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded-md text-center">No busy times added.</div>
+                      )}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+
+              {/* Courses Section */}
+              <Accordion type="single" collapsible defaultValue="courses">
+                <AccordionItem value="courses" className="border-b-0">
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+                    <AccordionTrigger className="flex items-center hover:bg-gray-100 transition-colors [&[data-state=open]>svg]:rotate-180 flex-1 p-0">
+                      <h3 className="font-medium text-base">Courses ({selectedCourses.length}/{courses.length})</h3>
+                    </AccordionTrigger>
+                    <Button variant="outline" size="sm" onClick={() => {
+                      setIsCourseSearchDrawerOpen(true);
+                      // FIX: Don't change mobile view when opening course search - stay in manage
+                    }} className="h-8 px-3 ml-2">
+                      <PlusCircle className="h-4 w-4 mr-1" />
+                      Add
+                    </Button>
+                  </div>
+                  <AccordionContent className="pt-3 space-y-3">
+                    <div className="space-y-2 max-h-96 overflow-y-auto">
+                      <AnimatePresence>
+                        {courses.map((course) => (
+                          <motion.div
+                            key={course.id}
+                            className={`bg-white border rounded-lg p-4 flex flex-col justify-between items-start group hover:shadow-sm transition-all w-full ${selectedCourses.includes(course.id) ? 'border-blue-300 bg-blue-50' : 'border-gray-200'}`}
+                            initial={{ opacity: 0, y: 5 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            transition={{ duration: 0.2 }}
+                          >
+                            <div className="flex items-start w-full space-x-2">
+                              <Checkbox
+                                id={`course-${course.id}`}
+                                checked={selectedCourses.includes(course.id)}
+                                onCheckedChange={() => handleCourseToggle(course.id)}
+                                className="mt-1"
+                              />
+                              <div className="flex-1">
+                                <div className="flex justify-between items-start w-full">
+                                  <div>
+                                    <label htmlFor={`course-${course.id}`} className="cursor-pointer">
+                                      <span className="font-medium text-base mr-2">{course.code}</span>
+                                      <Badge variant="secondary" className="text-xs mr-2">{course.credits}cr</Badge>
+                                    </label>
+                                    <div className="text-sm text-gray-700 mb-1">{course.name}</div>
+                                    {/* Show selected section info from the currently active schedule */}
+                                    {selectedSchedule && (() => {
+                                      const currentSectionInSchedule = selectedSchedule.sections.find(section => section.courseId === course.id);
+                                      if (currentSectionInSchedule) {
+                                        return (
+                                          <div className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded mb-1">
+                                            Section {currentSectionInSchedule.sectionNumber} • {currentSectionInSchedule.instructor} • {currentSectionInSchedule.schedule?.[0] ? `${currentSectionInSchedule.schedule[0].days} ${currentSectionInSchedule.schedule[0].startTime}-${currentSectionInSchedule.schedule[0].endTime}` : 'TBA'}
+                                          </div>
+                                        );
+                                      }
+                                      return null;
+                                    })()}
+                                  </div>
+                                  <div className="flex space-x-1">
+                                    <Button variant="ghost" size="icon" className={`h-8 w-8 ${lockedCourses.includes(course.id) ? 'bg-blue-100 hover:bg-blue-200' : ''}`} onClick={() => handleToggleCourseLock(course.id)}>
+                                      {lockedCourses.includes(course.id) ? <Lock className="h-4 w-4 text-blue-600 fill-current" /> : <Unlock className="h-4 w-4 text-gray-500" />}
+                                    </Button>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive/90" onClick={() => handleDeleteCourse(course.id)} aria-label="Delete course">
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </motion.div>
+                        ))}
+                      </AnimatePresence>
+                      {courses.length === 0 && (
+                        <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded-md text-center">No courses added.</div>
+                      )}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+
+              {/* Preferences and Generate Schedule Button */}
+              <div className="fixed bottom-0 left-0 w-full bg-white border-t p-4 flex flex-col gap-2 z-40">
+                <Button variant="outline" onClick={() => setIsTunePreferencesBottomSheetOpen(true)} className="w-full h-10">
+                  <SlidersHorizontal className="h-4 w-4 mr-2" /> Preferences
+                </Button>
+                <Button onClick={handleGenerateSchedule} variant="default" className="w-full h-10 transition-colors" disabled={selectedCourses.length === 0 || isGenerating}>
+                  <span className="flex items-center justify-center">
+                    <Sparkles className={`h-4 w-4 mr-2 ${isGenerating ? 'animate-spin' : ''}`} />
+                    {isGenerating ? 'Generating...' : selectedCourses.length === 0 ? 'Generate Schedule' : `Generate Schedule (${selectedCourses.length} selected)`}
+                  </span>
+                </Button>
               </div>
             </div>
-          ) : (
-            <>
-              {/* Restore list view toggle for mobile */}
-              <div className="w-full flex justify-center items-center bg-white border-b">
-                <div className="flex gap-2 py-2">
-                  <Button
-                    variant={view === "calendar" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => { setView("calendar"); setMobileView("calendar"); }}
-                  >
-                    <CalendarIcon className="h-4 w-4 mr-1" /> Calendar
-                  </Button>
-                  <Button
-                    variant={view === "list" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => { setView("list"); setMobileView("calendar"); }}
-                  >
-                    <ListIcon className="h-4 w-4 mr-1" /> List
-                  </Button>
-                </div>
-              </div>
-              {/* Show calendar or list view as appropriate */}
-              <AnimatePresence mode="wait">
-                {(view === "calendar" && !isMobile) || (isMobile && mobileView === "calendar" && view === "calendar") ? (
-                  <motion.div
-                    key="calendar"
-                    className={`flex-1 overflow-hidden ${isMobile ? '-mx-4 -mb-4' : ''}`}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <ScheduleCalendarView lockedCourses={lockedCourses} />
-                  </motion.div>
-                ) : (view === "list" && !isMobile) || (isMobile && mobileView === "calendar" && view === "list") ? (
-                  <motion.div
-                    key="list"
-                    className={`flex-1 overflow-auto ${isMobile ? 'p-2' : 'p-4'}`}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <ScheduleListView />
-                  </motion.div>
-                ) : null}
-              </AnimatePresence>
-            </>
-          )}
-        </div>
+          </div>
+        ) : (
+          <>
+            {/* Show calendar or list view as appropriate */}
+            <AnimatePresence mode="wait">
+              {(view === "calendar" && !isMobile) || (isMobile && mobileView === "calendar" && view === "calendar") ? (
+                <motion.div
+                  key="calendar"
+                  className={`flex-1 overflow-hidden ${isMobile ? '-mx-4 -mb-4' : ''}`}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <ScheduleCalendarView lockedCourses={lockedCourses} />
+                </motion.div>
+              ) : (view === "list" && !isMobile) || (isMobile && mobileView === "calendar" && view === "list") ? (
+                <motion.div
+                  key="list"
+                  className={`flex-1 overflow-auto ${isMobile ? 'p-2' : 'p-4'}`}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <ScheduleListView />
+                </motion.div>
+              ) : null}
+            </AnimatePresence>
+          </>
+        )}
+      </div>
 
       {/* Dialogs */}
       <AddBusyTimeDialog open={isAddBusyTimeOpen} onOpenChange={setIsAddBusyTimeOpen} />
       <EditBusyTimeDialog open={isEditBusyTimeOpen} onOpenChange={setIsEditBusyTimeOpen} busyTime={selectedBusyTime} />
-      <AIAdvisorBottomSheet open={isAIAdvisorBottomSheetOpen} onOpenChange={setIsAIAdvisorBottomSheetOpen} />
       <TunePreferencesDialog open={isPreferencesOpen} onOpenChange={setIsPreferencesOpen} />
       <CompareSchedulesDialog open={isCompareOpen} onOpenChange={setIsCompareOpen} />
+
+      {/* AI Advisor - Desktop uses AIAdvisor, Mobile uses AIAdvisorBottomSheet */}
+      {!isMobile && (
+        <AIAdvisor open={isAIAdvisorOpen} onOpenChange={setIsAIAdvisorOpen} />
+      )}
 
       {/* Course Search - Desktop uses Modal, Mobile uses Bottom Sheet */}
       <CourseSearchModal
         open={isCourseSearchDrawerOpen}
-        onOpenChange={setIsCourseSearchDrawerOpen}
-        onCourseSelected={(course) => { addCourse(course); }}
+        onOpenChange={(open) => {
+          setIsCourseSearchDrawerOpen(open);
+          // FIX: Don't change mobile view when closing modal - stay in manage view
+          // if (isMobile && !open && mobileView === "manage") {
+          //   // Keep in manage view
+          // }
+        }}
+        onCourseSelected={(course) => {
+          addCourse(course);
+          // FIX: Don't auto-close or change view when adding course on mobile
+        }}
       />
 
       {/* Mobile Bottom Sheets */}
@@ -458,10 +574,9 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
           addCourse(course);
           setIsCourseDetailBottomSheetOpen(false);
         }}
-        isAdded={selectedCourseForDetail ? courses.some((c: Course) => c.id === selectedCourseForDetail.id) : false}
+        isAdded={selectedCourseForDetail ? courses.some(c => c.id === selectedCourseForDetail.id) : false}
       />
 
-      {/* Mobile Bottom Sheets for other actions */}
       <AddBusyTimeBottomSheet
         open={isAddBusyTimeBottomSheetOpen}
         onOpenChange={setIsAddBusyTimeBottomSheetOpen}
@@ -478,16 +593,50 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
         onOpenChange={setIsTunePreferencesBottomSheetOpen}
       />
 
-      <AIAdvisorBottomSheet
-        open={isAIAdvisorBottomSheetOpen}
-        onOpenChange={setIsAIAdvisorBottomSheetOpen}
-      />
-
-      {/* Mobile Floating Icons */}
+      {/* Mobile AI Advisor Bottom Sheet */}
       {isMobile && (
-        <>
-          {/* Only show AIAdvisorBottomSheet for mobile, remove floating icon */}
-        </>
+        <AIAdvisorBottomSheet
+          open={isAIAdvisorBottomSheetOpen}
+          onOpenChange={setIsAIAdvisorBottomSheetOpen}
+        />
+      )}
+
+      {/* Mobile Floating Icons - Stacked vertically */}
+      {isMobile && (
+        <div className="fixed bottom-4 right-4 z-50 flex flex-col space-y-3">
+          {/* AI Advisor Floating Button */}
+          <Button
+            size="lg"
+            className="rounded-full shadow-lg bg-gradient-to-r from-purple-600 to-violet-500 hover:from-purple-700 hover:to-violet-600 h-12 w-12 p-0 flex items-center justify-center"
+            onClick={() => setIsAIAdvisorBottomSheetOpen(true)}
+            aria-label="Ask AI Advisor"
+          >
+            <Sparkles className="h-5 w-5 text-white" />
+          </Button>
+
+          {/* Schedule Management Floating Tab */}
+          <Button
+            className="rounded-full shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground h-12 w-12 p-0 flex items-center justify-center"
+            onClick={() => {
+              if (mobileView === "manage") {
+                setMobileView("calendar");
+              } else {
+                setMobileView("manage");
+                // When going to manage mode, ensure we're in calendar view (not list)
+                if (view === "list") {
+                  setView("calendar");
+                }
+              }
+            }}
+            aria-label={mobileView === "calendar" ? "Show Manage View" : "Show Calendar View"}
+          >
+            {mobileView === "calendar" ? (
+              <SlidersHorizontal className="h-5 w-5" />
+            ) : (
+              <CalendarIcon className="h-5 w-5" />
+            )}
+          </Button>
+        </div>
       )}
 
       {/* Desktop Sticky Action Buttons */}
@@ -510,28 +659,15 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
                 {isGenerating ? 'Generating...' : selectedCourses.length === 0 ? 'Generate Schedule' : `Generate Schedule (${selectedCourses.length} selected)`}
               </span>
             </Button>
+            <Button variant="outline" onClick={() => setIsAIAdvisorOpen(true)} className="w-full h-10">
+              <Sparkles className="h-4 w-4 mr-2" />
+              Ask AI Advisor
+            </Button>
           </div>
         </div>
       )}
-
-      {/* Floating Action Button for Mobile - Restore quick toggle between views */}
-      {isMobile && (
-        <button
-          className="fixed bottom-6 right-6 z-50 rounded-full shadow-lg bg-blue-600 hover:bg-blue-700 text-white w-16 h-16 flex items-center justify-center transition-all focus:outline-none focus:ring-2 focus:ring-blue-400"
-          aria-label={mobileView === "calendar" ? "Show Manage View" : "Show Calendar View"}
-          onClick={() => setMobileView(mobileView === "calendar" ? "manage" : "calendar")}
-          style={{ boxShadow: '0 4px 24px rgba(0,0,0,0.18)' }}
-        >
-          {mobileView === "calendar" ? (
-            <SlidersHorizontal className="h-8 w-8" />
-          ) : (
-            <CalendarIcon className="h-8 w-8" />
-          )}
-        </button>
-      )}
-    </div>
+    </>
   );
 };
 
 export default ScheduleTool;
-
