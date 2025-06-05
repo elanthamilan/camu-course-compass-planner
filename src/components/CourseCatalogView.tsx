@@ -7,8 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"; // DialogClose not used here
-import { XIcon, CalendarDays, Users, MapPin, Info, ThumbsUp, ThumbsDown, AlertTriangle, CheckSquare, Square, Rows, Columns, Check, Plus, Minus } from 'lucide-react'; // Added more icons
+import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"; // Added for Bottom Sheet
+import { XIcon, CalendarDays, Users, MapPin, Info, ThumbsUp, ThumbsDown, AlertTriangle, CheckSquare, Square, Rows, Columns, Check, Plus, Minus, Filter, Eye, Edit } from 'lucide-react'; // Added more icons, Added Filter, Eye, Edit
 import EmbeddedCourseSequenceView from './EmbeddedCourseSequenceView'; // Import the new component
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"; // Added for mobile filters
+import { useIsMobile } from '@/hooks/use-mobile'; // Added for mobile detection
 
 interface CourseCatalogViewProps {
   targetCourseCode?: string | null;
@@ -22,6 +25,11 @@ const CourseCatalogView: React.FC<CourseCatalogViewProps> = ({ targetCourseCode,
   const [selectedLevel, setSelectedLevel] = useState("all");
   const [selectedAttributes, setSelectedAttributes] = useState<string[]>([]);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false); // State for mobile filter sheet
+  const isMobile = useIsMobile(); // Hook for mobile detection
+  const [isCourseActionSheetOpen, setIsCourseActionSheetOpen] = useState(false); // State for course action bottom sheet
+  const [actionSheetCourse, setActionSheetCourse] = useState<Course | null>(null); // State for course in action sheet
+
 
   // New filter states
   const [selectedTerm, setSelectedTerm] = useState("all");
@@ -183,10 +191,11 @@ const CourseCatalogView: React.FC<CourseCatalogViewProps> = ({ targetCourseCode,
   ];
 
   const getGridColsClass = () => {
+    if (isMobile) return 'grid-cols-1';
     if (coursesToCompare.length === 1) return 'grid-cols-1';
-    if (coursesToCompare.length === 2) return 'grid-cols-2';
-    if (coursesToCompare.length === 3) return 'grid-cols-3';
-    return 'grid-cols-1'; // Default or for 0
+    if (coursesToCompare.length === 2) return 'grid-cols-1 sm:grid-cols-2';
+    if (coursesToCompare.length === 3) return 'grid-cols-1 md:grid-cols-3';
+    return 'grid-cols-1';
   };
 
 
@@ -197,15 +206,15 @@ const CourseCatalogView: React.FC<CourseCatalogViewProps> = ({ targetCourseCode,
         <div className="flex items-center space-x-3">
           <span className="text-2xl">📚</span>
           <div>
-            <h2 className="text-xl font-bold text-blue-900">Browse All Classes</h2>
+            <h2 className="text-lg sm:text-xl font-bold text-blue-900">Browse All Classes</h2>
             <p className="text-blue-700 text-sm">Search and filter through all available courses</p>
           </div>
         </div>
       </div>
 
       <div className="flex gap-6">
-        {/* Left Sidebar - Filters */}
-        <div className="w-80 flex-shrink-0">
+        {/* Left Sidebar - Filters (Desktop) */}
+        <div className="hidden lg:flex w-80 flex-shrink-0 flex-col">
           <div className="sticky top-4 space-y-6">
             {/* Search */}
             <div className="bg-white border rounded-lg p-4">
@@ -431,6 +440,176 @@ const CourseCatalogView: React.FC<CourseCatalogViewProps> = ({ targetCourseCode,
 
         {/* Main Content Area */}
         <div className="flex-1 min-w-0">
+          {/* Mobile Filter Trigger */}
+          <div className="lg:hidden mb-4">
+            <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
+              <SheetTrigger asChild>
+                <Button variant="outline" className="w-full">
+                  <Filter className="h-4 w-4 mr-2" />
+                  Show Filters
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-[300px] sm:w-[340px] p-0">
+                <div className="overflow-y-auto h-full p-4 space-y-6"> {/* Added padding here and scroll */}
+                  {/* Search */}
+                  <div className="bg-white border rounded-lg p-4">
+                    <h3 className="font-semibold text-gray-900 mb-3 flex items-center">
+                      <span className="text-lg mr-2">🔍</span>
+                      Search
+                    </h3>
+                    <Input
+                      type="text"
+                      placeholder="Search courses..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full"
+                    />
+                  </div>
+                  {/* Basic Filters */}
+                  <div className="bg-white border rounded-lg p-4">
+                    <h3 className="font-semibold text-gray-900 mb-3 flex items-center">
+                      <span className="text-lg mr-2">📖</span>
+                      Subject & Level
+                    </h3>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="mobile-department-select" className="text-sm font-medium text-gray-700">
+                          Subject Area
+                        </Label>
+                        <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
+                          <SelectTrigger id="mobile-department-select" className="mt-1">
+                            <SelectValue placeholder="All Subjects" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Subjects</SelectItem>
+                            {departments.map(dept => <SelectItem key={dept} value={dept}>{dept}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="mobile-level-select" className="text-sm font-medium text-gray-700">Course Level</Label>
+                        <Select value={selectedLevel} onValueChange={setSelectedLevel}>
+                          <SelectTrigger id="mobile-level-select" className="mt-1"><SelectValue placeholder="All Levels" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Levels</SelectItem>
+                            {levels.map(level => <SelectItem key={`mobile-level-${level}`} value={level}>{level}-level</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="mobile-credits-select" className="text-sm font-medium text-gray-700">Credit Hours</Label>
+                        <Select value={selectedCredits} onValueChange={setSelectedCredits}>
+                          <SelectTrigger id="mobile-credits-select" className="mt-1"><SelectValue placeholder="Any Credits" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Any Credits</SelectItem>
+                            {creditsOptions.map(cred => <SelectItem key={`mobile-cred-${cred}`} value={cred.toString()}>{cred} Credits</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Schedule Filters */}
+                  <div className="bg-white border rounded-lg p-4">
+                    <h3 className="font-semibold text-gray-900 mb-3 flex items-center"><span className="text-lg mr-2">⏰</span>Schedule</h3>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="mobile-days-select" className="text-sm font-medium text-gray-700">Days of Week</Label>
+                        <Select value={selectedMeetingDays} onValueChange={setSelectedMeetingDays}>
+                          <SelectTrigger id="mobile-days-select" className="mt-1"><SelectValue placeholder="Any Day" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Any Day</SelectItem>
+                            <SelectItem value="M">Monday</SelectItem><SelectItem value="T">Tuesday</SelectItem><SelectItem value="W">Wednesday</SelectItem><SelectItem value="Th">Thursday</SelectItem><SelectItem value="F">Friday</SelectItem><SelectItem value="S">Saturday</SelectItem><SelectItem value="Su">Sunday</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="mobile-time-select" className="text-sm font-medium text-gray-700">Start Time</Label>
+                        <Select value={selectedStartTime} onValueChange={setSelectedStartTime}>
+                          <SelectTrigger id="mobile-time-select" className="mt-1"><SelectValue placeholder="Any Time" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Any Time</SelectItem>
+                            <SelectItem value="08">8:00 AM</SelectItem><SelectItem value="09">9:00 AM</SelectItem><SelectItem value="10">10:00 AM</SelectItem><SelectItem value="11">11:00 AM</SelectItem><SelectItem value="12">12:00 PM</SelectItem><SelectItem value="13">1:00 PM</SelectItem><SelectItem value="14">2:00 PM</SelectItem><SelectItem value="15">3:00 PM</SelectItem><SelectItem value="16">4:00 PM</SelectItem><SelectItem value="17">5:00 PM</SelectItem><SelectItem value="18">6:00 PM</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="mobile-term-select" className="text-sm font-medium text-gray-700">Term</Label>
+                        <Select value={selectedTerm} onValueChange={setSelectedTerm}>
+                          <SelectTrigger id="mobile-term-select" className="mt-1"><SelectValue placeholder="Any Term" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Any Term</SelectItem>
+                            {termOptions.map(term => <SelectItem key={`mobile-term-${term}`} value={term}>{term}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="mobile-mode-select" className="text-sm font-medium text-gray-700">Format</Label>
+                        <Select value={selectedInstructionMode} onValueChange={setSelectedInstructionMode}>
+                          <SelectTrigger id="mobile-mode-select" className="mt-1"><SelectValue placeholder="Any Format" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Any Format</SelectItem>
+                            {instructionModeOptions.map(mode => <SelectItem key={`mobile-mode-${mode}`} value={mode}>{mode}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Additional Filters */}
+                  <div className="bg-white border rounded-lg p-4">
+                    <h3 className="font-semibold text-gray-900 mb-3 flex items-center"><span className="text-lg mr-2">🎯</span>More Options</h3>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="mobile-status-select" className="text-sm font-medium text-gray-700">Availability</Label>
+                        <Select value={selectedClassStatus} onValueChange={setSelectedClassStatus}>
+                          <SelectTrigger id="mobile-status-select" className="mt-1"><SelectValue placeholder="Any Status" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Any Status</SelectItem>
+                            {classStatusOptions.map(status => <SelectItem key={`mobile-status-${status}`} value={status}>{status}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="mobile-campus-select" className="text-sm font-medium text-gray-700">Campus</Label>
+                        <Select value={selectedCampus} onValueChange={setSelectedCampus}>
+                          <SelectTrigger id="mobile-campus-select" className="mt-1"><SelectValue placeholder="Any Campus" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Any Campus</SelectItem>
+                            {campusOptions.map(campus => <SelectItem key={`mobile-campus-${campus}`} value={campus}>{campus}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="mobile-session-select" className="text-sm font-medium text-gray-700">Session</Label>
+                        <Select value={selectedAcademicSession} onValueChange={setSelectedAcademicSession}>
+                          <SelectTrigger id="mobile-session-select" className="mt-1"><SelectValue placeholder="Any Session" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Any Session</SelectItem>
+                            {academicSessionOptions.map(session => <SelectItem key={`mobile-session-${session}`} value={session}>{session}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Special Attributes */}
+                  {attributesOptions.length > 0 && (
+                    <div className="bg-white border rounded-lg p-4">
+                      <h3 className="font-semibold text-gray-900 mb-3 flex items-center"><span className="text-lg mr-2">🏷️</span>Attributes</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {attributesOptions.map(attr => (
+                          <Badge key={attr} onClick={() => handleAttributeToggle(attr)} variant={selectedAttributes.includes(attr) ? "default" : "outline"} className="cursor-pointer py-1 px-3 text-sm hover:bg-primary/80 transition-colors">
+                            {selectedAttributes.includes(attr) ? "✓" : "+"} {attr}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                   {/* Button to close sheet */}
+                  <Button onClick={() => setIsFilterSheetOpen(false)} className="w-full mt-4">Done</Button>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
+
           {coursesToCompare.length > 0 && (
             <div className="mb-4 flex items-center justify-between p-4 bg-purple-50 border border-purple-200 rounded-lg">
               <div>
@@ -456,7 +635,7 @@ const CourseCatalogView: React.FC<CourseCatalogViewProps> = ({ targetCourseCode,
             </p>
           </div>
 
-          <div className={`grid grid-cols-1 ${selectedCourse ? 'lg:grid-cols-1' : 'lg:grid-cols-2'} gap-4`}>
+          <div className={`grid grid-cols-1 gap-4 ${selectedCourse && !isMobile ? 'lg:grid-cols-1' : 'sm:grid-cols-2 lg:grid-cols-3'}`}>
             {filteredCourses.map((course: Course) => {
               const isComparing = !!coursesToCompare.find(c => c.id === course.id);
               return (
@@ -466,10 +645,20 @@ const CourseCatalogView: React.FC<CourseCatalogViewProps> = ({ targetCourseCode,
                               ${selectedCourse && selectedCourse.id === course.id ? 'border-primary ring-2 ring-primary' : 'border-gray-200 hover:shadow-lg'}
                               ${isComparing ? 'ring-2 ring-blue-500 border-blue-400' : ''} transition-all duration-150 ease-in-out`}
                 >
-                  <div onClick={() => setSelectedCourse(course)} className="cursor-pointer">
+                  <div
+                    onClick={() => {
+                      if (isMobile) {
+                        setActionSheetCourse(course);
+                        setIsCourseActionSheetOpen(true);
+                      } else {
+                        setSelectedCourse(course);
+                      }
+                    }}
+                    className="cursor-pointer"
+                  >
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1">
-                        <h3 className="text-lg font-bold text-primary mb-1 group-hover:text-blue-700">
+                        <h3 className="text-base sm:text-lg font-bold text-primary mb-1 group-hover:text-blue-700">
                           {course.code}
                         </h3>
                         <h4 className="text-sm font-medium text-gray-700 leading-tight">
@@ -532,7 +721,7 @@ const CourseCatalogView: React.FC<CourseCatalogViewProps> = ({ targetCourseCode,
                     <Button
                       size="sm"
                       variant={isComparing ? "destructive" : "outline"}
-                      className="text-xs h-7 px-2"
+                      className="text-xs h-7 px-2.5" /* Increased padding slightly */
                       onClick={(e) => { e.stopPropagation(); handleToggleCompare(course); }}
                     >
                       {isComparing ? <Minus className="h-3 w-3 mr-1"/> : <Plus className="h-3 w-3 mr-1"/>}
@@ -562,8 +751,9 @@ const CourseCatalogView: React.FC<CourseCatalogViewProps> = ({ targetCourseCode,
           </div>
         </div>
 
-        {selectedCourse && (
-          <div id="course-detail-view" className="w-full md:w-1/3 p-4 border rounded-lg bg-white shadow-xl sticky top-24 max-h-[calc(100vh-120px)] overflow-y-auto transition-all duration-300 ease-in-out animate-slide-in-right">
+        {/* Desktop Selected Course Detail Panel */}
+        {!isMobile && selectedCourse && (
+          <div id="course-detail-view" className="hidden lg:block w-full lg:w-1/3 p-4 border rounded-lg bg-white shadow-xl sticky top-24 max-h-[calc(100vh-120px)] overflow-y-auto transition-all duration-300 ease-in-out animate-slide-in-right">
             <div className="flex justify-between items-start mb-3">
               <div className="flex-1">
                 <h3 className="text-xl font-bold text-primary mb-1">{selectedCourse.code}</h3>
@@ -735,6 +925,144 @@ const CourseCatalogView: React.FC<CourseCatalogViewProps> = ({ targetCourseCode,
             /> */}
           </div>
         )}
+
+        {/* Mobile Selected Course Detail Dialog */}
+        {isMobile && selectedCourse && (
+          <Dialog open={!!selectedCourse} onOpenChange={(isOpen) => { if (!isOpen) setSelectedCourse(null); }}>
+            <DialogContent className="max-w-[95vw] sm:max-w-lg max-h-[90vh] flex flex-col p-0">
+              <DialogHeader className="p-4 border-b">
+                <DialogTitle className="text-lg sm:text-xl">{selectedCourse.code} - {selectedCourse.name}</DialogTitle>
+                <Button onClick={() => setSelectedCourse(null)} variant="ghost" size="icon" className="absolute top-3 right-3 h-7 w-7">
+                  <XIcon className="h-4 w-4" />
+                </Button>
+              </DialogHeader>
+              <div className="overflow-y-auto p-4 space-y-3"> {/* Scrollable content area */}
+                <div className="space-y-1 text-sm">
+                  <p><strong>Credits:</strong> {selectedCourse.credits}</p>
+                  <p><strong>Subject:</strong> {selectedCourse.department || 'N/A'}</p>
+                  {selectedCourse.college && <p><strong>College:</strong> {selectedCourse.college}</p>}
+                  {selectedCourse.campus && <p><strong>Campus:</strong> {selectedCourse.campus}</p>}
+                  {selectedCourse.courseCareer && <p><strong>Course Career:</strong> {selectedCourse.courseCareer}</p>}
+                </div>
+                {selectedCourse.description && (
+                  <div>
+                    <h5 className="font-semibold text-sm mb-0.5 text-gray-600">Description</h5>
+                    <p className="text-xs text-gray-500 whitespace-pre-wrap">{selectedCourse.description}</p>
+                  </div>
+                )}
+                {(selectedCourse.prerequisites && selectedCourse.prerequisites.length > 0) && (
+                  <div>
+                    <h5 className="font-semibold text-sm mb-1 text-gray-600">Prerequisites</h5>
+                    <div className="space-y-1">
+                      {selectedCourse.prerequisites.map(prereqCode => {
+                        const prereqCourseDetails = mockCourses.find(c => c.code === prereqCode || c.id === prereqCode);
+                        return (
+                          <div key={`mobile-prereq-${prereqCode}`}>
+                            <Badge variant="secondary" className="text-xs py-0.5 px-1.5">
+                              {prereqCode}{prereqCourseDetails ? ` - ${prereqCourseDetails.name.substring(0,25)}${prereqCourseDetails.name.length > 25 ? '...' : ''}` : ''}
+                            </Badge>
+                            {prereqCourseDetails && prereqCourseDetails.prerequisites && prereqCourseDetails.prerequisites.length > 0 && (
+                              <div className="text-xs text-gray-500 ml-4 pl-2 border-l border-gray-300 mt-0.5">
+                                Requires: {prereqCourseDetails.prerequisites.join(', ')}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+                {(selectedCourse.corequisites && selectedCourse.corequisites.length > 0) && (
+                  <div>
+                    <h5 className="font-semibold text-sm mb-1 text-gray-600">Corequisites</h5>
+                    <div className="space-y-1">
+                      {selectedCourse.corequisites.map(coreqCode => {
+                        const coreqCourseDetails = mockCourses.find(c => c.code === coreqCode || c.id === coreqCode);
+                        return (
+                          <div key={`mobile-coreq-${coreqCode}`}>
+                            <Badge variant="secondary" className="text-xs py-0.5 px-1.5">
+                              {coreqCode}{coreqCourseDetails ? ` - ${coreqCourseDetails.name.substring(0,25)}${coreqCourseDetails.name.length > 25 ? '...' : ''}` : ''}
+                            </Badge>
+                            {coreqCourseDetails && coreqCourseDetails.prerequisites && coreqCourseDetails.prerequisites.length > 0 && (
+                              <div className="text-xs text-gray-500 ml-4 pl-2 border-l border-gray-300 mt-0.5">
+                                (Prerequisites for this corequisite: {coreqCourseDetails.prerequisites.join(', ')})
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+                {selectedCourse.attributes && selectedCourse.attributes.length > 0 && (
+                  <div>
+                    <h5 className="font-semibold text-sm mb-1 text-gray-600">Attributes</h5>
+                    <div className="flex flex-wrap gap-1">
+                      {selectedCourse.attributes.map(attr => <Badge key={attr} variant="outline" className="text-xs">{attr}</Badge>)}
+                    </div>
+                  </div>
+                )}
+                {selectedCourse.keywords && selectedCourse.keywords.length > 0 && (
+                  <div>
+                    <h5 className="font-semibold text-sm mb-1 text-gray-600">Keywords</h5>
+                    <div className="flex flex-wrap gap-1">
+                      {selectedCourse.keywords.map(kw => <Badge key={kw} variant="outline" className="text-xs">{kw}</Badge>)}
+                    </div>
+                  </div>
+                )}
+                {selectedCourse.sections && selectedCourse.sections.length > 0 && (
+                  <div>
+                    <h5 className="font-semibold text-sm mb-2 text-gray-600 pt-2 border-t">Available Sections</h5>
+                    <div className="space-y-3"> {/* Removed max-h and overflow, parent div handles scroll */}
+                      {selectedCourse.sections.map((section: CourseSection) => (
+                        <div key={`mobile-section-${section.id}`} className="p-2.5 border rounded-md bg-gray-50/70 text-xs leading-snug"> {/* Added leading-snug */}
+                          <div className="flex justify-between items-center mb-1">
+                            <p className="font-medium text-gray-800">Section {section.sectionNumber} <span className="text-gray-500">(CRN: {section.crn})</span></p>
+                            <div className="flex gap-1">
+                              {section.sectionType && section.sectionType !== 'Standard' && <Badge variant="secondary" className="text-[10px] py-0 px-1">{section.sectionType}</Badge>}
+                              {section.classStatus && <Badge variant={section.classStatus === 'Open' ? 'default' : section.classStatus === 'Closed' ? 'destructive' : 'secondary'} className="text-[10px] py-0 px-1">{section.classStatus}</Badge>}
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-1 gap-1 mb-2">
+                            <p className="text-gray-600"><Users className="inline h-3 w-3 mr-1 text-gray-400"/> {section.instructor || 'Staff'}</p>
+                            {section.term && <p className="text-gray-600"><CalendarDays className="inline h-3 w-3 mr-1 text-gray-400"/> Term: {section.term}</p>}
+                            {section.campus && <p className="text-gray-600"><MapPin className="inline h-3 w-3 mr-1 text-gray-400"/> Campus: {section.campus}</p>}
+                            {section.instructionMode && <p className="text-gray-600"><Info className="inline h-3 w-3 mr-1 text-gray-400"/> Mode: {section.instructionMode}</p>}
+                            {section.academicSession && <p className="text-gray-600"><CalendarDays className="inline h-3 w-3 mr-1 text-gray-400"/> Session: {section.academicSession}</p>}
+                            {section.component && <p className="text-gray-600"><Info className="inline h-3 w-3 mr-1 text-gray-400"/> Component: {section.component}</p>}
+                            {section.classStartDate && <p className="text-gray-600"><CalendarDays className="inline h-3 w-3 mr-1 text-gray-400"/> Dates: {section.classStartDate}{section.classEndDate ? ` - ${section.classEndDate}` : ''}</p>}
+                          </div>
+                          <div className="border-t pt-1 mt-1">
+                            <p className="font-medium text-gray-700 mb-1">Schedule:</p>
+                            {section.schedule.map((s, idx) => (
+                              <div key={idx} className="ml-2">
+                                 <p className="text-gray-600">• {s.days}: {s.startTime}-{s.endTime}</p>
+                                 <p className="text-gray-600 ml-2"><MapPin className="inline h-3 w-3 mr-1 text-gray-400"/> {s.location || section.location || 'TBD'}</p>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="flex justify-between items-center mt-2 pt-1 border-t text-gray-500">
+                            <span>Seats: {section.availableSeats}/{section.maxSeats}</span>
+                            {section.waitlistCount !== undefined && <span>Waitlist: {section.waitlistCount}</span>}
+                          </div>
+                          {section.courseControls && (<div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded"><p className="text-[11px] font-medium text-blue-800">Course Controls:</p><p className="text-[11px] text-blue-700">{section.courseControls}</p></div>)}
+                          {section.enrollmentRequirements && (<div className="mt-2 p-2 bg-orange-50 border border-orange-200 rounded"><p className="text-[11px] font-medium text-orange-800">Enrollment Requirements:</p><p className="text-[11px] text-orange-700">{section.enrollmentRequirements}</p></div>)}
+                          {section.additionalInformation && (<div className="mt-2 p-2 bg-green-50 border border-green-200 rounded"><p className="text-[11px] font-medium text-green-800">Additional Information:</p><p className="text-[11px] text-green-700">{section.additionalInformation}</p></div>)}
+                          {section.notes && <p className="text-[11px] text-amber-700 mt-2 italic"><Info className="inline h-3 w-3 mr-0.5"/> {section.notes}</p>}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {(!selectedCourse.sections || selectedCourse.sections.length === 0) && (
+                    <p className="text-xs text-gray-400 italic mt-3 pt-3 border-t">No sections listed for this course.</p>
+                )}
+                {/* EmbeddedCourseSequenceView could be added here if needed for mobile dialog too */}
+              </div>
+              {/* No explicit DialogFooter needed if close is handled by XIcon or onOpenChange */}
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
       {/* Comparison Modal */}
@@ -777,6 +1105,47 @@ const CourseCatalogView: React.FC<CourseCatalogViewProps> = ({ targetCourseCode,
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Course Action Bottom Sheet (Mobile) */}
+      {actionSheetCourse && (
+        <Drawer open={isCourseActionSheetOpen} onOpenChange={setIsCourseActionSheetOpen}>
+          <DrawerContent>
+            <DrawerHeader className="text-left">
+              <DrawerTitle>{actionSheetCourse.code} - {actionSheetCourse.name}</DrawerTitle>
+              <DrawerDescription>{actionSheetCourse.credits} credits • {actionSheetCourse.department}</DrawerDescription>
+            </DrawerHeader>
+            <div className="p-4 space-y-2">
+              <Button
+                variant="outline"
+                className="w-full justify-start"
+                onClick={() => {
+                  setSelectedCourse(actionSheetCourse);
+                  setIsCourseActionSheetOpen(false);
+                  // The existing Dialog for details will pick up selectedCourse
+                }}
+              >
+                <Eye className="h-4 w-4 mr-2" /> View Full Details
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full justify-start"
+                onClick={() => {
+                  handleToggleCompare(actionSheetCourse);
+                  setIsCourseActionSheetOpen(false);
+                }}
+              >
+                {coursesToCompare.find(c => c.id === actionSheetCourse.id) ? <Minus className="h-4 w-4 mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
+                {coursesToCompare.find(c => c.id === actionSheetCourse.id) ? 'Remove from Compare' : 'Add to Compare'}
+              </Button>
+            </div>
+            <DrawerFooter className="pt-2">
+              <DrawerClose asChild>
+                <Button variant="outline">Cancel</Button>
+              </DrawerClose>
+            </DrawerFooter>
+          </DrawerContent>
+        </Drawer>
+      )}
     </div>
   );
 };

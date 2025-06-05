@@ -103,7 +103,7 @@ const DegreeAuditPage: React.FC = () => {
           <TabsContent value="audit">
             <Card className="mb-6 shadow-lg border-border animate-fade-in">
               <CardHeader>
-                <CardTitle className="text-2xl font-bold text-gray-800">Degree Audit Summary</CardTitle>
+                <CardTitle className="text-xl sm:text-2xl font-bold text-gray-800">Degree Audit Summary</CardTitle>
             <CardDescription>
               Student: {mockStudent.name} ({mockStudent.id}) | Degree: {mockPrograms[0].name}
             </CardDescription>
@@ -138,14 +138,14 @@ const DegreeAuditPage: React.FC = () => {
 
         {Object.entries(groupedRequirements).map(([category, requirements]) => (
           <div key={category} className="mb-8 animate-slide-up" style={{animationDelay: `${Object.keys(groupedRequirements).indexOf(category) * 100}ms`}}>
-            <h3 className="text-lg font-semibold capitalize text-gray-600 mb-3 border-b pb-2">{category.replace(/_/g, ' ')}</h3>
+            <h3 className="text-base sm:text-lg font-semibold capitalize text-gray-600 mb-3 border-b pb-2">{category.replace(/_/g, ' ')}</h3>
             <Accordion type="multiple" className="w-full space-y-3">
               {requirements.map((req) => (
                 <AccordionItem value={req.id} key={req.id} className="bg-white rounded-lg shadow border border-gray-200 hover:shadow-md transition-shadow">
                   <AccordionTrigger className="px-4 py-3 text-sm font-medium hover:bg-gray-50 rounded-t-lg">
-                    <div className="flex items-center justify-between w-full">
-                      <span className="truncate mr-2">{req.name}</span>
-                      <div className="flex items-center flex-shrink-0">
+                    <div className="flex flex-col items-start space-y-1 max-sm:space-y-1 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 w-full">
+                      <span className="mr-2 text-left">{req.name}</span> {/* Removed truncate, added text-left for consistency when stacked */}
+                      <div className="flex items-center flex-shrink-0 max-sm:mt-1"> {/* Added max-sm:mt-1 for spacing when stacked */}
                         {getStatusIcon(req.status)}
                         <Badge variant={getStatusBadgeVariant(req.status)} className="text-xs">
                           {req.status.replace(/_/g, ' ')}

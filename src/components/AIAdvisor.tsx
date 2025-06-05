@@ -253,7 +253,7 @@ const AIAdvisor: React.FC<AIAdvisorProps> = ({ open, onOpenChange }) => {
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="w-[400px] sm:w-[600px] max-h-[90vh] flex flex-col">
+      <DrawerContent className="w-[95vw] max-w-sm sm:w-[400px] md:w-[600px] max-h-[90vh] flex flex-col">
         <DrawerHeader>
           <DrawerTitle>AI Course Advisor</DrawerTitle>
           <DrawerDescription>

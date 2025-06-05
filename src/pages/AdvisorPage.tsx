@@ -8,14 +8,14 @@ const AdvisorPage = () => {
       <Header />
       
       <main className="px-4 py-8">
-        <div className="bg-gradient-to-r from-purple-600 to-violet-500 rounded-lg p-8 text-white mb-8 shadow-lg animate-fade-in">
-          <h1 className="text-3xl font-bold mb-4">AI Course Advisor</h1>
+        <div className="bg-gradient-to-r from-purple-600 to-violet-500 rounded-lg p-4 sm:p-6 md:p-8 text-white mb-8 shadow-lg animate-fade-in">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-4">AI Course Advisor</h1>
           <p className="mb-6">
             Get personalized guidance on your course planning, degree requirements, 
             and scheduling from your AI assistant. Ask questions about prerequisites, 
             course load, or recommendations for your next semester.
           </p>
-          <div className="flex items-center space-x-3">
+          <div className="flex flex-col items-center text-center space-y-3 xs:flex-row xs:items-center xs:space-y-0 xs:space-x-3 xs:text-left">
             <div className="bg-white/20 rounded-lg p-3">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M19.7 14a2 2 0 0 0-1.7-1h-1.2a3 3 0 0 0-3 3v.7c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V16" />
@@ -43,7 +43,7 @@ const AdvisorPage = () => {
 
         {/* New Section: Schedule Sharing Information */}
         <div className="mt-10 bg-white rounded-lg shadow-md p-6 animate-fade-in" style={{animationDelay: "300ms"}}>
-          <h2 className="text-2xl font-semibold text-gray-700 mb-3">Share & Manage Your Schedules</h2>
+          <h2 className="text-xl sm:text-2xl font-semibold text-gray-700 mb-3">Share & Manage Your Schedules</h2>
           <p className="text-sm text-gray-600 mb-4">
             You can now easily manage and share your academic schedules:
           </p>
