@@ -2,6 +2,7 @@ import { useSchedule } from "@/contexts/ScheduleContext";
 import { Button } from "@/components/ui/button";
 import { CalendarIcon, ListIcon, ShoppingCartIcon, ArrowLeftRight, Sparkles } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -12,7 +13,7 @@ interface TermHeaderProps {
 }
 
 const TermHeader = ({ view, setView, onCompareClick }: TermHeaderProps) => {
-  const { currentTerm } = useSchedule();
+  const { currentTerm, schedules, selectedSchedule, selectSchedule, moveToCart } = useSchedule();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
@@ -26,7 +27,21 @@ const TermHeader = ({ view, setView, onCompareClick }: TermHeaderProps) => {
       </div>
 
       {/* Group Tabs and Buttons for better responsive layout */}
-      <div className="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:items-center sm:space-x-4 w-full sm:w-auto">
+      <div className="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:items-center sm:space-x-2 md:space-x-4 w-full sm:w-auto"> {/* Adjusted space-x for more items */}
+        {schedules && schedules.length > 0 && (
+          <Select value={selectedSchedule?.id || ""} onValueChange={(value) => selectSchedule(value)}>
+            <SelectTrigger className="w-full sm:w-[180px] md:w-[200px] text-xs sm:text-sm h-9 sm:h-auto"> {/* Adjusted height for sm screens */}
+              <SelectValue placeholder="Select Schedule" />
+            </SelectTrigger>
+            <SelectContent>
+              {schedules.map((schedule) => (
+                <SelectItem key={schedule.id} value={schedule.id} className="text-xs sm:text-sm">
+                  {schedule.name} ({schedule.sections.length} courses, {schedule.totalCredits}cr)
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
         <div className="flex items-center space-x-3 w-full sm:w-auto">
           <Tabs value={view} onValueChange={setView} className="animate-scale-in w-full sm:w-auto">
             <TabsList className="grid grid-cols-2 w-full sm:w-auto">
@@ -50,6 +65,18 @@ const TermHeader = ({ view, setView, onCompareClick }: TermHeaderProps) => {
           >
             <ArrowLeftRight className="mr-2 h-4 w-4" />
             Compare
+          </Button>
+        )}
+        {selectedSchedule && moveToCart && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={moveToCart}
+            className="w-full sm:w-auto"
+            aria-label="Add to Cart"
+          >
+            <ShoppingCartIcon className="mr-2 h-4 w-4" />
+            Add to Cart
           </Button>
         )}
       </div>
