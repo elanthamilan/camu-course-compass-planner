@@ -12,13 +12,30 @@ import { XIcon, CalendarDays, Users, MapPin, Info, ThumbsUp, ThumbsDown, AlertTr
 import EmbeddedCourseSequenceView from './EmbeddedCourseSequenceView'; // Import the new component
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"; // Added for mobile filters
 import { useIsMobile } from '@/hooks/use-mobile'; // Added for mobile detection
+import CourseDetailBottomSheet from './CourseDetailBottomSheet'; // Added for mobile course details
+
+interface FilterPreset {
+  searchTerm?: string;
+  department?: string;
+  level?: string;
+  credits?: string;
+  classStatus?: string;
+  attributes?: string[];
+}
 
 interface CourseCatalogViewProps {
   targetCourseCode?: string | null;
   onTargetCourseViewed?: () => void;
+  filterPreset?: FilterPreset | null;
+  onFilterPresetApplied?: () => void;
 }
 
-const CourseCatalogView: React.FC<CourseCatalogViewProps> = ({ targetCourseCode, onTargetCourseViewed }) => {
+const CourseCatalogView: React.FC<CourseCatalogViewProps> = ({
+  targetCourseCode,
+  onTargetCourseViewed,
+  filterPreset,
+  onFilterPresetApplied
+}) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("all");
   const [selectedCredits, setSelectedCredits] = useState("all");
@@ -29,6 +46,8 @@ const CourseCatalogView: React.FC<CourseCatalogViewProps> = ({ targetCourseCode,
   const isMobile = useIsMobile(); // Hook for mobile detection
   const [isCourseActionSheetOpen, setIsCourseActionSheetOpen] = useState(false); // State for course action bottom sheet
   const [actionSheetCourse, setActionSheetCourse] = useState<Course | null>(null); // State for course in action sheet
+  const [isCourseDetailBottomSheetOpen, setIsCourseDetailBottomSheetOpen] = useState(false); // State for mobile course detail bottom sheet
+  const [selectedCourseForDetail, setSelectedCourseForDetail] = useState<Course | null>(null); // Course selected for detail bottom sheet
 
 
   // New filter states
@@ -43,6 +62,7 @@ const CourseCatalogView: React.FC<CourseCatalogViewProps> = ({ targetCourseCode,
 
   const [coursesToCompare, setCoursesToCompare] = useState<Course[]>([]);
   const [showCompareModal, setShowCompareModal] = useState<boolean>(false);
+  const [showFilterBanner, setShowFilterBanner] = useState(false);
 
   const [departments, setDepartments] = useState<string[]>([]);
   const [creditsOptions, setCreditsOptions] = useState<number[]>([]);
@@ -89,6 +109,9 @@ const CourseCatalogView: React.FC<CourseCatalogViewProps> = ({ targetCourseCode,
 
   useEffect(() => {
     if (targetCourseCode) {
+      // Set search term to the target course code for filtering
+      setSearchTerm(targetCourseCode);
+
       const courseToSelect = mockCourses.find(c => c.code === targetCourseCode || c.id === targetCourseCode);
       if (courseToSelect) {
         setSelectedCourse(courseToSelect);
@@ -107,6 +130,25 @@ const CourseCatalogView: React.FC<CourseCatalogViewProps> = ({ targetCourseCode,
   // setSelectedCourse is stable, mockCourses is stable.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [targetCourseCode, onTargetCourseViewed]);
+
+  // Handle filter presets
+  useEffect(() => {
+    if (filterPreset) {
+      if (filterPreset.searchTerm) setSearchTerm(filterPreset.searchTerm);
+      if (filterPreset.department) setSelectedDepartment(filterPreset.department);
+      if (filterPreset.level) setSelectedLevel(filterPreset.level);
+      if (filterPreset.credits) setSelectedCredits(filterPreset.credits);
+      if (filterPreset.classStatus) setSelectedClassStatus(filterPreset.classStatus);
+      if (filterPreset.attributes) setSelectedAttributes(filterPreset.attributes);
+
+      // Show banner to indicate filters were applied
+      setShowFilterBanner(true);
+
+      if (onFilterPresetApplied) {
+        onFilterPresetApplied();
+      }
+    }
+  }, [filterPreset, onFilterPresetApplied]);
 
   const handleAttributeToggle = (attribute: string) => {
     setSelectedAttributes(prev =>
@@ -153,7 +195,7 @@ const CourseCatalogView: React.FC<CourseCatalogViewProps> = ({ targetCourseCode,
 
     // Section-based filters - course matches if ANY section matches
     const matchesTerm = selectedTerm === "all" || course.sections.some(s => s.term === selectedTerm);
-    const matchesClassStatus = selectedClassStatus === "all" || course.sections.some(s => s.classStatus === selectedClassStatus);
+    const matchesClassStatus = selectedClassStatus === "all" || course.sections.some(s => (s.classStatus || "Open") === selectedClassStatus);
     const matchesInstructionMode = selectedInstructionMode === "all" || course.sections.some(s => s.instructionMode === selectedInstructionMode);
     const matchesAcademicSession = selectedAcademicSession === "all" || course.sections.some(s => s.academicSession === selectedAcademicSession);
 
@@ -203,7 +245,7 @@ const CourseCatalogView: React.FC<CourseCatalogViewProps> = ({ targetCourseCode,
     <div>
       {/* Simplified Header */}
       <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg">
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-3 w-full">
           <span className="text-2xl">📚</span>
           <div>
             <h2 className="text-lg sm:text-xl font-bold text-blue-900">Browse All Classes</h2>
@@ -211,6 +253,43 @@ const CourseCatalogView: React.FC<CourseCatalogViewProps> = ({ targetCourseCode,
           </div>
         </div>
       </div>
+
+      {/* Smart Filter Banner */}
+      {showFilterBanner && (
+        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <AlertTriangle className="h-4 w-4 text-green-600" />
+              <div>
+                <p className="text-sm font-medium text-green-800">Smart filters applied</p>
+                <p className="text-xs text-green-600">
+                  Showing {selectedDepartment !== "all" ? `${selectedDepartment} ` : ""}
+                  {selectedClassStatus !== "all" ? `${selectedClassStatus.toLowerCase()} ` : ""}
+                  courses{selectedAttributes.length > 0 ? ` with ${selectedAttributes.join(", ").toLowerCase()} attributes` : ""}
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                // Clear all filters
+                setSearchTerm("");
+                setSelectedDepartment("all");
+                setSelectedLevel("all");
+                setSelectedCredits("all");
+                setSelectedClassStatus("all");
+                setSelectedAttributes([]);
+                setShowFilterBanner(false);
+              }}
+              className="text-green-600 hover:text-green-800"
+            >
+              <XIcon className="h-4 w-4 mr-1" />
+              Clear filters
+            </Button>
+          </div>
+        </div>
+      )}
 
       <div className="flex gap-6">
         {/* Left Sidebar - Filters (Desktop) */}
@@ -648,8 +727,8 @@ const CourseCatalogView: React.FC<CourseCatalogViewProps> = ({ targetCourseCode,
                   <div
                     onClick={() => {
                       if (isMobile) {
-                        setActionSheetCourse(course);
-                        setIsCourseActionSheetOpen(true);
+                        setSelectedCourseForDetail(course);
+                        setIsCourseDetailBottomSheetOpen(true);
                       } else {
                         setSelectedCourse(course);
                       }
@@ -873,7 +952,7 @@ const CourseCatalogView: React.FC<CourseCatalogViewProps> = ({ targetCourseCode,
                       <div className="border-t pt-1 mt-1">
                         <p className="font-medium text-gray-700 mb-1">Schedule:</p>
                         {section.schedule.map((s, idx) => (
-                          <div key={idx} className="ml-2">
+                          <div key={`${section.id}-schedule-${idx}`} className="ml-2">
                              <p className="text-gray-600">• {s.days}: {s.startTime}-{s.endTime}</p>
                              <p className="text-gray-600 ml-2"><MapPin className="inline h-3 w-3 mr-1 text-gray-400"/> {s.location || section.location || 'TBD'}</p>
                           </div>
@@ -926,143 +1005,7 @@ const CourseCatalogView: React.FC<CourseCatalogViewProps> = ({ targetCourseCode,
           </div>
         )}
 
-        {/* Mobile Selected Course Detail Dialog */}
-        {isMobile && selectedCourse && (
-          <Dialog open={!!selectedCourse} onOpenChange={(isOpen) => { if (!isOpen) setSelectedCourse(null); }}>
-            <DialogContent className="max-w-[95vw] sm:max-w-lg max-h-[90vh] flex flex-col p-0">
-              <DialogHeader className="p-4 border-b">
-                <DialogTitle className="text-lg sm:text-xl">{selectedCourse.code} - {selectedCourse.name}</DialogTitle>
-                <Button onClick={() => setSelectedCourse(null)} variant="ghost" size="icon" className="absolute top-3 right-3 h-7 w-7">
-                  <XIcon className="h-4 w-4" />
-                </Button>
-              </DialogHeader>
-              <div className="overflow-y-auto p-4 space-y-3"> {/* Scrollable content area */}
-                <div className="space-y-1 text-sm">
-                  <p><strong>Credits:</strong> {selectedCourse.credits}</p>
-                  <p><strong>Subject:</strong> {selectedCourse.department || 'N/A'}</p>
-                  {selectedCourse.college && <p><strong>College:</strong> {selectedCourse.college}</p>}
-                  {selectedCourse.campus && <p><strong>Campus:</strong> {selectedCourse.campus}</p>}
-                  {selectedCourse.courseCareer && <p><strong>Course Career:</strong> {selectedCourse.courseCareer}</p>}
-                </div>
-                {selectedCourse.description && (
-                  <div>
-                    <h5 className="font-semibold text-sm mb-0.5 text-gray-600">Description</h5>
-                    <p className="text-xs text-gray-500 whitespace-pre-wrap">{selectedCourse.description}</p>
-                  </div>
-                )}
-                {(selectedCourse.prerequisites && selectedCourse.prerequisites.length > 0) && (
-                  <div>
-                    <h5 className="font-semibold text-sm mb-1 text-gray-600">Prerequisites</h5>
-                    <div className="space-y-1">
-                      {selectedCourse.prerequisites.map(prereqCode => {
-                        const prereqCourseDetails = mockCourses.find(c => c.code === prereqCode || c.id === prereqCode);
-                        return (
-                          <div key={`mobile-prereq-${prereqCode}`}>
-                            <Badge variant="secondary" className="text-xs py-0.5 px-1.5">
-                              {prereqCode}{prereqCourseDetails ? ` - ${prereqCourseDetails.name.substring(0,25)}${prereqCourseDetails.name.length > 25 ? '...' : ''}` : ''}
-                            </Badge>
-                            {prereqCourseDetails && prereqCourseDetails.prerequisites && prereqCourseDetails.prerequisites.length > 0 && (
-                              <div className="text-xs text-gray-500 ml-4 pl-2 border-l border-gray-300 mt-0.5">
-                                Requires: {prereqCourseDetails.prerequisites.join(', ')}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-                {(selectedCourse.corequisites && selectedCourse.corequisites.length > 0) && (
-                  <div>
-                    <h5 className="font-semibold text-sm mb-1 text-gray-600">Corequisites</h5>
-                    <div className="space-y-1">
-                      {selectedCourse.corequisites.map(coreqCode => {
-                        const coreqCourseDetails = mockCourses.find(c => c.code === coreqCode || c.id === coreqCode);
-                        return (
-                          <div key={`mobile-coreq-${coreqCode}`}>
-                            <Badge variant="secondary" className="text-xs py-0.5 px-1.5">
-                              {coreqCode}{coreqCourseDetails ? ` - ${coreqCourseDetails.name.substring(0,25)}${coreqCourseDetails.name.length > 25 ? '...' : ''}` : ''}
-                            </Badge>
-                            {coreqCourseDetails && coreqCourseDetails.prerequisites && coreqCourseDetails.prerequisites.length > 0 && (
-                              <div className="text-xs text-gray-500 ml-4 pl-2 border-l border-gray-300 mt-0.5">
-                                (Prerequisites for this corequisite: {coreqCourseDetails.prerequisites.join(', ')})
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-                {selectedCourse.attributes && selectedCourse.attributes.length > 0 && (
-                  <div>
-                    <h5 className="font-semibold text-sm mb-1 text-gray-600">Attributes</h5>
-                    <div className="flex flex-wrap gap-1">
-                      {selectedCourse.attributes.map(attr => <Badge key={attr} variant="outline" className="text-xs">{attr}</Badge>)}
-                    </div>
-                  </div>
-                )}
-                {selectedCourse.keywords && selectedCourse.keywords.length > 0 && (
-                  <div>
-                    <h5 className="font-semibold text-sm mb-1 text-gray-600">Keywords</h5>
-                    <div className="flex flex-wrap gap-1">
-                      {selectedCourse.keywords.map(kw => <Badge key={kw} variant="outline" className="text-xs">{kw}</Badge>)}
-                    </div>
-                  </div>
-                )}
-                {selectedCourse.sections && selectedCourse.sections.length > 0 && (
-                  <div>
-                    <h5 className="font-semibold text-sm mb-2 text-gray-600 pt-2 border-t">Available Sections</h5>
-                    <div className="space-y-3"> {/* Removed max-h and overflow, parent div handles scroll */}
-                      {selectedCourse.sections.map((section: CourseSection) => (
-                        <div key={`mobile-section-${section.id}`} className="p-2.5 border rounded-md bg-gray-50/70 text-xs leading-snug"> {/* Added leading-snug */}
-                          <div className="flex justify-between items-center mb-1">
-                            <p className="font-medium text-gray-800">Section {section.sectionNumber} <span className="text-gray-500">(CRN: {section.crn})</span></p>
-                            <div className="flex gap-1">
-                              {section.sectionType && section.sectionType !== 'Standard' && <Badge variant="secondary" className="text-[10px] py-0 px-1">{section.sectionType}</Badge>}
-                              {section.classStatus && <Badge variant={section.classStatus === 'Open' ? 'default' : section.classStatus === 'Closed' ? 'destructive' : 'secondary'} className="text-[10px] py-0 px-1">{section.classStatus}</Badge>}
-                            </div>
-                          </div>
-                          <div className="grid grid-cols-1 gap-1 mb-2">
-                            <p className="text-gray-600"><Users className="inline h-3 w-3 mr-1 text-gray-400"/> {section.instructor || 'Staff'}</p>
-                            {section.term && <p className="text-gray-600"><CalendarDays className="inline h-3 w-3 mr-1 text-gray-400"/> Term: {section.term}</p>}
-                            {section.campus && <p className="text-gray-600"><MapPin className="inline h-3 w-3 mr-1 text-gray-400"/> Campus: {section.campus}</p>}
-                            {section.instructionMode && <p className="text-gray-600"><Info className="inline h-3 w-3 mr-1 text-gray-400"/> Mode: {section.instructionMode}</p>}
-                            {section.academicSession && <p className="text-gray-600"><CalendarDays className="inline h-3 w-3 mr-1 text-gray-400"/> Session: {section.academicSession}</p>}
-                            {section.component && <p className="text-gray-600"><Info className="inline h-3 w-3 mr-1 text-gray-400"/> Component: {section.component}</p>}
-                            {section.classStartDate && <p className="text-gray-600"><CalendarDays className="inline h-3 w-3 mr-1 text-gray-400"/> Dates: {section.classStartDate}{section.classEndDate ? ` - ${section.classEndDate}` : ''}</p>}
-                          </div>
-                          <div className="border-t pt-1 mt-1">
-                            <p className="font-medium text-gray-700 mb-1">Schedule:</p>
-                            {section.schedule.map((s, idx) => (
-                              <div key={idx} className="ml-2">
-                                 <p className="text-gray-600">• {s.days}: {s.startTime}-{s.endTime}</p>
-                                 <p className="text-gray-600 ml-2"><MapPin className="inline h-3 w-3 mr-1 text-gray-400"/> {s.location || section.location || 'TBD'}</p>
-                              </div>
-                            ))}
-                          </div>
-                          <div className="flex justify-between items-center mt-2 pt-1 border-t text-gray-500">
-                            <span>Seats: {section.availableSeats}/{section.maxSeats}</span>
-                            {section.waitlistCount !== undefined && <span>Waitlist: {section.waitlistCount}</span>}
-                          </div>
-                          {section.courseControls && (<div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded"><p className="text-[11px] font-medium text-blue-800">Course Controls:</p><p className="text-[11px] text-blue-700">{section.courseControls}</p></div>)}
-                          {section.enrollmentRequirements && (<div className="mt-2 p-2 bg-orange-50 border border-orange-200 rounded"><p className="text-[11px] font-medium text-orange-800">Enrollment Requirements:</p><p className="text-[11px] text-orange-700">{section.enrollmentRequirements}</p></div>)}
-                          {section.additionalInformation && (<div className="mt-2 p-2 bg-green-50 border border-green-200 rounded"><p className="text-[11px] font-medium text-green-800">Additional Information:</p><p className="text-[11px] text-green-700">{section.additionalInformation}</p></div>)}
-                          {section.notes && <p className="text-[11px] text-amber-700 mt-2 italic"><Info className="inline h-3 w-3 mr-0.5"/> {section.notes}</p>}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {(!selectedCourse.sections || selectedCourse.sections.length === 0) && (
-                    <p className="text-xs text-gray-400 italic mt-3 pt-3 border-t">No sections listed for this course.</p>
-                )}
-                {/* EmbeddedCourseSequenceView could be added here if needed for mobile dialog too */}
-              </div>
-              {/* No explicit DialogFooter needed if close is handled by XIcon or onOpenChange */}
-            </DialogContent>
-          </Dialog>
-        )}
+
       </div>
 
       {/* Comparison Modal */}
@@ -1106,26 +1049,148 @@ const CourseCatalogView: React.FC<CourseCatalogViewProps> = ({ targetCourseCode,
         </DialogContent>
       </Dialog>
 
-      {/* Course Action Bottom Sheet (Mobile) */}
+      {/* Course Details Bottom Sheet (Mobile) */}
       {actionSheetCourse && (
         <Drawer open={isCourseActionSheetOpen} onOpenChange={setIsCourseActionSheetOpen}>
-          <DrawerContent>
-            <DrawerHeader className="text-left">
+          <DrawerContent className="max-h-[90vh] flex flex-col">
+            <DrawerHeader className="text-left flex-shrink-0">
               <DrawerTitle>{actionSheetCourse.code} - {actionSheetCourse.name}</DrawerTitle>
               <DrawerDescription>{actionSheetCourse.credits} credits • {actionSheetCourse.department}</DrawerDescription>
             </DrawerHeader>
-            <div className="p-4 space-y-2">
-              <Button
-                variant="outline"
-                className="w-full justify-start"
-                onClick={() => {
-                  setSelectedCourse(actionSheetCourse);
-                  setIsCourseActionSheetOpen(false);
-                  // The existing Dialog for details will pick up selectedCourse
-                }}
-              >
-                <Eye className="h-4 w-4 mr-2" /> View Full Details
-              </Button>
+
+            {/* Scrollable Course Details */}
+            <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-3">
+              <div className="space-y-1 text-sm">
+                <p><strong>Credits:</strong> {actionSheetCourse.credits}</p>
+                <p><strong>Subject:</strong> {actionSheetCourse.department || 'N/A'}</p>
+                {actionSheetCourse.college && <p><strong>College:</strong> {actionSheetCourse.college}</p>}
+                {actionSheetCourse.campus && <p><strong>Campus:</strong> {actionSheetCourse.campus}</p>}
+                {actionSheetCourse.courseCareer && <p><strong>Course Career:</strong> {actionSheetCourse.courseCareer}</p>}
+              </div>
+
+              {actionSheetCourse.description && (
+                <div>
+                  <h5 className="font-semibold text-sm mb-0.5 text-gray-600">Description</h5>
+                  <p className="text-xs text-gray-500 whitespace-pre-wrap">{actionSheetCourse.description}</p>
+                </div>
+              )}
+
+              {(actionSheetCourse.prerequisites && actionSheetCourse.prerequisites.length > 0) && (
+                <div>
+                  <h5 className="font-semibold text-sm mb-1 text-gray-600">Prerequisites</h5>
+                  <div className="space-y-1">
+                    {actionSheetCourse.prerequisites.map(prereqCode => {
+                      const prereqCourseDetails = mockCourses.find(c => c.code === prereqCode || c.id === prereqCode);
+                      return (
+                        <div key={`mobile-drawer-prereq-${prereqCode}`}>
+                          <Badge variant="secondary" className="text-xs py-0.5 px-1.5">
+                            {prereqCode}{prereqCourseDetails ? ` - ${prereqCourseDetails.name.substring(0,25)}${prereqCourseDetails.name.length > 25 ? '...' : ''}` : ''}
+                          </Badge>
+                          {prereqCourseDetails && prereqCourseDetails.prerequisites && prereqCourseDetails.prerequisites.length > 0 && (
+                            <div className="text-xs text-gray-500 ml-4 pl-2 border-l border-gray-300 mt-0.5">
+                              Requires: {prereqCourseDetails.prerequisites.join(', ')}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {(actionSheetCourse.corequisites && actionSheetCourse.corequisites.length > 0) && (
+                <div>
+                  <h5 className="font-semibold text-sm mb-1 text-gray-600">Corequisites</h5>
+                  <div className="space-y-1">
+                    {actionSheetCourse.corequisites.map(coreqCode => {
+                      const coreqCourseDetails = mockCourses.find(c => c.code === coreqCode || c.id === coreqCode);
+                      return (
+                        <div key={`mobile-drawer-coreq-${coreqCode}`}>
+                          <Badge variant="secondary" className="text-xs py-0.5 px-1.5">
+                            {coreqCode}{coreqCourseDetails ? ` - ${coreqCourseDetails.name.substring(0,25)}${coreqCourseDetails.name.length > 25 ? '...' : ''}` : ''}
+                          </Badge>
+                          {coreqCourseDetails && coreqCourseDetails.prerequisites && coreqCourseDetails.prerequisites.length > 0 && (
+                            <div className="text-xs text-gray-500 ml-4 pl-2 border-l border-gray-300 mt-0.5">
+                              (Prerequisites for this corequisite: {coreqCourseDetails.prerequisites.join(', ')})
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {actionSheetCourse.attributes && actionSheetCourse.attributes.length > 0 && (
+                <div>
+                  <h5 className="font-semibold text-sm mb-1 text-gray-600">Attributes</h5>
+                  <div className="flex flex-wrap gap-1">
+                    {actionSheetCourse.attributes.map(attr => <Badge key={attr} variant="outline" className="text-xs">{attr}</Badge>)}
+                  </div>
+                </div>
+              )}
+
+              {actionSheetCourse.keywords && actionSheetCourse.keywords.length > 0 && (
+                <div>
+                  <h5 className="font-semibold text-sm mb-1 text-gray-600">Keywords</h5>
+                  <div className="flex flex-wrap gap-1">
+                    {actionSheetCourse.keywords.map(kw => <Badge key={kw} variant="outline" className="text-xs">{kw}</Badge>)}
+                  </div>
+                </div>
+              )}
+
+              {actionSheetCourse.sections && actionSheetCourse.sections.length > 0 && (
+                <div>
+                  <h5 className="font-semibold text-sm mb-2 text-gray-600 pt-2 border-t">Available Sections</h5>
+                  <div className="space-y-3">
+                    {actionSheetCourse.sections.map((section: CourseSection) => (
+                      <div key={`mobile-drawer-section-${section.id}`} className="p-2.5 border rounded-md bg-gray-50/70 text-xs leading-snug">
+                        <div className="flex justify-between items-center mb-1">
+                          <p className="font-medium text-gray-800">Section {section.sectionNumber} <span className="text-gray-500">(CRN: {section.crn})</span></p>
+                          <div className="flex gap-1">
+                            {section.sectionType && section.sectionType !== 'Standard' && <Badge variant="secondary" className="text-[10px] py-0 px-1">{section.sectionType}</Badge>}
+                            {section.classStatus && <Badge variant={section.classStatus === 'Open' ? 'default' : section.classStatus === 'Closed' ? 'destructive' : 'secondary'} className="text-[10px] py-0 px-1">{section.classStatus}</Badge>}
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 gap-1 mb-2">
+                          <p className="text-gray-600"><Users className="inline h-3 w-3 mr-1 text-gray-400"/> {section.instructor || 'Staff'}</p>
+                          {section.term && <p className="text-gray-600"><CalendarDays className="inline h-3 w-3 mr-1 text-gray-400"/> Term: {section.term}</p>}
+                          {section.campus && <p className="text-gray-600"><MapPin className="inline h-3 w-3 mr-1 text-gray-400"/> Campus: {section.campus}</p>}
+                          {section.instructionMode && <p className="text-gray-600"><Info className="inline h-3 w-3 mr-1 text-gray-400"/> Mode: {section.instructionMode}</p>}
+                          {section.academicSession && <p className="text-gray-600"><CalendarDays className="inline h-3 w-3 mr-1 text-gray-400"/> Session: {section.academicSession}</p>}
+                          {section.component && <p className="text-gray-600"><Info className="inline h-3 w-3 mr-1 text-gray-400"/> Component: {section.component}</p>}
+                          {section.classStartDate && <p className="text-gray-600"><CalendarDays className="inline h-3 w-3 mr-1 text-gray-400"/> Dates: {section.classStartDate}{section.classEndDate ? ` - ${section.classEndDate}` : ''}</p>}
+                        </div>
+                        <div className="border-t pt-1 mt-1">
+                          <p className="font-medium text-gray-700 mb-1">Schedule:</p>
+                          {section.schedule.map((s, idx) => (
+                            <div key={`mobile-drawer-${section.id}-schedule-${idx}`} className="ml-2">
+                               <p className="text-gray-600">• {s.days}: {s.startTime}-{s.endTime}</p>
+                               <p className="text-gray-600 ml-2"><MapPin className="inline h-3 w-3 mr-1 text-gray-400"/> {s.location || section.location || 'TBD'}</p>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="flex justify-between items-center mt-2 pt-1 border-t text-gray-500">
+                          <span>Seats: {section.availableSeats}/{section.maxSeats}</span>
+                          {section.waitlistCount !== undefined && <span>Waitlist: {section.waitlistCount}</span>}
+                        </div>
+                        {section.courseControls && (<div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded"><p className="text-[11px] font-medium text-blue-800">Course Controls:</p><p className="text-[11px] text-blue-700">{section.courseControls}</p></div>)}
+                        {section.enrollmentRequirements && (<div className="mt-2 p-2 bg-orange-50 border border-orange-200 rounded"><p className="text-[11px] font-medium text-orange-800">Enrollment Requirements:</p><p className="text-[11px] text-orange-700">{section.enrollmentRequirements}</p></div>)}
+                        {section.additionalInformation && (<div className="mt-2 p-2 bg-green-50 border border-green-200 rounded"><p className="text-[11px] font-medium text-green-800">Additional Information:</p><p className="text-[11px] text-green-700">{section.additionalInformation}</p></div>)}
+                        {section.notes && <p className="text-[11px] text-amber-700 mt-2 italic"><Info className="inline h-3 w-3 mr-0.5"/> {section.notes}</p>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {(!actionSheetCourse.sections || actionSheetCourse.sections.length === 0) && (
+                  <p className="text-xs text-gray-400 italic mt-3 pt-3 border-t">No sections listed for this course.</p>
+              )}
+            </div>
+
+            {/* Action Buttons at Bottom */}
+            <DrawerFooter className="flex-shrink-0 pt-2 space-y-2">
               <Button
                 variant="outline"
                 className="w-full justify-start"
@@ -1137,15 +1202,20 @@ const CourseCatalogView: React.FC<CourseCatalogViewProps> = ({ targetCourseCode,
                 {coursesToCompare.find(c => c.id === actionSheetCourse.id) ? <Minus className="h-4 w-4 mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
                 {coursesToCompare.find(c => c.id === actionSheetCourse.id) ? 'Remove from Compare' : 'Add to Compare'}
               </Button>
-            </div>
-            <DrawerFooter className="pt-2">
               <DrawerClose asChild>
-                <Button variant="outline">Cancel</Button>
+                <Button variant="outline">Close</Button>
               </DrawerClose>
             </DrawerFooter>
           </DrawerContent>
         </Drawer>
       )}
+
+      {/* Course Details Bottom Sheet (Mobile) */}
+      <CourseDetailBottomSheet
+        open={isCourseDetailBottomSheetOpen}
+        onOpenChange={setIsCourseDetailBottomSheetOpen}
+        course={selectedCourseForDetail}
+      />
     </div>
   );
 };

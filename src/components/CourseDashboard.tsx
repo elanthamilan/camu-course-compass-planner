@@ -22,6 +22,15 @@ import ViewScheduleDialog from './ViewScheduleDialog';
 import AddSemesterDialog from './AddSemesterDialog';
 import CourseCatalogView from './CourseCatalogView';
 
+interface FilterPreset {
+  searchTerm?: string;
+  department?: string;
+  level?: string;
+  credits?: string;
+  classStatus?: string;
+  attributes?: string[];
+}
+
 interface SemesterData {
   id: string;
   name: string;
@@ -103,12 +112,61 @@ const CourseDashboard: React.FC = () => {
   const [isAddSemesterDialogOpen, setIsAddSemesterDialogOpen] = useState(false);
   const [isMandatoryCoursesDialogOpen, setIsMandatoryCoursesDialogOpen] = useState(false);
   const [isProgramCreditsDialogOpen, setIsProgramCreditsDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("academic-plan");
+  const [catalogSearchTerm, setCatalogSearchTerm] = useState<string | null>(null);
+  const [catalogFilterPreset, setCatalogFilterPreset] = useState<FilterPreset | null>(null);
 
   const navigate = useNavigate();
 
   const handleOpenCourseSearch = (semesterId: string) => {
     setSelectedSemesterId(semesterId);
     setIsCourseSearchOpen(true);
+  };
+
+  const handleNavigateToBrowseAllClasses = (searchTerm?: string, filterPreset?: FilterPreset) => {
+    setActiveTab("course-catalog");
+    if (searchTerm) {
+      setCatalogSearchTerm(searchTerm);
+    }
+    if (filterPreset) {
+      setCatalogFilterPreset(filterPreset);
+    }
+    // Scroll to top to show the tab content
+    setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100);
+  };
+
+  // Navigate to Browse All Classes with filters for degree requirements
+  const handleNavigateToRequirementCourses = () => {
+    const remainingMandatoryCourses = mockMandatoryCourses.filter(course => course.status === "Not Started");
+    const requiredDepartments = [...new Set(remainingMandatoryCourses.map(course => {
+      // Extract department from course code (e.g., "CS101" -> "Computer Science")
+      const courseData = mockCourses.find(c => c.code === course.code);
+      return courseData?.department;
+    }).filter(Boolean))];
+
+    const filterPreset = {
+      // Only filter by department if there's exactly one department needed
+      ...(requiredDepartments.length === 1 && { department: requiredDepartments[0] }),
+      classStatus: "Open", // Show only available courses
+    };
+
+    setActiveTab("course-catalog");
+    setCatalogFilterPreset(filterPreset);
+    setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100);
+  };
+
+  // Navigate to Browse All Classes with filters for graduation progress
+  const handleNavigateToGraduationCourses = () => {
+    // Filter for courses that help with graduation requirements
+    const filterPreset = {
+      department: "Computer Science", // Focus on major courses
+      classStatus: "Open",
+      attributes: ["Technical"] // Focus on technical courses
+    };
+
+    setActiveTab("course-catalog");
+    setCatalogFilterPreset(filterPreset);
+    setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100);
   };
 
   const handleOpenSchedulePage = (semesterId: string) => {
@@ -290,31 +348,31 @@ const CourseDashboard: React.FC = () => {
   };
 
   return (
-    <div className="mx-auto px-4 max-w-7xl space-y-6">
+    <div className="mx-auto px-4 max-w-7xl space-y-6 pb-24 md:pb-6">
       {/* Minimal Header - Full Width */}
-      <div className="flex flex-col space-y-4 sm:flex-row sm:space-y-0 items-center justify-between py-6 animate-fade-in w-full">
+      <div className="flex flex-col space-y-4 sm:flex-row sm:space-y-0 items-center justify-between py-4 md:py-6 animate-fade-in w-full">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Academic Planning</h1>
           <p className="text-sm sm:text-base text-gray-600">Plan your courses and track your progress</p>
         </div>
       </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4 mb-4 md:mb-6">
           {/* Progress Toward Graduation Card */}
           <Card>
-          <CardHeader className="pb-4">
+          <CardHeader className="pb-3 md:pb-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <span className="text-lg">🎯</span>
+              <div className="flex items-center space-x-2 md:space-x-3 flex-1 min-w-0 w-full">
+                <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <span className="text-base md:text-lg">🎯</span>
                 </div>
-                <div>
-                  <CardTitle className="text-lg font-semibold">Graduation Progress</CardTitle>
-                  <CardDescription className="text-sm">
+                <div className="min-w-0 flex-1">
+                  <CardTitle className="text-base md:text-lg font-semibold truncate">Graduation Progress</CardTitle>
+                  <CardDescription className="text-xs md:text-sm truncate">
                     {creditsLeft >= 0 ? creditsLeft : 0} credits remaining
                   </CardDescription>
                 </div>
               </div>
-              <Badge variant="outline">{Math.round(programProgressValue)}%</Badge>
+              <Badge variant="outline" className="text-xs md:text-sm flex-shrink-0">{Math.round(programProgressValue)}%</Badge>
             </div>
             <div className="mt-4">
               <Progress value={programProgressValue} className="h-2" />
@@ -374,10 +432,16 @@ const CourseDashboard: React.FC = () => {
                         </div>
                       )}
 
-                      <Button variant="outline" size="sm" onClick={() => handleOpenCourseSearch("")} className="w-full mt-2">
-                        <Search className="h-4 w-4 mr-2" />
-                        Add Courses
-                      </Button>
+                      <div className="flex flex-col gap-2 mt-2">
+                        <Button variant="outline" size="sm" onClick={() => setIsProgramCreditsDialogOpen(true)} className="w-full">
+                          <Target className="h-4 w-4 mr-2" />
+                          Course Suggestions
+                        </Button>
+                        <Button variant="default" size="sm" onClick={() => handleNavigateToGraduationCourses()} className="w-full">
+                          <Search className="h-4 w-4 mr-2" />
+                          Browse All Classes
+                        </Button>
+                      </div>
                     </div>
                   </AccordionContent>
                 </AccordionItem>
@@ -388,20 +452,20 @@ const CourseDashboard: React.FC = () => {
 
         {/* Required Classes Card */}
         <Card>
-          <CardHeader className="pb-4">
+          <CardHeader className="pb-3 md:pb-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                  <span className="text-lg">📚</span>
+              <div className="flex items-center space-x-2 md:space-x-3 flex-1 min-w-0 w-full">
+                <div className="w-8 h-8 md:w-10 md:h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <span className="text-base md:text-lg">📚</span>
                 </div>
-                <div>
-                  <CardTitle className="text-lg font-semibold">Required Courses</CardTitle>
-                  <CardDescription className="text-sm">
+                <div className="min-w-0 flex-1">
+                  <CardTitle className="text-base md:text-lg font-semibold truncate">Required Courses</CardTitle>
+                  <CardDescription className="text-xs md:text-sm truncate">
                     {mandatoryCoursesLeft} courses remaining
                   </CardDescription>
                 </div>
               </div>
-              <Badge variant="outline">{Math.round(mandatoryProgressValue)}%</Badge>
+              <Badge variant="outline" className="text-xs md:text-sm flex-shrink-0">{Math.round(mandatoryProgressValue)}%</Badge>
             </div>
             <div className="mt-4">
               <Progress value={mandatoryProgressValue} className="h-2" />
@@ -464,10 +528,16 @@ const CourseDashboard: React.FC = () => {
                       </div>
                     )}
 
-                    <Button variant="outline" size="sm" onClick={() => setIsMandatoryCoursesDialogOpen(true)} className="w-full mt-2">
-                      <Eye className="h-4 w-4 mr-2" />
-                      See All Required Classes
-                    </Button>
+                    <div className="flex flex-col gap-2 mt-2">
+                      <Button variant="outline" size="sm" onClick={() => setIsMandatoryCoursesDialogOpen(true)} className="w-full">
+                        <BookOpen className="h-4 w-4 mr-2" />
+                        View All Required
+                      </Button>
+                      <Button variant="default" size="sm" onClick={() => handleNavigateToRequirementCourses()} className="w-full">
+                        <Search className="h-4 w-4 mr-2" />
+                        Browse All Classes
+                      </Button>
+                    </div>
                   </div>
                 </AccordionContent>
               </AccordionItem>
@@ -476,50 +546,52 @@ const CourseDashboard: React.FC = () => {
         </Card>
       </div>
 
-      <Tabs defaultValue="academic-plan" className="w-full mt-6">
-        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 mb-6">
-          <TabsTrigger value="academic-plan" className="flex items-center">
-            <span className="mr-2">📅</span>
-            Plan My Classes
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mt-4 md:mt-6">
+        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 mb-4 md:mb-6 h-auto">
+          <TabsTrigger value="academic-plan" className="flex items-center justify-center py-2 md:py-3 text-sm md:text-base">
+            <span className="mr-1 md:mr-2">📅</span>
+            <span className="truncate">Plan My Classes</span>
           </TabsTrigger>
-          <TabsTrigger value="explore-programs" className="flex items-center">
-            <span className="mr-2">🔍</span>
-            Explore Other Majors
+          <TabsTrigger value="explore-programs" className="flex items-center justify-center py-2 md:py-3 text-sm md:text-base">
+            <span className="mr-1 md:mr-2">🔍</span>
+            <span className="truncate">Explore Other Majors</span>
           </TabsTrigger>
-          <TabsTrigger value="course-catalog" className="flex items-center">
-            <span className="mr-2">📚</span>
-            Browse All Classes
+          <TabsTrigger value="course-catalog" className="flex items-center justify-center py-2 md:py-3 text-sm md:text-base">
+            <span className="mr-1 md:mr-2">📚</span>
+            <span className="truncate">Browse All Classes</span>
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="academic-plan">
           <div className="relative">
             {/* Timeline Line */}
-            <div className="absolute left-4 sm:left-6 lg:left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-200 via-purple-200 to-green-200"></div>
+            <div className="absolute left-3 sm:left-6 lg:left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-200 via-purple-200 to-green-200"></div>
 
-            <div className="space-y-8">
+            <div className="space-y-6 md:space-y-8">
               {yearsData.map((year, yearIndex) => (
                 <div key={year.year} className="relative">
                   {/* Timeline Node */}
-                  <div className={`absolute left-2 sm:left-4 lg:left-6 w-4 h-4 rounded-full border-4 border-white shadow-lg z-10 ${
+                  <div className={`absolute left-1 sm:left-4 lg:left-6 w-4 h-4 rounded-full border-4 border-white shadow-lg z-10 ${
                     year.semesters.some(s => s.courses.length > 0)
                       ? 'bg-blue-500'
                       : 'bg-gray-300'
                   }`}></div>
 
                   {/* Year Content */}
-                  <div className="ml-8 sm:ml-12 lg:ml-16">
-                    <div className="mb-6">
-                      <div className="flex items-center space-x-3 mb-2">
-                        <h3 className="text-2xl font-bold text-gray-900">{year.year}</h3>
-                        <Badge variant="outline" className="text-sm">
-                          {year.semesters.reduce((acc, sem) => acc + sem.creditsSelected, 0)} credits planned
-                        </Badge>
-                        {year.semesters.some(s => s.courses.length > 0) && (
-                          <Badge variant="default" className="text-xs bg-green-100 text-green-800">
-                            ✓ In Progress
+                  <div className="ml-6 sm:ml-12 lg:ml-16">
+                    <div className="mb-4 md:mb-6">
+                      <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:items-center sm:space-x-3 mb-2 w-full">
+                        <h3 className="text-xl md:text-2xl font-bold text-gray-900">{year.year}</h3>
+                        <div className="flex flex-wrap gap-2">
+                          <Badge variant="outline" className="text-xs md:text-sm">
+                            {year.semesters.reduce((acc, sem) => acc + sem.creditsSelected, 0)} credits planned
                           </Badge>
-                        )}
+                          {year.semesters.some(s => s.courses.length > 0) && (
+                            <Badge variant="default" className="text-xs bg-green-100 text-green-800">
+                              ✓ In Progress
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                       <div className="flex items-center space-x-4">
                         <p className="text-gray-600">Academic Year {yearIndex + 1}</p>
@@ -532,20 +604,20 @@ const CourseDashboard: React.FC = () => {
                     </div>
 
                     {/* Semesters Grid */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 mb-4 md:mb-6">
                       {year.semesters.map((semester) => (
                         <Card key={semester.id} className={`flex flex-col hover:shadow-md transition-all duration-200 ${
                           semester.courses.length > 0
                             ? 'border-blue-200 bg-blue-50/30'
                             : 'border-gray-200'
                         }`}>
-                          <CardHeader className="pb-3">
-                            <div className="flex justify-between items-center">
-                              <div className="flex items-center space-x-2">
-                                <div className={`w-3 h-3 rounded-full ${
+                          <CardHeader className="pb-2 md:pb-3">
+                            <div className="flex justify-between items-start md:items-center">
+                              <div className="flex items-center space-x-2 flex-1 min-w-0">
+                                <div className={`w-3 h-3 rounded-full flex-shrink-0 ${
                                   semester.courses.length > 0 ? 'bg-blue-500' : 'bg-gray-300'
                                 }`}></div>
-                                <CardTitle className="text-lg font-semibold text-gray-800">
+                                <CardTitle className="text-base md:text-lg font-semibold text-gray-800 truncate">
                                   {semester.name.replace(/\s\d{4}$/, "")}
                                 </CardTitle>
                               </div>
@@ -578,16 +650,16 @@ const CourseDashboard: React.FC = () => {
                             </div>
                           </CardHeader>
 
-                          <CardContent className="flex-grow">
+                          <CardContent className="flex-grow p-3 md:p-6">
                             {semester.courses.length > 0 ? (
                               <div className="space-y-2">
                                 {semester.courses.map(course => (
-                                  <div key={course.id} className="p-2 bg-gray-50 rounded-lg border">
+                                  <div key={course.id} className="p-2 md:p-3 bg-gray-50 rounded-lg border">
                                     <div className="flex justify-between items-start">
-                                      <div className="flex-1">
+                                      <div className="flex-1 min-w-0">
                                         <div className="flex items-center space-x-2 mb-1">
-                                          <span className="font-semibold text-xs sm:text-sm">{course.code}</span>
-                                          <Badge variant="outline" className="text-xs px-1 py-0">
+                                          <span className="font-semibold text-xs sm:text-sm truncate">{course.code}</span>
+                                          <Badge variant="outline" className="text-xs px-1 py-0 flex-shrink-0">
                                             {course.credits}cr
                                           </Badge>
                                         </div>
@@ -859,7 +931,12 @@ const CourseDashboard: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="course-catalog">
-          <CourseCatalogView />
+          <CourseCatalogView
+            targetCourseCode={catalogSearchTerm}
+            onTargetCourseViewed={() => setCatalogSearchTerm(null)}
+            filterPreset={catalogFilterPreset}
+            onFilterPresetApplied={() => setCatalogFilterPreset(null)}
+          />
         </TabsContent>
       </Tabs>
 
@@ -880,7 +957,140 @@ const CourseDashboard: React.FC = () => {
 
       {viewingSemester && (<ViewScheduleDialog open={isViewScheduleOpen} onOpenChange={setIsViewScheduleOpen} semesterName={viewingSemester.name} courses={viewingSemester.courses} />)}
       <AddSemesterDialog open={isAddSemesterDialogOpen} onOpenChange={setIsAddSemesterDialogOpen} onAddSemester={handleAddSemesterSubmit} />
-      <Dialog open={isMandatoryCoursesDialogOpen} onOpenChange={setIsMandatoryCoursesDialogOpen}><DialogContent className="sm:max-w-lg"><DialogHeader><DialogTitle>Remaining Mandatory Courses</DialogTitle><DialogDescription>These are the mandatory courses you still need to complete for your degree.</DialogDescription></DialogHeader><div className="py-4 space-y-3 max-h-[60vh] overflow-y-auto">{remainingMandatoryCourses.length > 0 ? (remainingMandatoryCourses.map(course => (<div key={course.code} className="border-b pb-2 last:border-0 last:pb-0"><h4 className="font-semibold">{course.code} - {course.name}</h4><p className="text-sm text-muted-foreground">Credits: {course.credits !== undefined ? course.credits : "N/A"}</p>{course.prerequisites && course.prerequisites.length > 0 && (<p className="text-sm text-muted-foreground">Prerequisites: {course.prerequisites.join(', ')}</p>)}</div>))) : (<p className="text-sm text-muted-foreground">All mandatory courses have been completed or are in progress.</p>)}</div><DialogFooter><Button variant="outline" onClick={() => setIsMandatoryCoursesDialogOpen(false)}>Close</Button></DialogFooter></DialogContent></Dialog>
+      <Dialog open={isMandatoryCoursesDialogOpen} onOpenChange={setIsMandatoryCoursesDialogOpen}>
+        <DialogContent className="sm:max-w-2xl max-h-[80vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center">
+              <BookOpen className="h-5 w-5 mr-2" />
+              Required Courses Overview
+            </DialogTitle>
+            <DialogDescription>
+              Complete view of your required courses with actions to help you plan your path to graduation.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto py-4 space-y-4">
+            {/* Quick Stats */}
+            <div className="grid grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600">{completedMandatoryCourses}</div>
+                <div className="text-xs text-gray-600">Completed</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-yellow-600">{mockMandatoryCourses.filter(c => c.status === "In Progress").length}</div>
+                <div className="text-xs text-gray-600">In Progress</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-600">{remainingMandatoryCourses.length}</div>
+                <div className="text-xs text-gray-600">Remaining</div>
+              </div>
+            </div>
+
+            {/* Courses by Status */}
+            <div className="space-y-4">
+              {/* Remaining Courses */}
+              {remainingMandatoryCourses.length > 0 && (
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-2 flex items-center">
+                    <span className="text-lg mr-2">📝</span>
+                    Courses You Still Need ({remainingMandatoryCourses.length})
+                  </h4>
+                  <div className="space-y-2">
+                    {remainingMandatoryCourses.map(course => {
+                      const canTakeNow = !course.prerequisites || course.prerequisites.length === 0 ||
+                        course.prerequisites.every(prereq => studentInfo?.completedCourses?.includes(prereq));
+
+                      return (
+                        <div key={course.code} className={`p-3 border rounded-lg ${canTakeNow ? 'bg-green-50 border-green-200' : 'bg-yellow-50 border-yellow-200'}`}>
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-2 mb-1">
+                                <span className="font-medium">{course.code}</span>
+                                <Badge variant="outline" className="text-xs">{course.credits || 'N/A'} cr</Badge>
+                                {canTakeNow && <Badge variant="default" className="text-xs bg-green-100 text-green-800">Can take now</Badge>}
+                              </div>
+                              <p className="text-sm text-gray-700">{course.name}</p>
+                              {course.prerequisites && course.prerequisites.length > 0 && (
+                                <p className="text-xs text-amber-600 mt-1">
+                                  Prerequisites: {course.prerequisites.join(', ')}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex gap-1">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  setIsMandatoryCoursesDialogOpen(false);
+                                  handleNavigateToBrowseAllClasses(course.code);
+                                }}
+                                className="text-xs"
+                              >
+                                <Search className="h-3 w-3 mr-1" />
+                                Find
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* In Progress Courses */}
+              {mockMandatoryCourses.filter(c => c.status === "In Progress").length > 0 && (
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-2 flex items-center">
+                    <span className="text-lg mr-2">🔄</span>
+                    Currently Taking ({mockMandatoryCourses.filter(c => c.status === "In Progress").length})
+                  </h4>
+                  <div className="space-y-2">
+                    {mockMandatoryCourses.filter(c => c.status === "In Progress").map(course => (
+                      <div key={course.code} className="p-3 border rounded-lg bg-yellow-50 border-yellow-200">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <span className="font-medium">{course.code}</span>
+                          <Badge variant="secondary" className="text-xs">In Progress</Badge>
+                        </div>
+                        <p className="text-sm text-gray-700">{course.name}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Completed Courses */}
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-2 flex items-center">
+                  <span className="text-lg mr-2">✅</span>
+                  Completed ({completedMandatoryCourses})
+                </h4>
+                <div className="grid grid-cols-2 gap-2">
+                  {mockMandatoryCourses.filter(c => c.status === "Completed").map(course => (
+                    <div key={course.code} className="p-2 border rounded bg-green-50 border-green-200">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm font-medium">{course.code}</span>
+                        <Badge variant="default" className="text-xs bg-green-100 text-green-800">Done</Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+          <DialogFooter className="flex-shrink-0 space-x-2">
+            <Button variant="outline" onClick={() => setIsMandatoryCoursesDialogOpen(false)}>
+              Close
+            </Button>
+            <Button onClick={() => {
+              setIsMandatoryCoursesDialogOpen(false);
+              handleNavigateToBrowseAllClasses();
+            }}>
+              <Search className="h-4 w-4 mr-2" />
+              Browse All Classes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <Dialog open={isProgramCreditsDialogOpen} onOpenChange={setIsProgramCreditsDialogOpen}><DialogContent className="sm:max-w-2xl"><DialogHeader><DialogTitle>Course Options for Degree Requirements</DialogTitle><DialogDescription>Here are some course suggestions for your unmet degree requirements.</DialogDescription></DialogHeader><div className="py-4 space-y-4 max-h-[70vh] overflow-y-auto">{unmetDegreeRequirements.length > 0 ? (unmetDegreeRequirements.map(req => { const suggestedCourses = getSuggestedCourses(req); const creditsToComplete = req.requiredCredits * (1 - req.progress); return (<div key={req.id} className="p-3 border rounded-md bg-background/50"><h4 className="font-semibold text-md mb-1">{req.name}</h4><p className="text-xs text-muted-foreground mb-2">{creditsToComplete} credits remaining.{req.choiceRequired && ` Choose ${req.choiceRequired - (req.progressCourses || 0)} more.`}</p>{suggestedCourses.length > 0 ? (<ul className="space-y-1.5">{suggestedCourses.map(course => (<li key={course.id} className="text-xs p-2 border rounded-md bg-background hover:bg-muted/50"><div className="flex justify-between items-center"><div><span className="font-medium">{course.code}</span> - {course.name}<span className="text-muted-foreground ml-1">({course.credits} cr)</span></div></div>{course.prerequisites && course.prerequisites.length > 0 && (<p className="text-xs text-amber-600 mt-0.5">Prereqs: {course.prerequisites.join(', ')}</p>)}</li>))}</ul>) : (<p className="text-xs text-muted-foreground italic">Specific course suggestions not available based on current matcher, or all suggestions already completed. Check course catalog or academic advisor.</p>)}</div>);})) : (<p className="text-sm text-muted-foreground text-center">All degree requirements appear to be met or in progress. Congratulations!</p>)}</div><DialogFooter><Button variant="outline" onClick={() => setIsProgramCreditsDialogOpen(false)}>Close</Button></DialogFooter></DialogContent></Dialog>
     </div>
   );

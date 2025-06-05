@@ -1,9 +1,9 @@
-
 import { useSchedule } from "@/contexts/ScheduleContext";
 import { Button } from "@/components/ui/button";
 import { CalendarIcon, ListIcon, ShoppingCartIcon, ArrowLeftRight, Sparkles } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate } from "react-router-dom";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface TermHeaderProps {
   view: string;
@@ -14,6 +14,7 @@ interface TermHeaderProps {
 const TermHeader = ({ view, setView, onCompareClick }: TermHeaderProps) => {
   const { currentTerm } = useSchedule();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   if (!currentTerm) return null;
 
@@ -26,16 +27,16 @@ const TermHeader = ({ view, setView, onCompareClick }: TermHeaderProps) => {
 
       {/* Group Tabs and Buttons for better responsive layout */}
       <div className="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:items-center sm:space-x-4 w-full sm:w-auto">
-        <div className="flex items-center space-x-3">
-          <Tabs value={view} onValueChange={setView} className="animate-scale-in">
-            <TabsList className="grid grid-cols-2">
+        <div className="flex items-center space-x-3 w-full sm:w-auto">
+          <Tabs value={view} onValueChange={setView} className="animate-scale-in w-full sm:w-auto">
+            <TabsList className="grid grid-cols-2 w-full sm:w-auto">
               <TabsTrigger value="calendar" className="flex items-center">
                 <CalendarIcon className="mr-1 h-4 w-4" />
                 Calendar
               </TabsTrigger>
-              <TabsTrigger value="list" className="flex items-center">
+              <TabsTrigger value={isMobile ? "manage" : "list"} className="flex items-center">
                 <ListIcon className="mr-1 h-4 w-4" />
-                List
+                {isMobile ? "Manage" : "List"}
               </TabsTrigger>
             </TabsList>
           </Tabs>

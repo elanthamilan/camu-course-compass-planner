@@ -1,14 +1,16 @@
 import React, { useState } from "react";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from "@/components/ui/drawer";
+import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Plus, X, ChevronDown, ChevronUp, CheckCircle, XCircle } from "lucide-react";
 import { mockCourses as fallbackCourses } from "@/lib/mock-data"; // Renamed to avoid conflict
-import { Course, StudentInfo } from "@/lib/types"; // Added StudentInfo
+import { Course } from "@/lib/types"; // Removed unused StudentInfo import
 import { toast } from "sonner";
 import { useSchedule } from "@/contexts/ScheduleContext"; // Import useSchedule
+import { useIsMobile } from "@/hooks/use-mobile"; // Import useIsMobile
 import { motion, AnimatePresence } from "framer-motion"; // For animations
 
 interface CourseSearchModalProps {
@@ -31,6 +33,7 @@ const CourseSearchModal: React.FC<CourseSearchModalProps> = ({
 }) => {
   const { studentInfo, allCourses: contextCourses } = useSchedule(); // Get studentInfo and allCourses from context
   const coursesToSearch = contextCourses && contextCourses.length > 0 ? contextCourses : fallbackCourses; // Use context courses if available
+  const isMobile = useIsMobile(); // Add mobile detection
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("all");
@@ -42,7 +45,7 @@ const CourseSearchModal: React.FC<CourseSearchModalProps> = ({
   const departments = Array.from(new Set(coursesToSearch.map(course => course.department).filter(Boolean)));
 
   // Filter courses
-  const filteredCourses = coursesToSearch.filter(course => {
+  const filteredCourses = coursesToSearch.filter((course: Course) => {
     const matchesSearch = !searchTerm ||
       course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       course.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -53,10 +56,13 @@ const CourseSearchModal: React.FC<CourseSearchModalProps> = ({
     return matchesSearch && matchesDepartment;
   });
 
-  const handleCourseSelect = (course: Course) => {
+  const handleCourseSelect = (course: Course): void => {
     onCourseSelected(course);
     toast.success(`${course.code} added to your course list!`);
-    // Don't close the modal - let users add multiple courses
+    if (!isMobile) {
+      onOpenChange(false); // Only close modal automatically on desktop
+    }
+    // On mobile, keep modal open for batch adding
   };
 
   const handleClose = () => {
@@ -66,6 +72,150 @@ const CourseSearchModal: React.FC<CourseSearchModalProps> = ({
     setSelectedDepartment("all");
   };
 
+  // Mobile version using BottomSheet
+  if (isMobile) {
+    return (
+      <BottomSheet
+        open={open}
+        onOpenChange={onOpenChange}
+        title="Add Course"
+        description={`Search and add courses ${termId ? `to ${termId}` : ''}`}
+        snapPoints={[70, 85, 95]}
+        defaultSnap={1}
+      >
+        <div className="p-4 space-y-4">
+          {/* Search Controls */}
+          <div className="flex flex-col gap-3">
+            <Input
+              type="text"
+              placeholder="Search courses by name, code, or description..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full h-12"
+            />
+            <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
+              <SelectTrigger className="h-12">
+                <SelectValue placeholder="Department" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Departments</SelectItem>
+                {departments.map(dept => (
+                  <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Results Count */}
+          <div className="p-2 bg-gray-50 rounded-lg border">
+            <p className="text-sm font-medium text-gray-700">
+              {filteredCourses.length} courses found
+            </p>
+          </div>
+
+          {/* Course List */}
+          <div className="space-y-3 max-h-96 overflow-y-auto">
+            {filteredCourses.map((course) => (
+              <div
+                key={course.id}
+                className="p-4 border rounded-lg shadow-sm bg-white hover:shadow-md transition-shadow"
+              >
+                <div className="flex flex-col space-y-3">
+                  <div className="flex-1 space-y-2">
+                    <h3 className="text-base font-semibold text-blue-700 leading-tight">
+                      {course.code} - <span className="font-normal">{course.name}</span>
+                    </h3>
+                    <div className="flex flex-wrap items-center text-xs text-gray-500 gap-2">
+                      <Badge variant="outline" className="text-xs">{course.credits} credits</Badge>
+                      <span>{course.department || 'N/A Dept.'}</span>
+                      {course.sections && <span>{course.sections.length} section{course.sections.length !== 1 ? 's' : ''}</span>}
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <Button
+                      size="sm"
+                      onClick={() => handleCourseSelect(course)}
+                      className="flex-1"
+                    >
+                      <Plus className="h-4 w-4 mr-1.5" />
+                      Add
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setExpandedCourseId(expandedCourseId === course.id ? null : course.id)}
+                      className="flex-1 text-blue-600 hover:text-blue-700"
+                    >
+                      {expandedCourseId === course.id ? <ChevronUp className="h-4 w-4 mr-1.5" /> : <ChevronDown className="h-4 w-4 mr-1.5" />}
+                      Details
+                    </Button>
+                  </div>
+                </div>
+
+                <AnimatePresence>
+                  {expandedCourseId === course.id && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="mt-3 pt-3 border-t border-gray-200 space-y-3"
+                    >
+                      <div>
+                        <h5 className="text-xs font-semibold text-gray-700 mb-0.5">Description:</h5>
+                        <p className="text-xs text-gray-600 leading-relaxed">
+                          {course.description || "No description available."}
+                        </p>
+                      </div>
+
+                      {course.prerequisites && course.prerequisites.length > 0 && (
+                        <div>
+                          <h5 className="text-xs font-semibold text-gray-700 mb-1">Prerequisites:</h5>
+                          <div className="flex flex-wrap gap-1.5">
+                  {course.prerequisites.map((prereq: string) => {
+                    const isMet = completedCourseCodes.includes(prereq);
+                              return (
+                                <Badge key={prereq} variant={isMet ? "default" : "outline"} className="text-xs">
+                                  {prereq}
+                                </Badge>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                        {course.sections && course.sections.length > 0 && (
+                            <div>
+                                <h5 className="text-xs font-semibold text-gray-700 mb-1">Section Types:</h5>
+                                <p className="text-xs text-gray-600">
+                                    {Array.from(new Set(course.sections.map((s: any) => s.sectionType))).join(', ') || 'Standard'}
+                                </p>
+                            </div>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ))}
+
+            {filteredCourses.length === 0 && (
+              <div className="text-center py-12">
+                <div className="max-w-md mx-auto">
+                  <span className="text-6xl mb-4 block">🔍</span>
+                  <h3 className="text-lg font-medium text-gray-700 mb-2">No courses found</h3>
+                  <p className="text-gray-500 mb-4">
+                    Try adjusting your search terms or filters.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </BottomSheet>
+    );
+  }
+
+  // Desktop version using Drawer
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent className="h-[90vh] max-w-6xl mx-auto flex flex-col">
@@ -78,7 +228,7 @@ const CourseSearchModal: React.FC<CourseSearchModalProps> = ({
 
         <div className="flex-1 flex flex-col min-h-0 px-4">
           {/* Search Controls */}
-          <div className="flex gap-4 mb-4 flex-shrink-0">
+          <div className="flex flex-col sm:flex-row gap-3 mb-4 flex-shrink-0">
             <div className="flex-1">
               <Input
                 type="text"
@@ -88,7 +238,7 @@ const CourseSearchModal: React.FC<CourseSearchModalProps> = ({
                 className="w-full"
               />
             </div>
-            <div className="w-48">
+            <div className="w-full sm:w-48">
               <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
                 <SelectTrigger>
                   <SelectValue placeholder="Department" />
@@ -115,28 +265,28 @@ const CourseSearchModal: React.FC<CourseSearchModalProps> = ({
 
           {/* Course List - Scrollable Area */}
           <div className="flex-1 overflow-y-auto min-h-0 pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 hover:scrollbar-thumb-gray-400 scroll-smooth">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pb-4">
+            <div className="grid grid-cols-1 gap-3 pb-4">
               {filteredCourses.map((course) => (
                 <div
                   key={course.id}
-                  className="p-3 border rounded-lg shadow-sm bg-white hover:shadow-md transition-shadow"
+                  className="p-4 border rounded-lg shadow-sm bg-white hover:shadow-md transition-shadow"
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 space-y-1">
-                      <h3 className="text-lg font-semibold text-blue-700">
+                  <div className="flex flex-col space-y-3">
+                    <div className="flex-1 space-y-2">
+                      <h3 className="text-base sm:text-lg font-semibold text-blue-700 leading-tight">
                         {course.code} - <span className="font-normal">{course.name}</span>
                       </h3>
-                      <div className="flex items-center text-xs text-gray-500 space-x-3">
-                        <span><Badge variant="outline">{course.credits} credits</Badge></span>
+                      <div className="flex flex-wrap items-center text-xs text-gray-500 gap-2">
+                        <Badge variant="outline" className="text-xs">{course.credits} credits</Badge>
                         <span>{course.department || 'N/A Dept.'}</span>
                         {course.sections && <span>{course.sections.length} section{course.sections.length !== 1 ? 's' : ''}</span>}
                       </div>
                     </div>
-                    <div className="flex flex-col items-end space-y-2">
+                    <div className="flex items-center justify-between gap-2">
                        <Button
                         size="sm"
                         onClick={() => handleCourseSelect(course)}
-                        className="w-24"
+                        className="flex-1 sm:flex-none sm:w-24"
                       >
                         <Plus className="h-4 w-4 mr-1.5" />
                         Add
@@ -145,7 +295,7 @@ const CourseSearchModal: React.FC<CourseSearchModalProps> = ({
                         size="sm"
                         variant="ghost"
                         onClick={() => setExpandedCourseId(expandedCourseId === course.id ? null : course.id)}
-                        className="w-24 text-blue-600 hover:text-blue-700"
+                        className="flex-1 sm:flex-none sm:w-24 text-blue-600 hover:text-blue-700"
                       >
                         {expandedCourseId === course.id ? <ChevronUp className="h-4 w-4 mr-1.5" /> : <ChevronDown className="h-4 w-4 mr-1.5" />}
                         Details
@@ -173,10 +323,10 @@ const CourseSearchModal: React.FC<CourseSearchModalProps> = ({
                           <div>
                             <h5 className="text-xs font-semibold text-gray-700 mb-1">Prerequisites:</h5>
                             <div className="flex flex-wrap gap-1.5">
-                              {course.prerequisites.map(prereq => {
+                              {course.prerequisites.map((prereq: string) => {
                                 const isMet = completedCourseCodes.includes(prereq);
                                 return (
-                                  <Badge key={prereq} variant={isMet ? "success" : "warning"} className="text-xs">
+                                  <Badge key={prereq} variant={isMet ? "default" : "outline"} className="text-xs">
                                     {isMet ? <CheckCircle className="h-3 w-3 mr-1" /> : <XCircle className="h-3 w-3 mr-1" />}
                                     {prereq}
                                   </Badge>
@@ -188,12 +338,12 @@ const CourseSearchModal: React.FC<CourseSearchModalProps> = ({
 
                         {course.corequisites && course.corequisites.length > 0 && (
                           <div>
-                            <h5 className="text-xs font-semibold text-gray-700 mb-1">Corequisites:</h5>
-                            <div className="flex flex-wrap gap-1.5">
-                              {course.corequisites.map(coreq => (
+                          <h5 className="text-xs font-semibold text-gray-700 mb-1">Corequisites:</h5>
+                          <div className="flex flex-wrap gap-1.5">
+                              {course.corequisites.map((coreq: string) => (
                                 <Badge key={coreq} variant="outline" className="text-xs">{coreq}</Badge>
-                              ))}
-                            </div>
+                            ))}
+                          </div>
                           </div>
                         )}
 
@@ -211,8 +361,8 @@ const CourseSearchModal: React.FC<CourseSearchModalProps> = ({
                         {course.attributes && course.attributes.length > 0 && (
                           <div>
                             <h5 className="text-xs font-semibold text-gray-700 mb-1">Attributes:</h5>
-                            <div className="flex flex-wrap gap-1.5">
-                              {course.attributes.map(attr => <Badge key={attr} variant="secondary" className="text-xs">{attr}</Badge>)}
+                          <div className="flex flex-wrap gap-1.5">
+                              {course.keywords?.map((keyword: string) => <Badge key={keyword} variant="outline" className="text-xs">{keyword}</Badge>)}
                             </div>
                           </div>
                         )}
@@ -220,8 +370,10 @@ const CourseSearchModal: React.FC<CourseSearchModalProps> = ({
                         {course.keywords && course.keywords.length > 0 && (
                            <div>
                             <h5 className="text-xs font-semibold text-gray-700 mb-1">Keywords:</h5>
-                            <div className="flex flex-wrap gap-1.5">
-                              {course.keywords.map(keyword => <Badge key={keyword} variant="outline" className="text-xs">{keyword}</Badge>)}
+                          <div className="flex flex-wrap gap-1.5">
+                              {course.keywords?.map((keyword: string) => (
+                                  <Badge key={keyword} variant="outline" className="text-xs">{keyword}</Badge>
+                              ))}
                             </div>
                           </div>
                         )}
@@ -230,7 +382,7 @@ const CourseSearchModal: React.FC<CourseSearchModalProps> = ({
                             <div>
                                 <h5 className="text-xs font-semibold text-gray-700 mb-1">Section Types:</h5>
                                 <p className="text-xs text-gray-600">
-                                    {Array.from(new Set(course.sections.map(s => s.sectionType))).join(', ') || 'Standard'}
+                                    {Array.from(new Set(course.sections.map((s:any) => s.sectionType))).join(', ') || 'Standard'}
                                 </p>
                             </div>
                         )}

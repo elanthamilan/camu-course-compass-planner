@@ -11,7 +11,7 @@ export default defineConfig(({ mode }) => ({
     'import.meta.env.VITE_NETLIFY': JSON.stringify(process.env.NETLIFY || false),
   },
   server: {
-    host: "127.0.0.1",
+    host: true, // Enable network access
     port: 8080,
   },
   plugins: [

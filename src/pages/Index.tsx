@@ -20,14 +20,14 @@ const Index = () => {
       <AIAdvisor open={isAIAdvisorOpen} onOpenChange={setIsAIAdvisorOpen} />
 
       {/* Mobile Floating Action Button for AI Advisor on mobile */}
-      <div className="fixed right-6 bottom-6 lg:hidden">
+      <div className="fixed right-4 bottom-20 lg:hidden z-40">
         <Button
           size="lg"
-          className="rounded-full shadow-lg bg-gradient-to-r from-purple-600 to-violet-500 hover:from-purple-700 hover:to-violet-600 h-14 w-14 p-0 flex items-center justify-center" // Added p-0 and flex for centering icon
+          className="rounded-full shadow-lg bg-gradient-to-r from-purple-600 to-violet-500 hover:from-purple-700 hover:to-violet-600 h-12 w-12 p-0 flex items-center justify-center" // Reduced size and adjusted positioning
           onClick={() => setIsAIAdvisorOpen(true)}
           aria-label="Ask AI Advisor"
         >
-          <Sparkles className="h-6 w-6 text-white" /> {/* Replaced SVG with Sparkles icon */}
+          <Sparkles className="h-5 w-5 text-white" /> {/* Reduced icon size */}
         </Button>
       </div>
     </div>

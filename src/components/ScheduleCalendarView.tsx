@@ -1,6 +1,7 @@
 
 import { useSchedule } from "@/contexts/ScheduleContext";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { timeSlots, weekDays, busyTimeColors } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
@@ -115,110 +116,115 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({ lockedCours
 
   const shortWeekDays = ["M", "T", "W", "Th", "F", "Sa", "Su"];
 
-  // Placeholder for Mobile View
+  // Mobile Calendar View
   if (isMobile) {
-    // Combine and sort all events (courses and busy times)
-    const events: Array<{ day: string; startTime: string; endTime: string; type: 'course' | 'busy'; data: any }> = [];
-    selectedSchedule.sections.forEach(section => {
-      const courseInfo = allPlannedCourses.find(c => c.id === section.courseId);
-      section.schedule.forEach(sch => {
-        sch.days.split(',').forEach(day => {
-          events.push({
-            day,
-            startTime: sch.startTime,
-            endTime: sch.endTime,
-            type: 'course',
-            data: { ...section, courseCode: courseInfo?.code || section.courseId, courseName: courseInfo?.name || 'Unknown Course' }
-          });
-        });
-      });
-    });
-    busyTimes.forEach(bt => {
-      bt.days.forEach(day => {
-        events.push({ day, startTime: bt.startTime, endTime: bt.endTime, type: 'busy', data: bt });
-      });
-    });
-
-    // Sort events: by day index, then by start time
-    const dayOrder = ["M", "T", "W", "Th", "F", "Sa", "Su"];
-    events.sort((a, b) => {
-      const dayIndexA = dayOrder.indexOf(a.day);
-      const dayIndexB = dayOrder.indexOf(b.day);
-      if (dayIndexA !== dayIndexB) {
-        return dayIndexA - dayIndexB;
-      }
-      return a.startTime.localeCompare(b.startTime);
-    });
-
-    const busyTypeIcons: Record<string, JSX.Element> = {
-      work: <Briefcase className="h-4 w-4" />, study: <BookOpen className="h-4 w-4" />,
-      personal: <Heart className="h-4 w-4" />, event: <CalendarDays className="h-4 w-4" />,
-      meeting: <Users className="h-4 w-4" />, class: <GraduationCap className="h-4 w-4" />, // Though 'class' type busy time is less common if courses are separate
-      reminder: <Bell className="h-4 w-4" />, other: <Bookmark className="h-4 w-4" />
-    };
-
     return (
-      <div className="p-4 space-y-4 bg-gray-50 min-h-full">
-        <Card className="p-3 bg-blue-50 border-blue-200">
-          <p className="text-sm text-blue-700">
-            <CalendarDays className="inline h-4 w-4 mr-2" />
-            Mobile view: Displaying schedule as a list. For a full calendar grid, please use a larger screen.
-          </p>
-        </Card>
-
-        {selectedSchedule.conflicts && selectedSchedule.conflicts.length > 0 && (
-          <Card className="p-3 bg-red-50 border-red-300">
-            <h4 className="text-sm font-semibold text-red-700 mb-1 flex items-center">
-              <AlertTriangle className="h-4 w-4 mr-2 text-red-600" />
-              Schedule Conflicts Detected!
-            </h4>
-            <ul className="list-disc pl-5 text-xs text-red-600 space-y-0.5">
-              {selectedSchedule.conflicts.map((conflict, index) => (
-                <li key={index}>{`${conflict.type}: ${conflict.message}`}</li>
+      <div className="h-full flex flex-col bg-white">
+        <div className="flex-1 overflow-auto">
+          <div className="min-w-[800px] p-2">
+            {/* Mobile Calendar Header with Weekdays */}
+            <div className="grid grid-cols-[60px_repeat(7,1fr)] gap-1 mb-2 sticky top-0 bg-white z-10 border-b pb-2">
+              <div className="text-center font-medium p-2 text-gray-500 text-xs flex items-center justify-center">
+                Time
+              </div>
+              {weekDays.map((day, index) => (
+                <motion.div
+                  key={day}
+                  className="text-center font-medium p-2 bg-gray-50 rounded-md text-xs text-gray-800 border"
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: index * 0.05 }}
+                >
+                  {day.substring(0, 3)}
+                </motion.div>
               ))}
-            </ul>
-          </Card>
-        )}
-
-        {events.length === 0 && (
-          <Card className="p-6 text-center text-gray-500">
-            <CalendarDays className="mx-auto h-12 w-12 text-gray-400 mb-2" />
-            No events scheduled for this period.
-          </Card>
-        )}
-
-        {events.map((event, index) => (
-          <Card key={index} className="p-4 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-start space-x-3">
-              <div className={`p-2 rounded-full mt-1 ${event.type === 'course' ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-600'}`}>
-                {event.type === 'course' ? <GraduationCap className="h-5 w-5" /> : busyTypeIcons[event.data.type] || <Bookmark className="h-5 w-5" />}
-              </div>
-              <div className="flex-1">
-                <div className="flex justify-between items-center mb-1">
-                  <h4 className="font-semibold text-sm">
-                    {event.type === 'course' ? `${event.data.courseCode} - ${event.data.courseName}` : event.data.title}
-                  </h4>
-                  <Badge variant={event.type === 'course' ? "default" : "secondary"} className="text-xs capitalize">
-                    {event.type === 'course' ? event.data.sectionNumber : event.data.type}
-                  </Badge>
-                </div>
-                <div className="text-xs text-gray-600 space-y-1">
-                  <p className="flex items-center"><CalendarDays className="h-3 w-3 mr-1.5 text-gray-500" /> {event.day}</p>
-                  <p className="flex items-center"><Clock className="h-3 w-3 mr-1.5 text-gray-500" /> {event.startTime} - {event.endTime}</p>
-                  {event.type === 'course' && (
-                    <>
-                      <p className="flex items-center"><User className="h-3 w-3 mr-1.5 text-gray-500" /> {event.data.instructors?.join(', ') || 'TBA'}</p>
-                      <p className="flex items-center"><MapPin className="h-3 w-3 mr-1.5 text-gray-500" /> {event.data.schedule.find((s:any)=>s.days.includes(event.day))?.location || event.data.location || 'TBA'}</p>
-                      {lockedCourses.includes(event.data.courseId) && (
-                        <p className="flex items-center text-blue-600 font-medium"><Lock className="h-3 w-3 mr-1.5" /> Locked</p>
-                      )}
-                    </>
-                  )}
-                </div>
-              </div>
             </div>
-          </Card>
-        ))}
+
+            {/* Mobile Calendar Body with Time Slots */}
+            {timeSlots.map((timeSlot, index) => (
+              <motion.div
+                key={timeSlot}
+                className="grid grid-cols-[60px_repeat(7,1fr)] gap-1 mb-1"
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.03 }}
+              >
+                {/* Time slot label */}
+                <div className="text-center text-xs font-medium flex items-center justify-center bg-gray-50 rounded-md text-gray-600 border min-h-[60px]">
+                  {timeSlot}
+                </div>
+
+                {/* Days of the week */}
+                {weekDays.map((day, dayIndex) => {
+                  const hour = index + 7; // 7 AM is the first slot
+                  const mapKey = `${shortWeekDays[dayIndex]}-${hour}`;
+                  const items = calendarMap[mapKey] || [];
+
+                  return (
+                    <div
+                      key={`${day}-${hour}`}
+                      className="relative border border-gray-100 rounded-md min-h-[60px] bg-white hover:bg-gray-50 transition-colors"
+                    >
+                      {items.map((item: any, i: number) => {
+                        if (item.type === 'course') {
+                          const colorInfo = getCourseColorInfo(item.courseCode);
+                          return (
+                            <motion.div
+                              key={`${item.courseCode}-${i}`}
+                              className={cn(
+                                "absolute inset-0.5 p-1 text-xs rounded-sm shadow-sm border overflow-hidden",
+                                colorInfo.backgroundClass,
+                                colorInfo.foregroundClass
+                              )}
+                              initial={{ opacity: 0, scale: 0.95 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              transition={{ duration: 0.3 }}
+                              title={`${item.courseCode} with ${item.instructor} in ${item.location}`}
+                            >
+                              {item.isCourseLocked && (
+                                <div className="absolute top-0.5 right-0.5 bg-blue-600 rounded-full p-0.5 shadow-lg">
+                                  <Lock
+                                    className="h-2 w-2 text-white fill-current"
+                                    style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))' }}
+                                  />
+                                </div>
+                              )}
+                              <div className="font-semibold text-xs leading-tight">{item.courseCode}</div>
+                              <div className="text-[10px] truncate leading-tight">{item.instructor}</div>
+                            </motion.div>
+                          );
+                        } else if (item.type === 'busy') {
+                          const busyType = item.busyTimeType as BusyTimeType;
+                          const busyTypeStyle = busyTimeColors[busyType] || busyTimeColors.other;
+
+                          return (
+                            <motion.div
+                              key={`busy-${i}`}
+                              className={cn(
+                                "absolute inset-0.5 p-1 text-xs rounded-sm border shadow-sm overflow-hidden flex items-center space-x-1",
+                                busyTypeStyle.bg,
+                                busyTypeStyle.text
+                              )}
+                              initial={{ opacity: 0, scale: 0.95 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              transition={{ duration: 0.3 }}
+                              title={`Busy time: ${item.title}`}
+                            >
+                              <span className="text-xs">🚫</span>
+                              <span className="truncate flex-1 font-medium text-xs leading-tight">{item.title}</span>
+                            </motion.div>
+                          );
+                        }
+
+                        return null;
+                      })}
+                    </div>
+                  );
+                })}
+              </motion.div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }

@@ -282,6 +282,7 @@ interface ScheduleContextType {
   selectedSchedule: Schedule | null;
   currentTerm: Term | null;
   allTerms: Term[];
+  allCourses: Course[];
   studentInfo: StudentInfo;
   preferences: PreferenceSettings;
   schedulePreferences: SchedulePreferences;
@@ -492,7 +493,7 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
       setSelectedSchedule(schedule);
       // toast.info(`Selected schedule: ${schedule.name}`); // Optional: can be noisy
     } else if (scheduleId) { // scheduleId was provided but schedule not found
-      toast.warn(`Could not find schedule with ID "${scheduleId}".`);
+      toast.info(`Could not find schedule with ID "${scheduleId}".`);
       setSelectedSchedule(null); // Or keep previous selectedSchedule, debatable. Clearing seems safer.
     } else { // scheduleId is null (deselecting)
       setSelectedSchedule(null);
@@ -763,6 +764,8 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
         selectTerm, // Function to change the current academic term
         updatePreferences, // Function to update general preferences
         updateSchedulePreferences, // Function to update schedule generation preferences
+
+        allCourses: courses, // Add allCourses to the context value
 
         addSectionToSchedule, // Function to add a section to the selected schedule
         removeSectionFromSchedule, // Function to remove a section from the selected schedule
