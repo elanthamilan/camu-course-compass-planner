@@ -635,7 +635,7 @@ const CourseCatalogView: React.FC<CourseCatalogViewProps> = ({ targetCourseCode,
             </p>
           </div>
 
-          <div className={`grid grid-cols-1 gap-4 ${selectedCourse && !isMobile ? 'lg:grid-cols-1' : 'sm:grid-cols-2 lg:grid-cols-3'}`}>
+          <div className={`grid grid-cols-1 gap-4 ${isMobile ? 'sm:grid-cols-2' : (selectedCourse ? 'md:grid-cols-1' : 'md:grid-cols-2')}`}>
             {filteredCourses.map((course: Course) => {
               const isComparing = !!coursesToCompare.find(c => c.id === course.id);
               return (
@@ -753,7 +753,7 @@ const CourseCatalogView: React.FC<CourseCatalogViewProps> = ({ targetCourseCode,
 
         {/* Desktop Selected Course Detail Panel */}
         {!isMobile && selectedCourse && (
-          <div id="course-detail-view" className="hidden lg:block w-full lg:w-1/3 p-4 border rounded-lg bg-white shadow-xl sticky top-24 max-h-[calc(100vh-120px)] overflow-y-auto transition-all duration-300 ease-in-out animate-slide-in-right">
+          <div id="course-detail-view" className="hidden md:block w-full lg:w-1/3 p-4 border rounded-lg bg-white shadow-xl sticky top-24 max-h-[calc(100vh-120px)] overflow-y-auto transition-all duration-300 ease-in-out animate-slide-in-right">
             <div className="flex justify-between items-start mb-3">
               <div className="flex-1">
                 <h3 className="text-xl font-bold text-primary mb-1">{selectedCourse.code}</h3>
