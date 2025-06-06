@@ -6,7 +6,7 @@ import { ArrowLeft, Sparkles, Menu, ShoppingCart } from 'lucide-react'; // Icons
 import { Sheet, SheetContent, SheetTrigger } from "@/components/atoms/sheet"; // For mobile menu
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/atoms/tooltip"; // Added Tooltip
 import AIAdvisor from './AIAdvisor'; // Import AIAdvisor
-import { useSchedule } from '@/contexts/ScheduleContext'; // Added to access cart state
+import { useSchedule } from '../../contexts/ScheduleContext'; // Added to access cart state
 
 const Header: React.FC = () => {
   const navigate = useNavigate();

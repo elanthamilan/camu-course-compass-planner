@@ -6,9 +6,9 @@ import { Label } from "@/components/atoms/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/atoms/select"
 import { Checkbox } from "@/components/atoms/checkbox"
 import { Clock, Plus, X } from "lucide-react"
-import { useSchedule } from "@/contexts/ScheduleContext"
-import { BusyTime, BusyTimeType } from "@/lib/types"
-import { useIsMobile } from "@/hooks/use-mobile"
+import { useSchedule } from "../../contexts/ScheduleContext"
+import { BusyTime, BusyTimeType } from "../../lib/types"
+import { useIsMobile } from "../../hooks/use-mobile"
 import { v4 as uuidv4 } from 'uuid'
 import { toast } from "sonner"
 

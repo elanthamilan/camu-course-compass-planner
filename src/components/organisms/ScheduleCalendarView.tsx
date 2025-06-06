@@ -1,12 +1,12 @@
-import { useSchedule } from "@/contexts/ScheduleContext";
+import { useSchedule } from "../../contexts/ScheduleContext";
 import { Card } from "@/components/atoms/card";
 import { Badge } from "@/components/atoms/badge";
-import { timeSlots, weekDays, busyTimeColors } from "@/lib/mock-data";
-import { cn } from "@/lib/utils";
+import { timeSlots, weekDays, busyTimeColors } from "../../lib/mock-data";
+import { cn } from "../../lib/utils";
 import { motion } from "framer-motion";
 import { Lock } from "lucide-react"; // Import Lock icon
-import { BusyTimeType, CourseSection as CourseSectionType } from "@/lib/types"; // Import BusyTimeType and CourseSectionType
-import { useIsMobile } from "@/hooks/use-mobile"; // Import useIsMobile
+import { BusyTimeType, CourseSection as CourseSectionType } from "../../lib/types"; // Import BusyTimeType and CourseSectionType
+import { useIsMobile } from "../../hooks/use-mobile"; // Import useIsMobile
 import { AlertTriangle, CalendarDays, Clock, MapPin, User, Briefcase, BookOpen, Heart, Users, GraduationCap, Bell, Bookmark } from "lucide-react"; // Icons for mobile view
 
 interface ScheduleCalendarViewProps {

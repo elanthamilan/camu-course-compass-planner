@@ -4,7 +4,7 @@ import { Button } from "@/components/atoms/button"
 import { Input } from "@/components/atoms/input"
 import { Badge } from "@/components/atoms/badge"
 import { Sparkles, Send, User, Bot, MessageCircle, X } from "lucide-react"
-import { useIsMobile } from "@/hooks/use-mobile"
+import { useIsMobile } from "../../hooks/use-mobile"
 import { motion, AnimatePresence } from "framer-motion"
 
 interface AIAdvisorBottomSheetProps {

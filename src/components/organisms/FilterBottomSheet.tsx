@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/atoms/checkbox"
 import { Separator } from "@/components/atoms/separator"
 import { Badge } from "@/components/atoms/badge"
 import { Filter, X, RotateCcw, Search } from "lucide-react"
-import { useIsMobile } from "@/hooks/use-mobile"
+import { useIsMobile } from "../../hooks/use-mobile"
 
 interface FilterBottomSheetProps {
   open: boolean

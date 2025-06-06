@@ -2,7 +2,7 @@
 import React from 'react';
 import { Input, type InputProps } from '@/components/atoms/input'; // Adjusted path
 import { Label } from '@/components/atoms/label'; // Adjusted path
-import { cn } from '@/lib/utils';
+import { cn } from '../lib/utils';
 
 interface LabeledInputProps {
   id: string;

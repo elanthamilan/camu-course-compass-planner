@@ -3,12 +3,12 @@ import React, { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/atoms/dialog";
 import { Button } from "@/components/atoms/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/atoms/tabs";
-import { useSchedule } from "@/contexts/ScheduleContext";
-import { Schedule } from "@/lib/types";
+import { useSchedule } from "../../contexts/ScheduleContext";
+import { Schedule } from "../../lib/types";
 import { AlertTriangle, CheckCircle2, CheckCircle, ArrowRight, ArrowLeft } from "lucide-react"; // Added CheckCircle, ArrowRight, ArrowLeft
 import ScheduleCompareView from "./ScheduleCompareView";
 import CompareCalendarView from "./CompareCalendarView";
-import { cn } from "@/lib/utils";
+import { cn } from "../../lib/utils";
 
 interface CompareSchedulesDialogProps {
   open: boolean;

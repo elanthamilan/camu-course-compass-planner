@@ -6,15 +6,15 @@ import {
   StudentInfo,
   Degree,
   Course,
-} from '../lib/types';
-import { calculateDegreeAudit } from '../lib/degree-audit-utils';
-import { mockStudent, mockPrograms, mockCourses } from '../lib/mock-data';
-import Header from '../components/organisms/Header';
+} from '@/lib/types';
+import { calculateDegreeAudit } from '@/lib/degree-audit-utils';
+import { mockStudent, mockPrograms, mockCourses } from '@/lib/mock-data';
+import Header from '@/components/organisms/Header';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/atoms/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/atoms/card';
 import { Progress } from '@/components/atoms/progress';
 import { Badge } from '@/components/atoms/badge';
-import CourseCatalogView from '../components/organisms/CourseCatalogView';
+import CourseCatalogView from '@/components/organisms/CourseCatalogView';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/atoms/accordion';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/atoms/table';
 import { CheckCircle, XCircle, Clock, ListChecks, Info } from 'lucide-react';

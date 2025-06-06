@@ -5,9 +5,9 @@ import { Label } from "@/components/atoms/label"
 import { RadioGroup, RadioGroupItem } from "@/components/atoms/radio-group"
 import { Checkbox } from "@/components/atoms/checkbox"
 import { SlidersHorizontal, Save, X } from "lucide-react"
-import { useSchedule } from "@/contexts/ScheduleContext"
-import { TimePreference } from "@/lib/types"
-import { useIsMobile } from "@/hooks/use-mobile"
+import { useSchedule } from "../../contexts/ScheduleContext"
+import { TimePreference } from "../../lib/types"
+import { useIsMobile } from "../../hooks/use-mobile"
 import { toast } from "sonner"
 
 interface TunePreferencesBottomSheetProps {

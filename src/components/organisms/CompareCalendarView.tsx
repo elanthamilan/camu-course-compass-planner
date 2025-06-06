@@ -1,13 +1,13 @@
 
 import React from "react";
-import { useSchedule } from "@/contexts/ScheduleContext";
+import { useSchedule } from "../../contexts/ScheduleContext";
 import { Card } from "@/components/atoms/card";
 import { Button } from "@/components/atoms/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { timeSlots, weekDays, busyTimeColors } from "@/lib/mock-data";
-import { cn } from "@/lib/utils";
+import { timeSlots, weekDays, busyTimeColors } from "../../lib/mock-data";
+import { cn } from "../../lib/utils";
 import { motion } from "framer-motion";
-import { BusyTimeType } from "@/lib/types";
+import { BusyTimeType } from "../../lib/types";
 
 interface CompareCalendarViewProps {
   scheduleIds: string[];

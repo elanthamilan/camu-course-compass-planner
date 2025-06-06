@@ -5,8 +5,8 @@ import { Button } from "@/components/atoms/button";
 import { Input } from "@/components/atoms/input";
 import { Label } from "@/components/atoms/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/atoms/select";
-import { useSchedule } from "@/contexts/ScheduleContext";
-import { BusyTime, BusyTimeType } from "@/lib/types";
+import { useSchedule } from "../../contexts/ScheduleContext";
+import { BusyTime, BusyTimeType } from "../../lib/types";
 import { Checkbox } from "@/components/atoms/checkbox";
 import { XCircle, Save } from "lucide-react"; // Added XCircle, Save
 

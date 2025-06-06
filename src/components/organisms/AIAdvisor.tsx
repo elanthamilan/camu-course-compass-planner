@@ -7,8 +7,8 @@ import { Avatar } from "@/components/atoms/avatar";
 import { Badge } from "@/components/atoms/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/atoms/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/atoms/accordion";
-import { useSchedule } from "@/contexts/ScheduleContext";
-import { cn } from "@/lib/utils";
+import { useSchedule } from "../../contexts/ScheduleContext";
+import { cn } from "../../lib/utils";
 import { Send, LogOut, HelpCircle, MessageSquare, BookOpen } from "lucide-react";
 import { useLocation } from "react-router-dom";
 

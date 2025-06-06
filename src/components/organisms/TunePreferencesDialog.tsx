@@ -12,8 +12,8 @@ import { Label } from "@/components/atoms/label";
 import { RadioGroup, RadioGroupItem } from "@/components/atoms/radio-group";
 import { Checkbox } from "@/components/atoms/checkbox";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/atoms/tooltip"; // Added Tooltip
-import { useSchedule } from '@/contexts/ScheduleContext';
-import { TimePreference } from '@/lib/types';
+import { useSchedule } from '../../contexts/ScheduleContext';
+import { TimePreference } from '../../lib/types';
 import { XCircle, Save } from 'lucide-react';
 
 interface TunePreferencesDialogProps {

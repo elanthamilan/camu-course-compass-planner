@@ -12,8 +12,8 @@ import {
   Plus,
   Check
 } from "lucide-react"
-import { Course, CourseSection } from "@/lib/types"
-import { useIsMobile } from "@/hooks/use-mobile"
+import { Course, CourseSection } from "../../lib/types"
+import { useIsMobile } from "../../hooks/use-mobile"
 
 interface CourseDetailBottomSheetProps {
   open: boolean

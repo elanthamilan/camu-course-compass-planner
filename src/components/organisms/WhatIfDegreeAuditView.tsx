@@ -1,5 +1,5 @@
 import React from 'react';
-import { AcademicProgram, DegreeRequirement } from '@/lib/types'; // Adjust path if needed
+import { AcademicProgram, DegreeRequirement } from '../../lib/types'; // Adjust path if needed
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/atoms/card';
 import { Badge } from '@/components/atoms/badge';
 import { Button } from '@/components/atoms/button'; // Added Button import
