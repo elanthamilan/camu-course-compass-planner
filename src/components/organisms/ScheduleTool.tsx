@@ -30,6 +30,30 @@ import { mockCourses } from "../../lib/mock-data";
 import { IconButton } from '../molecules/IconButton';
 import { v4 as uuidv4 } from 'uuid';
 
+// Helper function to format time from "HH:mm" to "h:mm A"
+const formatTime = (timeStr: string): string => {
+  if (!timeStr) return "N/A";
+  const [hours, minutes] = timeStr.split(':');
+  const h = parseInt(hours, 10);
+  const m = parseInt(minutes, 10);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const formattedHours = h % 12 || 12; // Convert 0 to 12 for 12 AM, and 12 to 12 for 12 PM
+  return `${formattedHours}:${m < 10 ? '0' + m : m} ${ampm}`;
+};
+
+// Helper function to format section schedule
+const formatSectionSchedule = (scheduleArray: CourseSection['schedule']): string => {
+  if (!scheduleArray || scheduleArray.length === 0) return "TBA";
+  return scheduleArray.map(slot => {
+    const days = slot.days || "N/A"; // slot.days is already a string like "MWF" or "TuTh" based on types.ts (it's string, not string[])
+                                     // If it were string[], it would be slot.days.join('')
+    const startTime = formatTime(slot.startTime);
+    const endTime = formatTime(slot.endTime);
+    return `${days} ${startTime} - ${endTime}`;
+  }).join(', ');
+};
+
+
 /**
  * Props for the ScheduleTool component.
  */
@@ -87,12 +111,28 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
   const [lockedCourses, setLockedCourses] = useState<string[]>([]); // IDs of courses whose sections are locked in the current schedule
 
   const [isGenerating, setIsGenerating] = useState(false); // Whether schedule generation is in progress
+  const [justGeneratedSchedules, setJustGeneratedSchedules] = useState(false);
 
   // Effect to initialize `selectedCourses` based on `courses` from context.
   // This ensures that if courses are added/removed externally, the checkboxes reflect that.
   useEffect(() => {
     setSelectedCourses(courses.map(course => course.id));
   }, [courses]);
+
+  // Effect for handling navigation after schedule generation on mobile
+  useEffect(() => {
+    // This effect runs when `justGeneratedSchedules` changes.
+    // It checks if schedules were indeed generated and if the conditions for mobile navigation are met.
+    if (justGeneratedSchedules) {
+      if (isMobile && manageViewActive && schedules && schedules.length > 0) {
+        setManageViewActive(false);
+        // Optional: toast.success("Displaying generated schedules.");
+        // The generateSchedules function in context already toasts success/failure.
+      }
+      // Always reset the trigger flag after checking.
+      setJustGeneratedSchedules(false);
+    }
+  }, [justGeneratedSchedules, schedules, isMobile, manageViewActive, setManageViewActive]); // Added setManageViewActive to dependencies
 
   // Effect for initial automatic schedule generation.
   // This attempts to generate schedules when the component mounts if courses are present
@@ -189,6 +229,7 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
 
       // Call the context function to generate schedules
       generateSchedules(selectedCourses, fixedSectionsForGeneration);
+      setJustGeneratedSchedules(true);
 
     } catch (error) {
       console.error("Error generating schedules:", error);
@@ -426,45 +467,59 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
                 </Button>
               </div>
               <AccordionContent className="pt-3 space-y-3">
-                <div className="space-y-2 max-h-60 overflow-y-auto"> {/* Preserved max-h and overflow */}
-                  <AnimatePresence>
-                    {courses.map((course) => (
-                      <motion.div
-                        key={course.id}
-                        className={`bg-white border rounded-lg p-4 flex flex-col justify-between items-start group hover:shadow-sm transition-all w-full ${selectedCourses.includes(course.id) ? 'border-blue-300 bg-blue-50' : 'border-gray-200'}`}
-                        initial={{ opacity: 0, y: 5 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        <div className="flex items-start w-full space-x-2">
-                          <Checkbox
-                            id={`course-manage-${course.id}`}
-                            checked={selectedCourses.includes(course.id)}
-                            onCheckedChange={() => handleCourseToggle(course.id)}
-                            className="mt-1"
-                          />
-                          <div className="flex-1">
-                            <div className="flex justify-between items-start w-full">
-                              <div>
-                                <label htmlFor={`course-manage-${course.id}`} className="cursor-pointer">
-                                  <span className="font-medium text-base mr-2">{course.code}</span>
-                                  <Badge variant="secondary" className="text-xs mr-2">{course.credits}cr</Badge>
-                                </label>
-                                <div className="text-sm text-gray-700 mb-1">{course.name}</div>
-                                {selectedSchedule && (() => {
-                                  const currentSectionInSchedule = selectedSchedule.sections.find(section => section.courseId === course.id);
-                                  if (currentSectionInSchedule) {
-                                    return (
-                                      <div className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded mb-1">
-                                        Section {currentSectionInSchedule.sectionNumber} - {currentSectionInSchedule.instructor} - {currentSectionInSchedule.schedule?.[0] ? `${currentSectionInSchedule.schedule[0].days} ${currentSectionInSchedule.schedule[0].startTime}-${currentSectionInSchedule.schedule[0].endTime}` : 'TBA'}
-                                      </div>
-                                    );
-                                  }
-                                  return null;
-                                })()}
-                              </div>
-                              <div className="flex space-x-1">
+                <div className="space-y-2 max-h-96 overflow-y-auto"> {/* Increased max-h for accordion content */}
+                  {courses.length === 0 && (
+                    <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded-md text-center">No courses added.</div>
+                  )}
+                  <Accordion type="multiple" collapsible className="w-full">
+                    <AnimatePresence>
+                      {courses.map((course) => (
+                        <AccordionItem key={course.id} value={course.id} className="border-b last:border-b-0">
+                          {/* motion.div will be part of AccordionItem, or AccordionTrigger/Content might have their own motion if needed */}
+                          {/* For now, let's use the existing motion.div as the container for the AccordionItem content */}
+                           <motion.div
+                            initial={{ opacity: 0, y: 5 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            transition={{ duration: 0.2 }}
+                            className={`bg-white border rounded-lg group hover:shadow-sm transition-all w-full mb-2 ${selectedCourses.includes(course.id) ? 'border-blue-300 bg-blue-50' : 'border-gray-200'}`}
+                          >
+                            <div className="flex items-start w-full space-x-2 p-3"> {/* p-3 here for trigger area */}
+                              <Checkbox
+                                id={`course-manage-${course.id}`}
+                                checked={selectedCourses.includes(course.id)}
+                                onCheckedChange={() => handleCourseToggle(course.id)}
+                                className="mt-1"
+                                aria-label={`Select course ${course.code}`}
+                              />
+                              <AccordionTrigger className="flex-1 p-0 text-left">
+                                <div className="flex flex-col w-full">
+                                  <div className="flex justify-between items-start w-full">
+                                    <div>
+                                      <label htmlFor={`course-manage-${course.id}`} className="cursor-pointer">
+                                        <span className="font-medium text-base mr-2">{course.code}</span>
+                                        <Badge variant="secondary" className="text-xs mr-2">{course.credits}cr</Badge>
+                                      </label>
+                                      <div className="text-sm text-gray-700 mb-1">{course.name}</div>
+                                      {/* Show selected section info from the currently active schedule */}
+                                      {selectedSchedule && (() => {
+                                        const currentSectionInSchedule = selectedSchedule.sections.find(section => section.courseId === course.id);
+                                        if (currentSectionInSchedule) {
+                                          return (
+                                            <div className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded my-1">
+                                              Sec {currentSectionInSchedule.sectionNumber} • {currentSectionInSchedule.instructor} • {formatSectionSchedule(currentSectionInSchedule.schedule) || 'TBA'}
+                                            </div>
+                                          );
+                                        }
+                                        return null;
+                                      })()}
+                                    </div>
+                                  </div>
+                                </div>
+                              </AccordionTrigger>
+                              {/* Buttons next to trigger */}
+                              {/* Ensure these buttons are vertically centered with the trigger text if possible, or adjust layout as needed */}
+                              <div className="flex flex-col space-y-1 ml-2 items-center justify-center">
                                 <Button variant="ghost" size="icon" className={`h-8 w-8 ${lockedCourses.includes(course.id) ? 'bg-blue-100 hover:bg-blue-200' : ''}`} onClick={() => handleToggleCourseLock(course.id)}>
                                   {lockedCourses.includes(course.id) ? <Lock className="h-4 w-4 text-blue-600 fill-current" /> : <Unlock className="h-4 w-4 text-gray-500" />}
                                 </Button>
@@ -478,14 +533,43 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
                                 />
                               </div>
                             </div>
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-                  {courses.length === 0 && (
-                    <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded-md text-center">No courses added.</div>
-                  )}
+                            <AccordionContent className="p-3 border-t border-gray-200 bg-white rounded-b-lg">
+                              <div className="space-y-3">
+                                <div>
+                                  <h4 className="text-sm font-semibold mb-1">Description</h4>
+                                  <p className="text-xs text-gray-700">{course.description || "No description available."}</p>
+                                </div>
+                                <div>
+                                  <h4 className="text-sm font-semibold mb-1">Prerequisites</h4>
+                                  <p className="text-xs text-gray-700">
+                                    {course.prerequisites && course.prerequisites.length > 0
+                                      ? course.prerequisites.join(', ')
+                                      : "None"}
+                                  </p>
+                                </div>
+                                <div>
+                                  <h4 className="text-sm font-semibold mb-1">Available Sections</h4>
+                                  {course.sections && course.sections.length > 0 ? (
+                                    <ul className="space-y-2">
+                                      {course.sections.map(section => (
+                                        <li key={section.id} className="text-xs text-gray-700 border p-2 rounded-md bg-gray-50">
+                                          <div className="font-medium">Section {section.sectionNumber} - {section.instructor}</div>
+                                          <div>Location: {section.location || "N/A"}</div>
+                                          <div>Schedule: {formatSectionSchedule(section.schedule)}</div>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  ) : (
+                                    <p className="text-xs text-gray-500">No sections available.</p>
+                                  )}
+                                </div>
+                              </div>
+                            </AccordionContent>
+                          </motion.div>
+                        </AccordionItem>
+                      ))}
+                    </AnimatePresence>
+                  </Accordion>
                 </div>
               </AccordionContent>
             </AccordionItem>
