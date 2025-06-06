@@ -7,7 +7,7 @@ import { useSchedule } from "@/contexts/ScheduleContext";
 import { Schedule } from "@/lib/types";
 import { AlertTriangle, CheckCircle2, CheckCircle, ArrowRight, ArrowLeft } from "lucide-react"; // Added CheckCircle, ArrowRight, ArrowLeft
 import ScheduleCompareView from "./ScheduleCompareView";
-import CompareCalendarView from "./organisms/CompareCalendarView";
+import CompareCalendarView from "./CompareCalendarView";
 import { cn } from "@/lib/utils";
 
 interface CompareSchedulesDialogProps {

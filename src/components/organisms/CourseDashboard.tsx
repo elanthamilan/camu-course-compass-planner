@@ -14,9 +14,9 @@ import { mockPrograms, mockCourses, mockMandatoryCourses } from "@/lib/mock-data
 import { PlusCircle, Trash2, ArrowRight, ChevronDown, Eye, CheckCircle2, CircleDot, Circle, PlusSquare, Lightbulb, CheckCircle, Clock, Target, Search, Info, Home, RotateCcw, TrendingUp, AlertCircle, GraduationCap, BookOpen, Zap } from "lucide-react";
 import { useSchedule } from '@/contexts/ScheduleContext';
 import { Label } from "@/components/atoms/label";
-import { calculateWhatIfAudit } from '../lib/degree-audit-utils';
+import { calculateWhatIfAudit } from '../../lib/degree-audit-utils';
 import WhatIfDegreeAuditView from './WhatIfDegreeAuditView';
-import { Course, AcademicProgram, DegreeRequirement } from "../lib/types";
+import { Course, AcademicProgram, DegreeRequirement } from "../../lib/types";
 import CourseSearchModal from './CourseSearchModal';
 import ViewScheduleDialog from './ViewScheduleDialog';
 import AddSemesterDialog from './AddSemesterDialog';

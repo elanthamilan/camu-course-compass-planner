@@ -1,8 +1,8 @@
 import React from 'react';
 import { AcademicProgram, DegreeRequirement } from '@/lib/types'; // Adjust path if needed
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button'; // Added Button import
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/atoms/card';
+import { Badge } from '@/components/atoms/badge';
+import { Button } from '@/components/atoms/button'; // Added Button import
 import { CheckCircle2, CircleDot, Circle } from 'lucide-react'; // For status icons
 
 interface WhatIfDegreeAuditViewProps {

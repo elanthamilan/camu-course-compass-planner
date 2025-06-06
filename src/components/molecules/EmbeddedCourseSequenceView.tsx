@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Course } from '../lib/types';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/components/atoms/badge';
 import { AlertTriangle, ChevronDown, ChevronRight } from 'lucide-react'; // Chevron icons for potential future expansion
 
 // Updated structure for a node in the sequence tree

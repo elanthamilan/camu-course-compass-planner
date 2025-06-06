@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { mockCourses } from '../lib/mock-data';
+import { mockCourses } from '../../lib/mock-data';
 import { Course, CourseSection, ScheduleTime } from '../lib/types';
 import { Input } from "@/components/atoms/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/atoms/select";
