@@ -15,7 +15,7 @@ import EditBusyTimeDialog from "./EditBusyTimeDialog";
 import AIAdvisor from "./AIAdvisor";
 import TunePreferencesDialog from "./TunePreferencesDialog";
 import CompareSchedulesDialog from "./CompareSchedulesDialog";
-import { PlusCircle, SlidersHorizontal as Sliders, Sparkles, Trash2, Lock, Unlock, ArrowLeft } from "lucide-react";
+import { PlusCircle, SlidersHorizontal, Sparkles, Trash2, Lock, Unlock, ArrowLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import CourseSearchModal from "./CourseSearchModal";
@@ -234,15 +234,17 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
       <input type="file" accept=".json" ref={fileInputRef} style={{ display: 'none' }} />
 
       {/* Header */}
-      <div className="flex-shrink-0 border-b bg-white">
-        <div className="container mx-auto px-4 max-w-7xl">
-          <TermHeader
-            view={termHeaderView}
-            setView={handleTermHeaderViewChange}
-            onCompareClick={() => setIsCompareOpen(true)}
-          />
+      {!(isMobile && manageViewActive) && (
+        <div className="flex-shrink-0 border-b bg-white">
+          <div className="container mx-auto px-4 max-w-7xl">
+            <TermHeader
+              view={termHeaderView}
+              setView={handleTermHeaderViewChange}
+              onCompareClick={() => setIsCompareOpen(true)}
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
@@ -370,12 +372,8 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
       // Content for Manage Schedule View on Mobile (New)
       <div className="w-full h-full overflow-y-auto bg-white flex flex-col"> {/* Removed p-4, space-y-4 from here, will add to inner container */}
         {/* Header for Manage View */}
-        <div className="flex items-center justify-between p-3 border-b sticky top-0 bg-white z-10"> {/* Made header sticky */}
-          <Button variant="ghost" size="icon" onClick={() => setManageViewActive(false)} aria-label="Back to schedule view">
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
+        <div className="flex items-center justify-center p-3 border-b sticky top-0 bg-white z-10"> {/* Made header sticky */}
           <h2 className="text-lg font-semibold">Manage Schedule</h2>
-          <div className="w-10"></div> {/* Spacer for alignment, matches typical icon button width */}
         </div>
 
         <div className="p-4 space-y-4 flex-1"> {/* Inner container for padding and scrolling content */}
@@ -503,6 +501,9 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
                 <Sparkles className={`h-4 w-4 mr-2 ${isGenerating ? 'animate-spin' : ''}`} />
                 {isGenerating ? 'Generating...' : selectedCourses.length === 0 ? 'Generate Schedule' : `Generate Schedule (${selectedCourses.length} selected)`}
               </span>
+            </Button>
+            <Button variant="ghost" onClick={() => setManageViewActive(false)} className="w-full h-10">
+              Cancel
             </Button>
           </div>
         </div>
