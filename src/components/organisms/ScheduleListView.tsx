@@ -64,8 +64,8 @@ const ScheduleListView = () => {
                   <TableCell className="p-2 sm:p-4">{section.location}</TableCell>
                 </TableRow>
               );
-            })}
-            {selectedSchedule.busyTimes.map((busyTime) => (
+            })}{/*
+          */}{selectedSchedule.busyTimes.map((busyTime) => (
               <TableRow key={busyTime.id} className="bg-muted/30 hover:bg-muted/50 text-xs sm:text-sm">
                 <TableCell className="p-2 sm:p-4" colSpan={2}><span className="font-medium text-foreground">{busyTime.title} (Busy)</span></TableCell>
                 <TableCell className="p-2 sm:p-4 text-muted-foreground">-</TableCell>
@@ -78,8 +78,8 @@ const ScheduleListView = () => {
                 </TableCell>
                 <TableCell className="p-2 sm:p-4 text-muted-foreground">-</TableCell>
               </TableRow>
-            ))}
-            <TableRow className="bg-muted font-semibold text-xs sm:text-sm">
+            ))}{/*
+          */}<TableRow className="bg-muted font-semibold text-xs sm:text-sm">
               <TableCell className="p-2 sm:p-4 text-right" colSpan={3}>Total Credits:</TableCell>
               <TableCell className="p-2 sm:p-4">{selectedSchedule.totalCredits}</TableCell>
               <TableCell className="p-2 sm:p-4" colSpan={4}></TableCell>

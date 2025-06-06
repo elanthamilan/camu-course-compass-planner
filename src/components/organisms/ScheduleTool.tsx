@@ -84,6 +84,8 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
     allCourses,
     selectedSectionMap, // Added for desktop section selection
     updateSelectedSectionMap, // Added for desktop section selection
+    lockedCourses,
+    toggleCourseLock,
   } = useSchedule();
 
   const fileInputRef = React.useRef<HTMLInputElement>(null); // Ref for file input used in schedule import
@@ -110,7 +112,6 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
 
   // Course Selection and Configuration State
   const [selectedCourses, setSelectedCourses] = useState<string[]>([]); // IDs of courses checked by the user for generation
-  const [lockedCourses, setLockedCourses] = useState<string[]>([]); // IDs of courses whose sections are locked in the current schedule
 
   const [isGenerating, setIsGenerating] = useState(false); // Whether schedule generation is in progress
   const [justGeneratedSchedules, setJustGeneratedSchedules] = useState(false);
@@ -228,7 +229,7 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
             lcId => !fixedSectionsForGeneration.some(fs => fs.id.startsWith(lcId))
           );
           if (missingFixedCourses.length > 0) {
-            toast.warn(`Some locked courses (${missingFixedCourses.join(', ')}) couldn't use their original sections and will be rescheduled if possible.`);
+            toast.error(`Some locked courses (${missingFixedCourses.join(', ')}) couldn't use their original sections and will be rescheduled if possible.`);
           }
         }
       }
@@ -252,17 +253,7 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
 
   /** Toggles the lock state of a course for schedule generation. */
   const handleToggleCourseLock = (courseId: string) => {
-    const course = courses.find(c => c.id === courseId);
-    if (!course) return;
-    setLockedCourses(prevLocked => {
-      if (prevLocked.includes(courseId)) {
-        toast.success(`${course.code} unlocked! It can now be changed by regeneration.`);
-        return prevLocked.filter(id => id !== courseId);
-      } else {
-        toast.success(`${course.code} locked! It will be preserved during regeneration.`);
-        return [...prevLocked, courseId];
-      }
-    });
+    toggleCourseLock(courseId);
   };
 
   // Pass the correct value and setter to TermHeader
@@ -300,7 +291,7 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
           <div className="w-80 flex-shrink-0 border-r bg-white overflow-y-auto">
             <div className="p-4 space-y-4">
               {/* Busy Times Accordion */}
-              <Accordion type="single" collapsible defaultValue="busy-times">
+              <Accordion type="single" defaultValue="busy-times">
                 <AccordionItem value="busy-times" className="border-b-0">
                   <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
                     <AccordionTrigger className="flex items-center hover:bg-gray-100 transition-colors [&[data-state=open]>svg]:rotate-180 flex-1 p-0">
@@ -333,7 +324,7 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
               </Accordion>
 
               {/* Courses Accordion */}
-              <Accordion type="single" collapsible defaultValue="courses">
+              <Accordion type="single" defaultValue="courses">
                 <AccordionItem value="courses" className="border-b-0">
                   <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
                     <AccordionTrigger className="flex items-center hover:bg-gray-100 transition-colors [&[data-state=open]>svg]:rotate-180 flex-1 p-0">
@@ -349,7 +340,7 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
                       {courses.length === 0 && (
                         <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded-md text-center">No courses added.</div>
                       )}
-                      <Accordion type="multiple" collapsible className="w-full">
+                      <Accordion type="multiple" className="w-full">
                         <AnimatePresence>
                           {courses.map((course) => (
                             <AccordionItem key={course.id} value={course.id} className="border-b last:border-b-0">
@@ -497,7 +488,7 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
         <div className="p-4 space-y-4 flex-1"> {/* Inner container for padding and scrolling content */}
           {/* Accordions and Buttons (copied from the old BottomSheet content) */}
           {/* Busy Times Accordion */}
-          <Accordion type="single" collapsible defaultValue="busy-times" className="w-full">
+          <Accordion type="single" defaultValue="busy-times" className="w-full">
             <AccordionItem value="busy-times" className="border-b-0">
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
                 <AccordionTrigger className="flex items-center hover:bg-gray-100 transition-colors [&[data-state=open]>svg]:rotate-180 flex-1 p-0">
@@ -532,7 +523,7 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
           </Accordion>
 
           {/* Courses Accordion */}
-          <Accordion type="single" collapsible defaultValue="courses" className="w-full">
+          <Accordion type="single" defaultValue="courses" className="w-full">
             <AccordionItem value="courses" className="border-b-0">
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
                 <AccordionTrigger className="flex items-center hover:bg-gray-100 transition-colors [&[data-state=open]>svg]:rotate-180 flex-1 p-0">
@@ -548,7 +539,7 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
                   {courses.length === 0 && (
                     <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded-md text-center">No courses added.</div>
                   )}
-                  <Accordion type="multiple" collapsible className="w-full">
+                  <Accordion type="multiple" className="w-full">
                     <AnimatePresence>
                       {courses.map((course) => (
                         <AccordionItem key={course.id} value={course.id} className="border-b last:border-b-0">

@@ -30,15 +30,35 @@ const TermHeader = ({ view, setView, onCompareClick }: TermHeaderProps) => {
       <div className="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:items-center sm:space-x-2 md:space-x-4 w-full sm:w-auto"> {/* Adjusted space-x for more items */}
         {schedules && schedules.length > 0 && (
           <Select value={selectedSchedule?.id || ""} onValueChange={(value) => selectSchedule(value)}>
-            <SelectTrigger className="w-full sm:w-[250px] md:w-[300px] text-xs sm:text-sm h-9 sm:h-auto"> {/* Adjusted height for sm screens */}
-              <SelectValue placeholder="Select Schedule" />
+            <SelectTrigger className="w-full sm:w-[500px] md:w-[550px] text-base bg-gray-50 border-gray-300 h-16">
+              <SelectValue placeholder="Select a Schedule" />
             </SelectTrigger>
             <SelectContent>
-              {schedules.map((schedule) => (
-                <SelectItem key={schedule.id} value={schedule.id} className="text-xs sm:text-sm">
-                  {schedule.name} ({schedule.sections.length} courses, {schedule.totalCredits}cr)
-                </SelectItem>
-              ))}
+              {schedules.map((schedule, index) => {
+                const days = [...new Set(schedule.sections.flatMap(s => s.schedule.map(sl => sl.days)))].join(', ');
+                const times = schedule.sections.flatMap(s => s.schedule.map(sl => ({ start: sl.startTime, end: sl.endTime })));
+                const earliest = times.length > 0 ? times.reduce((min, t) => t.start < min ? t.start : min, '23:59') : 'N/A';
+                const latest = times.length > 0 ? times.reduce((max, t) => t.end > max ? t.end : max, '00:00') : 'N/A';
+
+                const scheduleNames = ["Morning Focus", "Balanced Day", "Afternoon Power"];
+                const scheduleName = scheduleNames[index % scheduleNames.length];
+
+                return (
+                  <SelectItem key={schedule.id} value={schedule.id} className="text-base py-3 px-4">
+                    <div className="flex justify-between items-center w-full gap-4">
+                      <div>
+                        <p className="font-semibold text-lg">{scheduleName}</p>
+                        <p className="text-sm text-gray-500">{days}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm text-gray-500">{schedule.sections.length} courses</p>
+                        <p className="text-sm text-gray-500">{schedule.totalCredits} credits</p>
+                        <p className="text-sm text-gray-500">{earliest} - {latest}</p>
+                      </div>
+                    </div>
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
         )}

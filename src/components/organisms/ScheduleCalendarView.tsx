@@ -70,7 +70,7 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({ lockedCours
             instructor: section.instructor,
             location: schedule.location,
             color: getCourseColorInfo(courseCode),
-            isCourseLocked: lockedCourses.includes(section.id.split("-")[0]) || lockedCourses.includes(courseCode),
+            isCourseLocked: lockedCourses.includes(section.courseId),
             startTime: schedule.startTime,
             endTime: schedule.endTime,
             days: schedule.days

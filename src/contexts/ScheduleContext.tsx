@@ -320,6 +320,8 @@ interface ScheduleContextType {
   updateSelectedSectionMap: (courseId: string, selection: string[] | 'all') => void;
   excludeHonorsMap: Record<string, boolean>;
   updateExcludeHonorsMap: (courseId: string, exclude: boolean) => void;
+  lockedCourses: string[];
+  toggleCourseLock: (courseId: string) => void;
 }
 
 const defaultPreferences: PreferenceSettings = {
@@ -351,6 +353,7 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
 
   const [selectedSectionMap, setSelectedSectionMapState] = useState<Record<string, string[] | 'all'>>({});
   const [excludeHonorsMap, setExcludeHonorsMapState] = useState<Record<string, boolean>>({});
+  const [lockedCourses, setLockedCourses] = useState<string[]>([]);
   // Initialize with 2 default schedules in cart
   const [shoppingCart, setShoppingCart] = useState<Schedule[]>([
     {
@@ -432,6 +435,20 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
+  const toggleCourseLock = (courseId: string) => {
+    setLockedCourses(prev => {
+      const course = courses.find(c => c.id === courseId);
+      if (!course) return prev;
+      if (prev.includes(courseId)) {
+        toast.success(`${course.code} unlocked! It can now be changed by regeneration.`);
+        return prev.filter(id => id !== courseId);
+      } else {
+        toast.success(`${course.code} locked! It will be preserved during regeneration.`);
+        return [...prev, courseId];
+      }
+    });
+  };
+
   /** Adds a new busy time to the user's schedule. */
   const addBusyTime = (busyTime: BusyTime) => {
     setBusyTimes(prev => {
@@ -493,7 +510,7 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
       setSelectedSchedule(schedule);
       // toast.info(`Selected schedule: ${schedule.name}`); // Optional: can be noisy
     } else if (scheduleId) { // scheduleId was provided but schedule not found
-      toast.warn(`Could not find the specified schedule.`);
+      toast.error(`Could not find the specified schedule.`);
       setSelectedSchedule(null); // Or keep previous selectedSchedule, debatable. Clearing seems safer.
     } else { // scheduleId is null (deselecting)
       setSelectedSchedule(null);
@@ -506,7 +523,6 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
    */
   const generateSchedules = (selectedCourseIds: string[], fixedSections: CourseSection[] = []) => {
     console.log("[Demo] Generating schedules for:", selectedCourseIds);
-    toast.loading("Finding the best schedules for you...");
 
     if (!selectedCourseIds || selectedCourseIds.length === 0) {
       toast.error("Please select courses to generate schedules.");
@@ -659,7 +675,7 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
 
       const sectionToRemove = prev.sections.find(s => s.id === sectionId);
       if (!sectionToRemove) {
-        toast.warn(`Section ${sectionId} not found in the selected schedule.`);
+        toast.error(`Section ${sectionId} not found in the selected schedule.`);
         return prev;
       }
       // Use sectionToRemove.courseId for robustness
@@ -772,7 +788,9 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
 
         moveToCart, // Function to move the selected schedule to the cart
         clearCart, // Function to clear the shopping cart
-        compareSchedules // Function to initiate comparison of schedules (placeholder)
+        compareSchedules, // Function to initiate comparison of schedules (placeholder)
+        lockedCourses,
+        toggleCourseLock
       }}
     >
       {children}

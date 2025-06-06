@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from "@/components/atoms/drawer";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter, DrawerDescription } from "@/components/atoms/drawer";
 import { BottomSheet } from "@/components/atoms/bottom-sheet";
 import { Button } from "@/components/atoms/button";
 import { Input } from "@/components/atoms/input";
@@ -245,8 +245,11 @@ const CourseSearchModal: React.FC<CourseSearchModalProps> = ({
           <DrawerTitle className="flex items-center">
             <Search className="h-5 w-5 mr-2" />
             Add Course {termId && `to ${termId}`}
-          </DrawerTitle>
-        </DrawerHeader>
+         </DrawerTitle>
+         <DrawerDescription>
+           Search for courses and add them to your schedule.
+         </DrawerDescription>
+       </DrawerHeader>
 
         <div className="flex-1 flex flex-col min-h-0 px-4">
           {/* Search Controls */}
