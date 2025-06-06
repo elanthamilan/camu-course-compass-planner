@@ -15,7 +15,7 @@ import EditBusyTimeDialog from "./EditBusyTimeDialog";
 import AIAdvisor from "./AIAdvisor";
 import TunePreferencesDialog from "./TunePreferencesDialog";
 import CompareSchedulesDialog from "./CompareSchedulesDialog";
-import { PlusCircle, Sliders, ArrowLeftRight, ChevronDown, ChevronUp, CalendarPlus, Sparkles, Trash2, Download, Upload, Settings, ListChecks, CalendarDays, Edit3, Copy as CopyIcon, Share2, Lock, Unlock, AlertTriangle, ShoppingCart, X, Edit2, Clock, BookOpen, SlidersHorizontal, List as ListIcon, Calendar as CalendarIcon, ArrowLeft } from "lucide-react";
+import { PlusCircle, SlidersHorizontal as Sliders, Sparkles, Trash2, Lock, Unlock, ArrowLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import CourseSearchModal from "./CourseSearchModal";
