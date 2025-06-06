@@ -1,12 +1,12 @@
 
 import { useState } from 'react';
-import CourseDashboard from '@/components/CourseDashboard';
-import Header from '@/components/Header';
-import AIAdvisor from '@/components/AIAdvisor';
-import { Button } from '@/components/ui/button';
+import CourseDashboard from '@/components/organisms/CourseDashboard';
+import Header from '@/components/organisms/Header';
+import AIAdvisor from '@/components/organisms/AIAdvisor';
+import { Button } from '@/components/atoms/button';
 import { Sparkles } from 'lucide-react'; // Import Sparkles
 import { useIsMobile } from "@/hooks/use-mobile";
-import AIAdvisorBottomSheet from "@/components/AIAdvisorBottomSheet";
+import AIAdvisorBottomSheet from "@/components/organisms/AIAdvisorBottomSheet";
 
 const Index = () => {
   const [isAIAdvisorOpen, setIsAIAdvisorOpen] = useState(false);

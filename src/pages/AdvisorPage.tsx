@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect } from 'react'; // Added useEffect
-import Header from '@/components/Header';
-import AIAdvisor from '@/components/AIAdvisor';
-import AIAdvisorBottomSheet from '@/components/AIAdvisorBottomSheet'; // Added
+import Header from '@/components/organisms/Header';
+import AIAdvisor from '@/components/organisms/AIAdvisor';
+import AIAdvisorBottomSheet from '@/components/organisms/AIAdvisorBottomSheet'; // Added
 import { useIsMobile } from '@/hooks/use-mobile'; // Added
 
 const AdvisorPage = () => {

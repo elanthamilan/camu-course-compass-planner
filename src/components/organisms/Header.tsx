@@ -5,7 +5,7 @@ import { Badge } from '@/components/atoms/badge'; // Added Badge for cart indica
 import { ArrowLeft, Sparkles, Menu, ShoppingCart } from 'lucide-react'; // Icons
 import { Sheet, SheetContent, SheetTrigger } from "@/components/atoms/sheet"; // For mobile menu
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/atoms/tooltip"; // Added Tooltip
-import AIAdvisor from '@/components/AIAdvisor'; // Import AIAdvisor
+import AIAdvisor from '@/components/organisms/AIAdvisor'; // Import AIAdvisor
 import { useSchedule } from '@/contexts/ScheduleContext'; // Added to access cart state
 
 const Header: React.FC = () => {

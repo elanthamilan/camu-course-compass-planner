@@ -1,6 +1,5 @@
-
-import RegistrationSummary from '@/components/RegistrationSummary';
-import Header from '@/components/Header';
+import RegistrationSummary from '@/components/organisms/RegistrationSummary';
+import Header from '@/components/organisms/Header';
 
 const CartPage = () => {
   return (

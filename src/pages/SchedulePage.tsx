@@ -1,8 +1,8 @@
 
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import Header from '@/components/Header';
-import ScheduleTool from '@/components/ScheduleTool';
+import Header from '@/components/organisms/Header';
+import ScheduleTool from '@/components/organisms/ScheduleTool';
 import { useSchedule } from '@/contexts/ScheduleContext';
 import { Button } from '@/components/atoms/button';
 import { ArrowLeft } from 'lucide-react';

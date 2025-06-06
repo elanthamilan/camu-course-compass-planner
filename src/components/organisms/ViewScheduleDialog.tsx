@@ -7,8 +7,8 @@ import { Checkbox } from "@/components/atoms/checkbox";
 import { Badge } from "@/components/atoms/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/atoms/card";
 import { Calendar, List, ListFilter, ChevronDown, ChevronUp, Wand2, ShoppingCart, Clock, Users, MapPin, Zap, RefreshCw, Heart, Trash2, Eye, Settings } from "lucide-react";
-import ScheduleCalendarView from "./ScheduleCalendarView";
-import ScheduleListView from "./ScheduleListView";
+import ScheduleCalendarView from "./organisms/ScheduleCalendarView";
+import ScheduleListView from "./organisms/ScheduleListView";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 

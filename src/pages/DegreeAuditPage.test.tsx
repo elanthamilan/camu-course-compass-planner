@@ -69,7 +69,7 @@ jest.mock('sonner', () => ({
   toast: { success: jest.fn(), error: jest.fn(), info: jest.fn(), warn: jest.fn() },
 }));
 
-jest.mock('@/components/CourseCatalogView', () => {
+jest.mock('@/components/organisms/CourseCatalogView', () => {
   return function MockedCourseCatalogView({ targetCourseCode, onTargetCourseViewed }: { targetCourseCode: string | null, onTargetCourseViewed: () => void }) {
     if (!targetCourseCode) return null;
     return (

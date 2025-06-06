@@ -34,7 +34,7 @@ jest.mock('./CourseSearch', () => ({ open, onOpenChange, termId, onCourseSelecte
   ) : null
 );
 jest.mock('./ViewScheduleDialog', () => () => <div data-testid="mock-view-schedule-dialog">ViewScheduleDialog</div>);
-jest.mock('./AddSemesterDialog', () => ({ open, onOpenChange, onAddSemester }: any) =>
+jest.mock('./organisms/AddSemesterDialog', () => ({ open, onOpenChange, onAddSemester }: any) =>
   open ? (
     <div data-testid="mock-add-semester-dialog">
       Mock Add Semester Dialog

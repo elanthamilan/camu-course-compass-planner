@@ -6,8 +6,8 @@ import { ScheduleProvider } from '@/contexts/ScheduleContext';
 import AdvisorPage from './AdvisorPage';
 
 // Mock child components
-jest.mock('@/components/Header', () => () => <div data-testid="mock-header">Header Mock</div>);
-jest.mock('@/components/AIAdvisor', () => () => <div data-testid="mock-ai-advisor">AIAdvisor Mock</div>);
+jest.mock('@/components/organisms/Header', () => () => <div data-testid="mock-header">Header Mock</div>);
+jest.mock('@/components/organisms/AIAdvisor', () => () => <div data-testid="mock-ai-advisor">AIAdvisor Mock</div>);
 
 // Mock react-router-dom as Header likely uses it
 jest.mock('react-router-dom', () => ({
