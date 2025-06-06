@@ -9,14 +9,14 @@ import {
 } from '../lib/types';
 import { calculateDegreeAudit } from '../lib/degree-audit-utils';
 import { mockStudent, mockPrograms, mockCourses } from '../lib/mock-data';
-import Header from '../components/Header';
+import Header from '../components/organisms/Header';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/atoms/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/atoms/card';
+import { Progress } from '@/components/atoms/progress';
+import { Badge } from '@/components/atoms/badge';
 import CourseCatalogView from '../components/organisms/CourseCatalogView';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/atoms/accordion';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/atoms/table';
 import { CheckCircle, XCircle, Clock, ListChecks, Info } from 'lucide-react';
 
 const DegreeAuditPage: React.FC = () => {

@@ -19,8 +19,8 @@ import WhatIfDegreeAuditView from './WhatIfDegreeAuditView';
 import { Course, AcademicProgram, DegreeRequirement } from "../lib/types";
 import CourseSearchModal from './CourseSearchModal';
 import ViewScheduleDialog from './ViewScheduleDialog';
-import AddSemesterDialog from './organisms/AddSemesterDialog';
-import CourseCatalogView from './organisms/CourseCatalogView';
+import AddSemesterDialog from './AddSemesterDialog';
+import CourseCatalogView from './CourseCatalogView';
 
 interface FilterPreset {
   searchTerm?: string;

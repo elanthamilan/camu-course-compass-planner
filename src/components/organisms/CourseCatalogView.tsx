@@ -9,7 +9,7 @@ import { Button } from "@/components/atoms/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/atoms/dialog"; // DialogClose not used here
 import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/atoms/drawer"; // Added for Bottom Sheet
 import { XIcon, CalendarDays, Users, MapPin, Info, ThumbsUp, ThumbsDown, AlertTriangle, CheckSquare, Square, Rows, Columns, Check, Plus, Minus, Filter, Eye, Edit } from 'lucide-react'; // Added more icons, Added Filter, Eye, Edit
-import EmbeddedCourseSequenceView from './molecules/EmbeddedCourseSequenceView'; // Import the new component
+import EmbeddedCourseSequenceView from '../molecules/EmbeddedCourseSequenceView'; // Import the new component
 import { Sheet, SheetContent, SheetTrigger } from "@/components/atoms/sheet"; // Added for mobile filters
 import { useIsMobile } from '@/hooks/use-mobile'; // Added for mobile detection
 import CourseDetailBottomSheet from './CourseDetailBottomSheet'; // Added for mobile course details
