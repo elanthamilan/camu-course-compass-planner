@@ -153,7 +153,8 @@ const CompareCalendarView: React.FC<CompareCalendarViewProps> = ({ scheduleIds }
       </div>
       
       <Card className="p-4 overflow-auto border border-gray-200 rounded-xl shadow-sm">
-        <div className="min-w-[900px]">
+        {/* Removed min-w-[900px] for responsiveness */}
+        <div>
           {/* Calendar Header with Weekdays */}
           <div className="grid grid-cols-[80px_repeat(7,1fr)] gap-1 mb-2">
             <div className="text-center font-medium p-2 text-gray-500">Time</div>

@@ -82,6 +82,8 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
     addSchedule, // Function from context to add a new (e.g., imported) schedule
     addCourse, // Function from context to add a course to the planning list
     allCourses,
+    selectedSectionMap, // Added for desktop section selection
+    updateSelectedSectionMap, // Added for desktop section selection
   } = useSchedule();
 
   const fileInputRef = React.useRef<HTMLInputElement>(null); // Ref for file input used in schedule import
@@ -183,7 +185,11 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
   /** Opens the dialog to edit a specific busy time. */
   const handleEditBusyTime = (busyTime: BusyTime) => {
     setSelectedBusyTime(busyTime);
-    setIsEditBusyTimeOpen(true);
+    if (isMobile) {
+      setIsEditBusyTimeBottomSheetOpen(true);
+    } else {
+      setIsEditBusyTimeOpen(true);
+    }
   };
 
   /**
@@ -339,67 +345,138 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
                     </Button>
                   </div>
                   <AccordionContent className="pt-3 space-y-3">
-                    <div className="space-y-2 max-h-96 overflow-y-auto">
-                      <AnimatePresence>
-                        {courses.map((course) => (
-                          <motion.div
-                            key={course.id}
-                            className={`bg-white border rounded-lg p-3 flex flex-col justify-between items-start group hover:shadow-sm transition-all w-full ${selectedCourses.includes(course.id) ? 'border-blue-300 bg-blue-50' : 'border-gray-200'}`}
-                            initial={{ opacity: 0, y: 5 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            transition={{ duration: 0.2 }}
-                          >
-                            <div className="flex items-start w-full space-x-2">
-                              <Checkbox
-                                id={`desktop-course-${course.id}`}
-                                checked={selectedCourses.includes(course.id)}
-                                onCheckedChange={() => handleCourseToggle(course.id)}
-                                className="mt-1"
-                              />
-                              <div className="flex-1">
-                                <div className="flex justify-between items-start w-full">
-                                  <div>
-                                    <label htmlFor={`desktop-course-${course.id}`} className="cursor-pointer">
-                                      <span className="font-medium text-sm mr-2">{course.code}</span>
-                                      <Badge variant="secondary" className="text-xs mr-2">{course.credits}cr</Badge>
-                                    </label>
-                                    <div className="text-xs text-gray-700 mb-1">{course.name}</div>
-                                    {/* Show selected section info from the currently active schedule */}
-                                    {selectedSchedule && (() => {
-                                      const currentSectionInSchedule = selectedSchedule.sections.find(section => section.courseId === course.id);
-                                      if (currentSectionInSchedule) {
-                                        return (
-                                          <div className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded mb-1">
-                                            Section {currentSectionInSchedule.sectionNumber} • {currentSectionInSchedule.instructor} • {currentSectionInSchedule.schedule?.[0] ? `${currentSectionInSchedule.schedule[0].days} ${currentSectionInSchedule.schedule[0].startTime}-${currentSectionInSchedule.schedule[0].endTime}` : 'TBA'}
-                                          </div>
-                                        );
-                                      }
-                                      return null;
-                                    })()}
-                                  </div>
-                                  <div className="flex space-x-1">
-                                    <Button variant="ghost" size="icon" className={`h-6 w-6 ${lockedCourses.includes(course.id) ? 'bg-blue-100 hover:bg-blue-200' : ''}`} onClick={() => handleToggleCourseLock(course.id)}>
-                                      {lockedCourses.includes(course.id) ? <Lock className="h-3 w-3 text-blue-600 fill-current" /> : <Unlock className="h-3 w-3 text-gray-500" />}
+                    <div className="space-y-2 max-h-[30rem] overflow-y-auto"> {/* Adjusted max-h for desktop */}
+                      {courses.length === 0 && (
+                        <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded-md text-center">No courses added.</div>
+                      )}
+                      <Accordion type="multiple" collapsible className="w-full">
+                        <AnimatePresence>
+                          {courses.map((course) => (
+                            <AccordionItem key={course.id} value={course.id} className="border-b last:border-b-0">
+                              <motion.div
+                                initial={{ opacity: 0, y: 5 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                transition={{ duration: 0.2 }}
+                                className={`bg-white border rounded-lg group hover:shadow-sm transition-all w-full mb-1 ${selectedCourses.includes(course.id) ? 'border-blue-300 bg-blue-50' : 'border-gray-200'}`}
+                              >
+                                <div className="flex items-start w-full space-x-2 p-2.5"> {/* p-2.5 for trigger area */}
+                                  <Checkbox
+                                    id={`desktop-course-${course.id}`}
+                                    checked={selectedCourses.includes(course.id)}
+                                    onCheckedChange={() => handleCourseToggle(course.id)}
+                                    className="mt-1"
+                                    aria-label={`Select course ${course.code}`}
+                                  />
+                                  <AccordionTrigger className="flex-1 p-0 text-left">
+                                    <div className="flex flex-col w-full">
+                                      <div className="flex justify-between items-start w-full">
+                                        <div>
+                                          <label htmlFor={`desktop-course-${course.id}`} className="cursor-pointer">
+                                            <span className="font-medium text-sm mr-1.5">{course.code}</span>
+                                            <Badge variant="secondary" className="text-xs mr-1.5">{course.credits}cr</Badge>
+                                          </label>
+                                          <div className="text-xs text-gray-700 mb-1">{course.name}</div>
+                                          {selectedSchedule && (() => {
+                                            const currentSectionInSchedule = selectedSchedule.sections.find(section => section.courseId === course.id);
+                                            if (currentSectionInSchedule) {
+                                              return (
+                                                <div className="text-xs text-blue-600 bg-blue-100 px-1.5 py-0.5 rounded my-1">
+                                                  Sec {currentSectionInSchedule.sectionNumber} • {currentSectionInSchedule.instructor} • {formatSectionSchedule(currentSectionInSchedule.schedule) || 'TBA'}
+                                                </div>
+                                              );
+                                            }
+                                            return null;
+                                          })()}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </AccordionTrigger>
+                                  <div className="flex flex-col space-y-1 ml-1.5 items-center justify-center">
+                                    <Button variant="ghost" size="icon" className={`h-7 w-7 ${lockedCourses.includes(course.id) ? 'bg-blue-100 hover:bg-blue-200' : ''}`} onClick={() => handleToggleCourseLock(course.id)}>
+                                      {lockedCourses.includes(course.id) ? <Lock className="h-3.5 w-3.5 text-blue-600 fill-current" /> : <Unlock className="h-3.5 w-3.5 text-gray-500" />}
                                     </Button>
                                     <IconButton
                                       icon={Trash2}
                                       label="Delete course"
                                       variant="ghost"
                                       onClick={() => handleDeleteCourse(course.id)}
-                                      className="h-6 w-6 text-destructive hover:text-destructive/90"
-                                      iconClassName="h-3 w-3"
+                                      className="h-7 w-7 text-destructive hover:text-destructive/90"
+                                      iconClassName="h-3.5 w-3.5"
                                     />
                                   </div>
                                 </div>
-                              </div>
-                            </div>
-                          </motion.div>
-                        ))}
-                      </AnimatePresence>
-                      {courses.length === 0 && (
-                        <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded-md text-center">No courses added.</div>
-                      )}
+                                <AccordionContent className="p-3 border-t border-gray-200 bg-white rounded-b-lg">
+                                  <div className="space-y-3">
+                                    <div>
+                                      <h4 className="text-xs font-semibold mb-1 text-gray-600">Prerequisites</h4>
+                                      <p className="text-xs text-gray-700">
+                                        {course.prerequisites && course.prerequisites.length > 0
+                                          ? course.prerequisites.join(', ')
+                                          : "None"}
+                                      </p>
+                                    </div>
+                                    <div>
+                                      <h4 className="text-xs font-semibold mb-2 text-gray-600">Available Sections</h4>
+                                      {course.sections && course.sections.length > 0 ? (
+                                        <>
+                                          <div className="flex items-center space-x-2 mb-2">
+                                            <Checkbox
+                                              id={`desktop-course-${course.id}-select-all`}
+                                              checked={selectedSectionMap[course.id] === 'all'}
+                                              onCheckedChange={(checked) => {
+                                                updateSelectedSectionMap(course.id, checked ? 'all' : (course.sections && course.sections.length > 0 ? [course.sections[0].id] : []));
+                                              }}
+                                            />
+                                            <label htmlFor={`desktop-course-${course.id}-select-all`} className="text-xs text-gray-700 cursor-pointer">
+                                              Use any available section (auto-select)
+                                            </label>
+                                          </div>
+                                          <ul className="space-y-2 max-h-48 overflow-y-auto border rounded-md p-2 bg-gray-50/50">
+                                            {course.sections.map(section => {
+                                              const currentCourseSelections = selectedSectionMap[course.id];
+                                              const isSectionSelected = Array.isArray(currentCourseSelections) && currentCourseSelections.includes(section.id);
+                                              return (
+                                                <li key={section.id} className="text-xs text-gray-700 p-1.5 rounded-md hover:bg-gray-100 transition-colors">
+                                                  <div className="flex items-center space-x-2">
+                                                    <Checkbox
+                                                      id={`desktop-section-${section.id}`}
+                                                      checked={isSectionSelected}
+                                                      disabled={selectedSectionMap[course.id] === 'all'}
+                                                      onCheckedChange={(checked) => {
+                                                        let newSelectionArray: string[];
+                                                        const currentSelection = selectedSectionMap[course.id];
+                                                        if (checked) {
+                                                          newSelectionArray = Array.isArray(currentSelection) ? [...currentSelection, section.id] : [section.id];
+                                                        } else {
+                                                          newSelectionArray = Array.isArray(currentSelection) ? currentSelection.filter(id => id !== section.id) : [];
+                                                        }
+                                                        updateSelectedSectionMap(course.id, newSelectionArray);
+                                                      }}
+                                                      aria-label={`Select section ${section.sectionNumber}`}
+                                                    />
+                                                    <label htmlFor={`desktop-section-${section.id}`} className={`flex-1 cursor-pointer ${selectedSectionMap[course.id] === 'all' ? 'opacity-50' : ''}`}>
+                                                      <div className="font-medium">Sec {section.sectionNumber} - {section.instructor}</div>
+                                                      <div>{formatSectionSchedule(section.schedule)}</div>
+                                                      <div>Loc: {section.location || "N/A"} ({section.instructionMode || 'In-Person'})</div>
+                                                    </label>
+                                                  </div>
+                                                </li>
+                                              );
+                                            })}
+                                          </ul>
+                                        </>
+                                      ) : (
+                                        <p className="text-xs text-gray-500">No sections available for this course.</p>
+                                      )}
+                                    </div>
+                                  </div>
+                                </AccordionContent>
+                              </motion.div>
+                            </AccordionItem>
+                          ))}
+                        </AnimatePresence>
+                      </Accordion>
                     </div>
                   </AccordionContent>
                 </AccordionItem>
