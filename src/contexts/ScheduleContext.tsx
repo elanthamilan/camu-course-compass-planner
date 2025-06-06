@@ -465,7 +465,7 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
    */
   const addSchedule = (schedule: Schedule) => {
     if (schedules.find(s => s.id === schedule.id)) {
-      toast.error(`Schedule with ID "${schedule.id}" already exists and cannot be added again.`);
+      toast.error(`Schedule named "${schedule.name}" already exists and cannot be added again.`);
       return;
     }
     setSchedules(prev => [...prev, schedule]);
@@ -493,7 +493,7 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
       setSelectedSchedule(schedule);
       // toast.info(`Selected schedule: ${schedule.name}`); // Optional: can be noisy
     } else if (scheduleId) { // scheduleId was provided but schedule not found
-      toast.info(`Could not find schedule with ID "${scheduleId}".`);
+      toast.warn(`Could not find the specified schedule.`);
       setSelectedSchedule(null); // Or keep previous selectedSchedule, debatable. Clearing seems safer.
     } else { // scheduleId is null (deselecting)
       setSelectedSchedule(null);
@@ -506,7 +506,7 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
    */
   const generateSchedules = (selectedCourseIds: string[], fixedSections: CourseSection[] = []) => {
     console.log("[Demo] Generating schedules for:", selectedCourseIds);
-    toast.info("Generating schedules...");
+    toast.loading("Finding the best schedules for you...");
 
     if (!selectedCourseIds || selectedCourseIds.length === 0) {
       toast.error("Please select courses to generate schedules.");
@@ -574,7 +574,7 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
 
     setSelectedSchedule(demoSchedules[0]);
     console.log(`[Demo] Successfully generated and set ${demoSchedules.length} schedules`);
-    toast.success(`✅ Generated ${demoSchedules.length} schedule options with ${selectedCourses.length} courses!`);
+    toast.success(`Generated ${demoSchedules.length} schedule options with ${selectedCourses.length} courses. You can now view and select them.`);
   };
 
   /** Selects the current academic term. */
@@ -588,20 +588,20 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
       // setCourses([]); // Depending on application logic
       // setSelectedSchedule(null);
     } else {
-      toast.error(`Term with ID ${termId} not found.`);
+      toast.error(`The selected term could not be found.`);
     }
   };
 
   /** Updates general application preferences. */
   const updatePreferences = (newPreferences: Partial<PreferenceSettings>) => {
     setPreferences(prev => ({ ...prev, ...newPreferences }));
-    toast.success("Application preferences updated!");
+    toast.success("Your application preferences have been updated.");
   };
 
   /** Updates preferences specifically related to schedule generation. */
   const updateSchedulePreferences = (newPreferences: Partial<SchedulePreferences>) => {
     setSchedulePreferences(prev => ({ ...prev, ...newPreferences }));
-    toast.success("Schedule generation preferences updated!");
+    toast.success("Your schedule generation preferences have been saved.");
   };
 
   /** Adds a course section to the currently selected schedule. Replaces if section for same course already exists. */
@@ -723,7 +723,7 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
       toast.error("Please select at least two schedules to compare.");
       return;
     }
-    toast.info(`Comparing ${scheduleIds.length} schedules.`);
+    toast.info(`Now comparing ${scheduleIds.length} selected schedules.`);
   };
 
   return (

@@ -346,13 +346,15 @@ const AIAdvisorBottomSheet: React.FC<AIAdvisorBottomSheetProps> = ({
                 className="flex-1 min-h-[48px] max-h-[120px] text-sm resize-none" // Adjusted input size
                 disabled={isThinking}
               />
-              <Button
-                onClick={handleSendMessage}
-                disabled={!inputMessage.trim() || isThinking}
-                className="h-12 px-4" // Standardized button height
-              >
-                <Send className="h-4 w-4" />
-              </Button>
+              <motion.div whileTap={{ scale: 0.97, transition: { duration: 0.1 } }}>
+                <Button
+                  onClick={handleSendMessage}
+                  disabled={!inputMessage.trim() || isThinking}
+                  className="h-12 px-4" // Standardized button height
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
+              </motion.div>
             </div>
           </div>
         </TabsContent>

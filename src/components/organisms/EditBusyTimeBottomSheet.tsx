@@ -10,6 +10,7 @@ import { useSchedule } from "../../contexts/ScheduleContext"
 import { BusyTime, BusyTimeType } from "../../lib/types"
 import { useIsMobile } from "../../hooks/use-mobile"
 import { toast } from "sonner"
+import { motion } from "framer-motion"
 
 interface EditBusyTimeBottomSheetProps {
   open: boolean
@@ -82,7 +83,7 @@ const EditBusyTimeBottomSheet: React.FC<EditBusyTimeBottomSheetProps> = ({
     
     updateBusyTime(updatedBusyTime)
     onOpenChange(false)
-    toast.success("Busy time updated successfully!")
+    toast.success(`"${updatedBusyTime.title}" has been updated.`)
   }
 
   const handleDelete = () => {
@@ -90,7 +91,7 @@ const EditBusyTimeBottomSheet: React.FC<EditBusyTimeBottomSheetProps> = ({
     
     deleteBusyTime(busyTime.id)
     onOpenChange(false)
-    toast.success("Busy time deleted successfully!")
+    toast.success(`The busy time has been deleted.`)
   }
 
   const handleDayChange = (day: string, checked: boolean) => {
@@ -197,30 +198,36 @@ const EditBusyTimeBottomSheet: React.FC<EditBusyTimeBottomSheetProps> = ({
 
           {/* Action Buttons */}
           <div className="flex gap-3 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              className="flex-1 h-12"
-            >
-              <X className="h-4 w-4 mr-2" />
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={handleDelete}
-              className="h-12 px-4"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-            <Button
-              type="submit"
-              className="flex-1 h-12"
-            >
-              <Save className="h-4 w-4 mr-2" />
-              Save Changes
-            </Button>
+            <motion.div whileTap={{ scale: 0.97, transition: { duration: 0.1 } }} className="flex-1">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                className="w-full h-12"
+              >
+                <X className="h-4 w-4 mr-2" />
+                Cancel
+              </Button>
+            </motion.div>
+            <motion.div whileTap={{ scale: 0.97, transition: { duration: 0.1 } }}>
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={handleDelete}
+                className="h-12 px-4"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </motion.div>
+            <motion.div whileTap={{ scale: 0.97, transition: { duration: 0.1 } }} className="flex-1">
+              <Button
+                type="submit"
+                className="w-full h-12"
+              >
+                <Save className="h-4 w-4 mr-2" />
+                Save Changes
+              </Button>
+            </motion.div>
           </div>
         </form>
       </div>

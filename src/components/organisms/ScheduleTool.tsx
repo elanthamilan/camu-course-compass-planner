@@ -228,7 +228,7 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
             lcId => !fixedSectionsForGeneration.some(fs => fs.id.startsWith(lcId))
           );
           if (missingFixedCourses.length > 0) {
-            toast.error(`Sections for locked courses (${missingFixedCourses.join(', ')}) were not found in the current base schedule and will be scheduled dynamically if possible.`);
+            toast.warn(`Some locked courses (${missingFixedCourses.join(', ')}) couldn't use their original sections and will be rescheduled if possible.`);
           }
         }
       }
@@ -239,7 +239,7 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
 
     } catch (error) {
       console.error("Error generating schedules:", error);
-      toast.error("An unexpected error occurred while generating schedules.");
+      toast.error("Sorry, something went wrong while generating schedules. Please try again.");
     } finally {
       setIsGenerating(false); // Reset loading state
     }
@@ -611,7 +611,13 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
                               </div>
                             </div>
                             <AccordionContent className="p-3 border-t border-gray-200 bg-white rounded-b-lg">
-                              <div className="space-y-3">
+                              <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                exit={{ opacity: 0, height: 0 }}
+                                transition={{ duration: 0.3 }}
+                                className="space-y-3 overflow-hidden" // Added overflow-hidden for smoother animation
+                              >
                                 <div>
                                   <h4 className="text-sm font-semibold mb-1">Description</h4>
                                   <p className="text-xs text-gray-700">{course.description || "No description available."}</p>
@@ -679,7 +685,7 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
                                     <p className="text-xs text-gray-500 bg-gray-50 p-3 rounded-md text-center">No sections available for this course.</p>
                                   )}
                                 </div>
-                              </div>
+                              </motion.div>
                             </AccordionContent>
                           </motion.div>
                         </AccordionItem>
@@ -828,24 +834,28 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
       {isMobile && (
         <div className="fixed bottom-4 right-4 z-50 flex flex-col space-y-3">
           {!manageViewActive && ( // Only show Config FAB if not in manage view
-            <Button
-              size="lg"
-              className="rounded-full shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground h-12 w-12 p-0 flex items-center justify-center"
-              onClick={() => setManageViewActive(true)}
-              aria-label="Manage Schedule"
-            >
-              <SlidersHorizontal className="h-5 w-5" />
-            </Button>
+            <motion.div whileTap={{ scale: 0.97, transition: { duration: 0.1 } }}>
+              <Button
+                size="lg"
+                className="rounded-full shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground h-12 w-12 p-0 flex items-center justify-center"
+                onClick={() => setManageViewActive(true)}
+                aria-label="Manage Schedule"
+              >
+                <SlidersHorizontal className="h-5 w-5" />
+              </Button>
+            </motion.div>
           )}
           {/* AI Advisor Floating Button (remains unchanged and always visible if mobile) */}
-          <Button
-            size="lg"
-            className="rounded-full shadow-lg bg-gradient-to-r from-purple-600 to-violet-500 hover:from-purple-700 hover:to-violet-600 h-12 w-12 p-0 flex items-center justify-center"
-            onClick={() => setIsAIAdvisorBottomSheetOpen(true)}
-            aria-label="Ask AI Advisor"
-          >
-            <Sparkles className="h-5 w-5 text-white" />
-          </Button>
+          <motion.div whileTap={{ scale: 0.97, transition: { duration: 0.1 } }}>
+            <Button
+              size="lg"
+              className="rounded-full shadow-lg bg-gradient-to-r from-purple-600 to-violet-500 hover:from-purple-700 hover:to-violet-600 h-12 w-12 p-0 flex items-center justify-center"
+              onClick={() => setIsAIAdvisorBottomSheetOpen(true)}
+              aria-label="Ask AI Advisor"
+            >
+              <Sparkles className="h-5 w-5 text-white" />
+            </Button>
+          </motion.div>
         </div>
       )}
 

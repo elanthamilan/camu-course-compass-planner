@@ -1,7 +1,7 @@
 import * as React from "react"
 import * as CheckboxPrimitive from "@radix-ui/react-checkbox"
 import { Check } from "lucide-react"
-
+import { motion } from "framer-motion" // Import motion
 import { cn } from "@/lib/utils"
 
 const Checkbox = React.forwardRef<
@@ -19,7 +19,14 @@ const Checkbox = React.forwardRef<
     <CheckboxPrimitive.Indicator
       className={cn("flex items-center justify-center text-current")}
     >
-      <Check className="h-4 w-4" />
+      <motion.div
+        initial={{ scale: 0.7 }}
+        animate={{ scale: 1 }}
+        exit={{ scale: 0.7 }} // Optional: may not work if Radix removes it instantly
+        transition={{ duration: 0.1 }}
+      >
+        <Check className="h-4 w-4" />
+      </motion.div>
     </CheckboxPrimitive.Indicator>
   </CheckboxPrimitive.Root>
 ))

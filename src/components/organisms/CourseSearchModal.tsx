@@ -128,13 +128,18 @@ const CourseSearchModal: React.FC<CourseSearchModalProps> = ({
 
           {/* Course List */}
           <div className="space-y-3 max-h-96 overflow-y-auto">
-            {filteredCourses.map((course) => (
-              <div
-                key={course.id}
-                className="p-4 border rounded-lg shadow-sm bg-white hover:shadow-md transition-shadow"
-              >
-                <div className="flex flex-col space-y-3">
-                  <div className="flex-1 space-y-2">
+            <AnimatePresence>
+              {filteredCourses.map((course) => (
+                <motion.div
+                  key={course.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10, transition: { duration: 0.15 } }}
+                  transition={{ duration: 0.2 }}
+                  className="p-4 border rounded-lg shadow-sm bg-white hover:shadow-md transition-shadow"
+                >
+                  <div className="flex flex-col space-y-3">
+                    <div className="flex-1 space-y-2">
                     <h3 className="text-base font-semibold text-blue-700 leading-tight">
                       {course.code} - <span className="font-normal">{course.name}</span>
                     </h3>
@@ -145,23 +150,27 @@ const CourseSearchModal: React.FC<CourseSearchModalProps> = ({
                     </div>
                   </div>
                   <div className="flex items-center justify-between gap-2">
-                    <Button
-                      size="sm"
-                      onClick={() => handleCourseSelect(course)}
-                      className="flex-1"
-                    >
-                      <Plus className="h-4 w-4 mr-1.5" />
-                      Add
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => setExpandedCourseId(expandedCourseId === course.id ? null : course.id)}
-                      className="flex-1 text-blue-600 hover:text-blue-700"
-                    >
-                      {expandedCourseId === course.id ? <ChevronUp className="h-4 w-4 mr-1.5" /> : <ChevronDown className="h-4 w-4 mr-1.5" />}
-                      Details
-                    </Button>
+                    <motion.div whileTap={{ scale: 0.97, transition: { duration: 0.1 } }} className="flex-1">
+                      <Button
+                        size="sm"
+                        onClick={() => handleCourseSelect(course)}
+                        className="w-full" // Ensure button takes full width of motion.div
+                      >
+                        <Plus className="h-4 w-4 mr-1.5" />
+                        Add
+                      </Button>
+                    </motion.div>
+                    <motion.div whileTap={{ scale: 0.97, transition: { duration: 0.1 } }} className="flex-1">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setExpandedCourseId(expandedCourseId === course.id ? null : course.id)}
+                        className="w-full text-blue-600 hover:text-blue-700" // Ensure button takes full width
+                      >
+                        {expandedCourseId === course.id ? <ChevronUp className="h-4 w-4 mr-1.5" /> : <ChevronDown className="h-4 w-4 mr-1.5" />}
+                        Details
+                      </Button>
+                    </motion.div>
                   </div>
                 </div>
 
@@ -208,9 +217,9 @@ const CourseSearchModal: React.FC<CourseSearchModalProps> = ({
                     </motion.div>
                   )}
                 </AnimatePresence>
-              </div>
-            ))}
-
+                </motion.div>
+              ))}
+            </AnimatePresence>
             {filteredCourses.length === 0 && (
               <div className="text-center py-12">
                 <div className="max-w-md mx-auto">

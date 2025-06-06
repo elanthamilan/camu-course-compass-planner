@@ -9,6 +9,7 @@ import { useSchedule } from "../../contexts/ScheduleContext"
 import { TimePreference } from "../../lib/types"
 import { useIsMobile } from "../../hooks/use-mobile"
 import { toast } from "sonner"
+import { motion } from "framer-motion"
 
 interface TunePreferencesBottomSheetProps {
   open: boolean
@@ -44,7 +45,7 @@ const TunePreferencesBottomSheet: React.FC<TunePreferencesBottomSheetProps> = ({
       dayDistribution: localDayDistribution,
     })
     onOpenChange(false)
-    toast.success("Preferences saved successfully!")
+    toast.success("Your scheduling preferences have been saved.")
   }
 
   if (!isMobile) return null
@@ -152,21 +153,25 @@ const TunePreferencesBottomSheet: React.FC<TunePreferencesBottomSheetProps> = ({
 
         {/* Action Buttons */}
         <div className="flex gap-3 pt-4">
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            className="flex-1 h-12"
-          >
-            <X className="h-4 w-4 mr-2" />
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSave}
-            className="flex-1 h-12"
-          >
-            <Save className="h-4 w-4 mr-2" />
-            Save Preferences
-          </Button>
+          <motion.div whileTap={{ scale: 0.97, transition: { duration: 0.1 } }} className="flex-1">
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              className="w-full h-12"
+            >
+              <X className="h-4 w-4 mr-2" />
+              Cancel
+            </Button>
+          </motion.div>
+          <motion.div whileTap={{ scale: 0.97, transition: { duration: 0.1 } }} className="flex-1">
+            <Button
+              onClick={handleSave}
+              className="w-full h-12"
+            >
+              <Save className="h-4 w-4 mr-2" />
+              Save Preferences
+            </Button>
+          </motion.div>
         </div>
       </div>
     </BottomSheet>

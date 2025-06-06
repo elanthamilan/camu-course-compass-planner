@@ -25,6 +25,7 @@ import {
 } from "lucide-react"
 import { Course, CourseSection } from "../../lib/types"
 import { useIsMobile } from "../../hooks/use-mobile"
+import { motion } from "framer-motion"
 
 interface CourseDetailBottomSheetProps {
   open: boolean
@@ -314,24 +315,26 @@ const CourseDetailBottomSheet: React.FC<CourseDetailBottomSheetProps> = ({
         {/* Action Button */}
         {onAddCourse && (
           <div className="sticky bottom-0 bg-white pt-4 border-t">
-            <Button
-              onClick={handleAddCourse}
-              disabled={isAdded}
-              className="w-full h-12 text-base"
-              variant={isAdded ? "outline" : "default"}
-            >
-              {isAdded ? (
-                <>
-                  <Check className="h-4 w-4 mr-2" />
-                  Added to Schedule
-                </>
-              ) : (
-                <>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add to Schedule
-                </>
-              )}
-            </Button>
+            <motion.div whileTap={{ scale: 0.97, transition: { duration: 0.1 } }}>
+              <Button
+                onClick={handleAddCourse}
+                disabled={isAdded}
+                className="w-full h-12 text-base"
+                variant={isAdded ? "outline" : "default"}
+              >
+                {isAdded ? (
+                  <>
+                    <Check className="h-4 w-4 mr-2" />
+                    Added to Schedule
+                  </>
+                ) : (
+                  <>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add to Schedule
+                  </>
+                )}
+              </Button>
+            </motion.div>
           </div>
         )}
       </div>
