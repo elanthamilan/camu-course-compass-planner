@@ -1,6 +1,6 @@
 import { useSchedule } from "@/contexts/ScheduleContext";
-import { Card } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Card } from "@/components/atoms/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/atoms/table";
 import { cn } from "@/lib/utils";
 import { Lock } from "lucide-react"; // Import Lock icon
 import { CourseSection, Course, SectionSchedule } from "@/lib/types"; // Import CourseSection, Course, and SectionSchedule

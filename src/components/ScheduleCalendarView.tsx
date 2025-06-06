@@ -1,6 +1,6 @@
 import { useSchedule } from "@/contexts/ScheduleContext";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/atoms/card";
+import { Badge } from "@/components/atoms/badge";
 import { timeSlots, weekDays, busyTimeColors } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";

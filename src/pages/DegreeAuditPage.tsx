@@ -10,7 +10,7 @@ import {
 import { calculateDegreeAudit } from '../lib/degree-audit-utils';
 import { mockStudent, mockPrograms, mockCourses } from '../lib/mock-data';
 import Header from '../components/Header';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/atoms/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';

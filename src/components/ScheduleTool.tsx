@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import TermHeader from "./TermHeader";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Button } from "@/components/atoms/button";
+import { Badge } from "@/components/atoms/badge";
+import { Checkbox } from "@/components/atoms/checkbox";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/atoms/accordion";
 import { Course, CourseSection, ExportedSchedule, Schedule } from "@/lib/types";
 import type { BusyTime } from "@/lib/types";
 import { useSchedule } from "@/contexts/ScheduleContext";

@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import ScheduleTool from '@/components/ScheduleTool';
 import { useSchedule } from '@/contexts/ScheduleContext';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/atoms/button';
 import { ArrowLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
 

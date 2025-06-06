@@ -1,7 +1,7 @@
 
 import React from "react";
 import { useSchedule } from "@/contexts/ScheduleContext";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/atoms/button";
 import { AlertTriangle, CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/atoms/button";
 import {
   Dialog,
   DialogContent,
@@ -7,11 +7,11 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"; // Added Tooltip
+} from "@/components/atoms/dialog";
+import { Label } from "@/components/atoms/label";
+import { RadioGroup, RadioGroupItem } from "@/components/atoms/radio-group";
+import { Checkbox } from "@/components/atoms/checkbox";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/atoms/tooltip"; // Added Tooltip
 import { useSchedule } from '@/contexts/ScheduleContext';
 import { TimePreference } from '@/lib/types';
 import { XCircle, Save } from 'lucide-react';

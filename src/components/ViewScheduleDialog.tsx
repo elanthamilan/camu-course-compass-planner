@@ -1,11 +1,11 @@
 
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/atoms/dialog";
+import { Button } from "@/components/atoms/button";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/atoms/tabs";
+import { Checkbox } from "@/components/atoms/checkbox";
+import { Badge } from "@/components/atoms/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/atoms/card";
 import { Calendar, List, ListFilter, ChevronDown, ChevronUp, Wand2, ShoppingCart, Clock, Users, MapPin, Zap, RefreshCw, Heart, Trash2, Eye, Settings } from "lucide-react";
 import ScheduleCalendarView from "./ScheduleCalendarView";
 import ScheduleListView from "./ScheduleListView";

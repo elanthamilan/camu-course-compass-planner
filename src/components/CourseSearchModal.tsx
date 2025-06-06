@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from "@/components/ui/drawer";
-import { BottomSheet } from "@/components/ui/bottom-sheet";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from "@/components/atoms/drawer";
+import { BottomSheet } from "@/components/atoms/bottom-sheet";
+import { Button } from "@/components/atoms/button";
+import { Input } from "@/components/atoms/input";
+import { Badge } from "@/components/atoms/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/atoms/select";
 import { Search, Plus, X, ChevronDown, ChevronUp, CheckCircle, XCircle } from "lucide-react";
 import { mockCourses as fallbackCourses } from "@/lib/mock-data"; // Renamed to avoid conflict
 import { Course } from "@/lib/types"; // Removed unused StudentInfo import
