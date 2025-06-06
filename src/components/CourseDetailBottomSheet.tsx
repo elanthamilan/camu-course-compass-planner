@@ -1,8 +1,8 @@
 import React from "react"
-import { BottomSheet } from "@/components/ui/bottom-sheet"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
+import { BottomSheet } from "@/components/atoms/bottom-sheet"
+import { Badge } from "@/components/atoms/badge"
+import { Button } from "@/components/atoms/button"
+import { Separator } from "@/components/atoms/separator"
 import { 
   Clock, 
   MapPin, 

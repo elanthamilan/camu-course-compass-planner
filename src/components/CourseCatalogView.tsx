@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { mockCourses } from '../lib/mock-data';
 import { Course, CourseSection, ScheduleTime } from '../lib/types';
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"; // DialogClose not used here
-import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"; // Added for Bottom Sheet
+import { Input } from "@/components/atoms/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/atoms/select";
+import { Badge } from "@/components/atoms/badge";
+import { Label } from "@/components/atoms/label";
+import { Button } from "@/components/atoms/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/atoms/dialog"; // DialogClose not used here
+import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/atoms/drawer"; // Added for Bottom Sheet
 import { XIcon, CalendarDays, Users, MapPin, Info, ThumbsUp, ThumbsDown, AlertTriangle, CheckSquare, Square, Rows, Columns, Check, Plus, Minus, Filter, Eye, Edit } from 'lucide-react'; // Added more icons, Added Filter, Eye, Edit
 import EmbeddedCourseSequenceView from './EmbeddedCourseSequenceView'; // Import the new component
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"; // Added for mobile filters
+import { Sheet, SheetContent, SheetTrigger } from "@/components/atoms/sheet"; // Added for mobile filters
 import { useIsMobile } from '@/hooks/use-mobile'; // Added for mobile detection
 import CourseDetailBottomSheet from './CourseDetailBottomSheet'; // Added for mobile course details
 

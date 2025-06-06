@@ -1,13 +1,14 @@
 
 import React, { useState } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/atoms/dialog";
+import { Button } from "@/components/atoms/button";
+import { Input } from "@/components/atoms/input";
+import { Label } from "@/components/atoms/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/atoms/select";
+import { LabeledInput } from '@/components/molecules/LabeledInput';
 import { useSchedule } from "@/contexts/ScheduleContext";
 import { BusyTime, BusyTimeType } from "@/lib/types";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Checkbox } from "@/components/atoms/checkbox";
 import { v4 as uuidv4 } from 'uuid';
 import { XCircle, PlusCircle } from "lucide-react"; // Added XCircle, PlusCircle
 
@@ -77,17 +78,17 @@ const AddBusyTimeDialog: React.FC<AddBusyTimeDialogProps> = ({ open, onOpenChang
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="title">Title</Label>
-            <Input
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Enter a title for this busy time"
-              required
-              className="focus-ring"
-            />
-          </div>
+          <LabeledInput
+            id="title"
+            label="Title"
+            inputProps={{
+              value: title,
+              onChange: (e) => setTitle(e.target.value),
+              placeholder: "Enter a title for this busy time",
+              required: true,
+              className: "focus-ring"
+            }}
+          />
           
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">

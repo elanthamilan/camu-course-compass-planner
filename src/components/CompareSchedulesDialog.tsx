@@ -1,8 +1,8 @@
 
 import React, { useState } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/atoms/dialog";
+import { Button } from "@/components/atoms/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/atoms/tabs";
 import { useSchedule } from "@/contexts/ScheduleContext";
 import { Schedule } from "@/lib/types";
 import { AlertTriangle, CheckCircle2, CheckCircle, ArrowRight, ArrowLeft } from "lucide-react"; // Added CheckCircle, ArrowRight, ArrowLeft

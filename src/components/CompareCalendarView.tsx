@@ -1,8 +1,8 @@
 
 import React from "react";
 import { useSchedule } from "@/contexts/ScheduleContext";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card } from "@/components/atoms/card";
+import { Button } from "@/components/atoms/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { timeSlots, weekDays, busyTimeColors } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";

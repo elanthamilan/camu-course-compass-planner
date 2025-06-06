@@ -24,9 +24,10 @@ import AddBusyTimeBottomSheet from "./AddBusyTimeBottomSheet";
 import EditBusyTimeBottomSheet from "./EditBusyTimeBottomSheet";
 import TunePreferencesBottomSheet from "./TunePreferencesBottomSheet";
 import AIAdvisorBottomSheet from "./AIAdvisorBottomSheet";
-import { BottomSheet } from "@/components/ui/bottom-sheet";
+import { BottomSheet } from "@/components/atoms/bottom-sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { mockCourses } from "@/lib/mock-data";
+import { IconButton } from '@/components/molecules/IconButton';
 import { v4 as uuidv4 } from 'uuid';
 
 /**
@@ -338,9 +339,14 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
                                     <Button variant="ghost" size="icon" className={`h-6 w-6 ${lockedCourses.includes(course.id) ? 'bg-blue-100 hover:bg-blue-200' : ''}`} onClick={() => handleToggleCourseLock(course.id)}>
                                       {lockedCourses.includes(course.id) ? <Lock className="h-3 w-3 text-blue-600 fill-current" /> : <Unlock className="h-3 w-3 text-gray-500" />}
                                     </Button>
-                                    <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive/90" onClick={() => handleDeleteCourse(course.id)} aria-label="Delete course">
-                                      <Trash2 className="h-3 w-3" />
-                                    </Button>
+                                    <IconButton
+                                      icon={Trash2}
+                                      label="Delete course"
+                                      variant="ghost"
+                                      onClick={() => handleDeleteCourse(course.id)}
+                                      className="h-6 w-6 text-destructive hover:text-destructive/90"
+                                      iconClassName="h-3 w-3"
+                                    />
                                   </div>
                                 </div>
                               </div>
@@ -464,9 +470,14 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
                                 <Button variant="ghost" size="icon" className={`h-8 w-8 ${lockedCourses.includes(course.id) ? 'bg-blue-100 hover:bg-blue-200' : ''}`} onClick={() => handleToggleCourseLock(course.id)}>
                                   {lockedCourses.includes(course.id) ? <Lock className="h-4 w-4 text-blue-600 fill-current" /> : <Unlock className="h-4 w-4 text-gray-500" />}
                                 </Button>
-                                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive/90" onClick={() => handleDeleteCourse(course.id)} aria-label="Delete course">
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
+                                <IconButton
+                                  icon={Trash2}
+                                  label="Delete course"
+                                  variant="ghost"
+                                  onClick={() => handleDeleteCourse(course.id)}
+                                  className="h-8 w-8 text-destructive hover:text-destructive/90"
+                                  iconClassName="h-4 w-4"
+                                />
                               </div>
                             </div>
                           </div>

@@ -7,11 +7,11 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-// import { Input } from "@/components/ui/input"; // No longer needed for year
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // Added Select
+} from "@/components/atoms/dialog";
+// import { Input } from "@/components/atoms/input"; // No longer needed for year
+import { Label } from "@/components/atoms/label";
+import { RadioGroup, RadioGroupItem } from "@/components/atoms/radio-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/atoms/select"; // Added Select
 
 interface AddSemesterDialogProps {
   open: boolean;

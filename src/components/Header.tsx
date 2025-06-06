@@ -1,10 +1,10 @@
 import React, { useState } from 'react'; // Added useState
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button'; // Shadcn Button
-import { Badge } from '@/components/ui/badge'; // Added Badge for cart indicator
+import { Button } from '@/components/atoms/button'; // Shadcn Button
+import { Badge } from '@/components/atoms/badge'; // Added Badge for cart indicator
 import { ArrowLeft, Sparkles, Menu, ShoppingCart } from 'lucide-react'; // Icons
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"; // For mobile menu
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"; // Added Tooltip
+import { Sheet, SheetContent, SheetTrigger } from "@/components/atoms/sheet"; // For mobile menu
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/atoms/tooltip"; // Added Tooltip
 import AIAdvisor from '@/components/AIAdvisor'; // Import AIAdvisor
 import { useSchedule } from '@/contexts/ScheduleContext'; // Added to access cart state
 

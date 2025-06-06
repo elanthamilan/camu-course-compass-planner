@@ -1,9 +1,9 @@
 import React from 'react';
 import { useSchedule } from '@/contexts/ScheduleContext';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/atoms/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/atoms/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/atoms/table';
+import { Badge } from '@/components/atoms/badge';
 import { ShoppingCart, Trash2, Send, ArrowLeft } from 'lucide-react'; // Added ArrowLeft
 import { useNavigate } from "react-router-dom"; // Added useNavigate
 import { Course } from '@/lib/types'; // For getParentCourse

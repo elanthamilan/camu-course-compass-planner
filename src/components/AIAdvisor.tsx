@@ -1,12 +1,12 @@
 
 import React, { useState } from "react";
-import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Avatar } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/atoms/drawer";
+import { Button } from "@/components/atoms/button";
+import { Textarea } from "@/components/atoms/textarea";
+import { Avatar } from "@/components/atoms/avatar";
+import { Badge } from "@/components/atoms/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/atoms/tabs";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/atoms/accordion";
 import { useSchedule } from "@/contexts/ScheduleContext";
 import { cn } from "@/lib/utils";
 import { Send, LogOut, HelpCircle, MessageSquare, BookOpen } from "lucide-react";

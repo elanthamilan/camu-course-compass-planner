@@ -1,13 +1,13 @@
 
 import React, { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/atoms/dialog";
+import { Button } from "@/components/atoms/button";
+import { Input } from "@/components/atoms/input";
+import { Label } from "@/components/atoms/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/atoms/select";
 import { useSchedule } from "@/contexts/ScheduleContext";
 import { BusyTime, BusyTimeType } from "@/lib/types";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Checkbox } from "@/components/atoms/checkbox";
 import { XCircle, Save } from "lucide-react"; // Added XCircle, Save
 
 interface EditBusyTimeDialogProps {
