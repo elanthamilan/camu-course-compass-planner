@@ -1,10 +1,10 @@
-import { useSchedule } from "@/contexts/ScheduleContext";
+import { useSchedule } from "../../contexts/ScheduleContext";
 import { Button } from "@/components/atoms/button";
 import { CalendarIcon, ListIcon, ShoppingCartIcon, ArrowLeftRight, Sparkles } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/atoms/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/atoms/select";
 import { useNavigate } from "react-router-dom";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "../../hooks/use-mobile";
 
 interface TermHeaderProps {
   view: string;
