@@ -31,7 +31,7 @@ const CourseSearchModal: React.FC<CourseSearchModalProps> = ({
   onCourseSelected,
   termId
 }) => {
-  const { studentInfo, allCourses: contextCourses } = useSchedule(); // Get studentInfo and allCourses from context
+  const { studentInfo, allCourses: contextCourses, allTerms, currentTerm } = useSchedule(); // Get studentInfo, allCourses, allTerms, and currentTerm from context
   const coursesToSearch = contextCourses && contextCourses.length > 0 ? contextCourses : fallbackCourses; // Use context courses if available
   const isMobile = useIsMobile(); // Add mobile detection
 
@@ -58,7 +58,20 @@ const CourseSearchModal: React.FC<CourseSearchModalProps> = ({
 
   const handleCourseSelect = (course: Course): void => {
     onCourseSelected(course);
-    toast.success(`${course.code} added to your course list!`);
+
+    let message = `${course.code} added to your course list!`; // Default message
+
+    if (termId) {
+      const term = allTerms.find(t => t.id === termId);
+      if (term) {
+        message = `${course.code} added to ${term.name}!`;
+      } else if (currentTerm && termId === currentTerm.id) {
+        message = `${course.code} added to ${currentTerm.name}!`;
+      }
+      // If termId is provided but not found, it will use the default message.
+    }
+    toast.success(message);
+
     if (!isMobile) {
       onOpenChange(false); // Only close modal automatically on desktop
     }

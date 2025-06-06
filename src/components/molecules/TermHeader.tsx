@@ -30,7 +30,7 @@ const TermHeader = ({ view, setView, onCompareClick }: TermHeaderProps) => {
       <div className="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:items-center sm:space-x-2 md:space-x-4 w-full sm:w-auto"> {/* Adjusted space-x for more items */}
         {schedules && schedules.length > 0 && (
           <Select value={selectedSchedule?.id || ""} onValueChange={(value) => selectSchedule(value)}>
-            <SelectTrigger className="w-full sm:w-[180px] md:w-[200px] text-xs sm:text-sm h-9 sm:h-auto"> {/* Adjusted height for sm screens */}
+            <SelectTrigger className="w-full sm:w-[250px] md:w-[300px] text-xs sm:text-sm h-9 sm:h-auto"> {/* Adjusted height for sm screens */}
               <SelectValue placeholder="Select Schedule" />
             </SelectTrigger>
             <SelectContent>
@@ -69,14 +69,14 @@ const TermHeader = ({ view, setView, onCompareClick }: TermHeaderProps) => {
         )}
         {selectedSchedule && moveToCart && (
           <Button
-            variant="outline"
+            variant="default"
             size="sm"
             onClick={moveToCart}
             className="w-full sm:w-auto"
-            aria-label="Add to Cart"
+            aria-label="Add schedule to cart"
           >
             <ShoppingCartIcon className="mr-2 h-4 w-4" />
-            Add to Cart
+            Add schedule to cart
           </Button>
         )}
       </div>

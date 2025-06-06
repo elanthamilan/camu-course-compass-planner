@@ -625,19 +625,58 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
                                   </p>
                                 </div>
                                 <div>
-                                  <h4 className="text-sm font-semibold mb-1">Available Sections</h4>
+                                  <h4 className="text-sm font-semibold mb-2">Available Sections</h4>
                                   {course.sections && course.sections.length > 0 ? (
-                                    <ul className="space-y-2">
-                                      {course.sections.map(section => (
-                                        <li key={section.id} className="text-xs text-gray-700 border p-2 rounded-md bg-gray-50">
-                                          <div className="font-medium">Section {section.sectionNumber} - {section.instructor}</div>
-                                          <div>Location: {section.location || "N/A"}</div>
-                                          <div>Schedule: {formatSectionSchedule(section.schedule)}</div>
-                                        </li>
-                                      ))}
-                                    </ul>
+                                    <>
+                                      <div className="flex items-center space-x-2 mb-2">
+                                        <Checkbox
+                                          id={`mobile-course-${course.id}-select-all`}
+                                          checked={selectedSectionMap[course.id] === 'all'}
+                                          onCheckedChange={(checked) => {
+                                            updateSelectedSectionMap(course.id, checked ? 'all' : (course.sections && course.sections.length > 0 ? [course.sections[0].id] : []));
+                                          }}
+                                          aria-label="Select all sections for this course"
+                                        />
+                                        <label htmlFor={`mobile-course-${course.id}-select-all`} className="text-xs text-gray-700 cursor-pointer">
+                                          Use any available section (auto-select)
+                                        </label>
+                                      </div>
+                                      <ul className="space-y-2 max-h-48 overflow-y-auto border rounded-md p-2 bg-gray-50/50">
+                                        {course.sections.map(section => {
+                                          const currentCourseSelections = selectedSectionMap[course.id];
+                                          const isSectionSelected = Array.isArray(currentCourseSelections) && currentCourseSelections.includes(section.id);
+                                          return (
+                                            <li key={section.id} className="text-xs text-gray-700 p-1.5 rounded-md hover:bg-gray-100 transition-colors">
+                                              <div className="flex items-center space-x-2">
+                                                <Checkbox
+                                                  id={`mobile-section-${section.id}`}
+                                                  checked={isSectionSelected}
+                                                  disabled={selectedSectionMap[course.id] === 'all'}
+                                                  onCheckedChange={(checked) => {
+                                                    let newSelectionArray: string[];
+                                                    const currentSelection = selectedSectionMap[course.id];
+                                                    if (checked) {
+                                                      newSelectionArray = Array.isArray(currentSelection) ? [...currentSelection, section.id] : [section.id];
+                                                    } else {
+                                                      newSelectionArray = Array.isArray(currentSelection) ? currentSelection.filter(id => id !== section.id) : [];
+                                                    }
+                                                    updateSelectedSectionMap(course.id, newSelectionArray);
+                                                  }}
+                                                  aria-label={`Select section ${section.sectionNumber}`}
+                                                />
+                                                <label htmlFor={`mobile-section-${section.id}`} className={`flex-1 cursor-pointer ${selectedSectionMap[course.id] === 'all' ? 'opacity-50' : ''}`}>
+                                                  <div className="font-medium">Sec {section.sectionNumber} - {section.instructor}</div>
+                                                  <div>{formatSectionSchedule(section.schedule)}</div>
+                                                  <div>Loc: {section.location || "N/A"} ({section.instructionMode || 'In-Person'})</div>
+                                                </label>
+                                              </div>
+                                            </li>
+                                          );
+                                        })}
+                                      </ul>
+                                    </>
                                   ) : (
-                                    <p className="text-xs text-gray-500">No sections available.</p>
+                                    <p className="text-xs text-gray-500 bg-gray-50 p-3 rounded-md text-center">No sections available for this course.</p>
                                   )}
                                 </div>
                               </div>
@@ -823,10 +862,6 @@ const ScheduleTool: React.FC<ScheduleToolProps> = ({ semesterId: _semesterId }) 
                 <Sparkles className={`h-4 w-4 mr-2 ${isGenerating ? 'animate-spin' : ''}`} />
                 {isGenerating ? 'Generating...' : selectedCourses.length === 0 ? 'Generate Schedule' : `Generate Schedule (${selectedCourses.length} selected)`}
               </span>
-            </Button>
-            <Button variant="outline" onClick={() => setIsAIAdvisorOpen(true)} className="w-full h-10">
-              <Sparkles className="h-4 w-4 mr-2" />
-              Ask AI Advisor
             </Button>
           </div>
         </div>
