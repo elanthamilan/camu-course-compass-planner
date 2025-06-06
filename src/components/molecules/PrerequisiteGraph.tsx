@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Course } from '../lib/types';
-import { mockCourses } from '../lib/mock-data'; // Assuming allCourses might be passed or used as fallback
+import { Course } from '../../lib/types';
+import { mockCourses } from '../../lib/mock-data'; // Assuming allCourses might be passed or used as fallback
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/atoms/dialog';
 import { DialogFooter } from '@/components/atoms/dialog';
 import { Badge } from '@/components/atoms/badge';

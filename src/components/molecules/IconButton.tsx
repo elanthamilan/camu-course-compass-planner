@@ -1,7 +1,7 @@
 // src/components/molecules/IconButton.tsx
 import React from 'react';
 import { Button, type ButtonProps } from '@/components/atoms/button';
-import { cn } from '../lib/utils';
+import { cn } from '../../lib/utils';
 
 interface IconButtonProps extends Omit<ButtonProps, 'children' | 'aria-label'> {
   icon: React.ElementType;

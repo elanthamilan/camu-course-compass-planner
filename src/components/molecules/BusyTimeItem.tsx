@@ -1,13 +1,13 @@
 
 import React from "react";
 import { Button } from "@/components/atoms/button";
-import { BusyTime } from "../lib/types";
+import { BusyTime } from "../../lib/types";
 import { 
   Briefcase, BookOpen, Heart, Calendar, Users, GraduationCap, Bell, Bookmark,
   Edit, Trash2 
 } from "lucide-react";
-import { useSchedule } from "../contexts/ScheduleContext";
-import { cn } from "../lib/utils";
+import { useSchedule } from "../../contexts/ScheduleContext";
+import { cn } from "../../lib/utils";
 
 interface BusyTimeItemProps {
   busyTime: BusyTime;
